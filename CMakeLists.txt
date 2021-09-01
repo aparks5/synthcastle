@@ -13,7 +13,8 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/include 
     ${PROJECT_SOURCE_DIR}/src)
 
-add_executable (modern_dsp_framework ${source})
+add_executable (${PROJECT_NAME} ${source})
 add_subdirectory("C:/portaudio" "C:/portaudio/out" EXCLUDE_FROM_ALL)
-target_link_libraries(modern_dsp_framework portaudio_static)
+target_link_libraries(${PROJECT_NAME} portaudio_static)
+
 
