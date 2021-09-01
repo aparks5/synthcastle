@@ -3,7 +3,7 @@
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-project ("modern_dsp_framework")
+project ("synthcastle")
 
 file(GLOB source
 	"${PROJECT_SOURCE_DIR}/include/*.h"
@@ -14,7 +14,26 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/src)
 
 add_executable (${PROJECT_NAME} ${source})
+
+# PortAudio
 add_subdirectory("C:/portaudio" "C:/portaudio/out" EXCLUDE_FROM_ALL)
 target_link_libraries(${PROJECT_NAME} portaudio_static)
+
+# GLFW (OpenGL)
+set(GLFW_DIR "C:/GL/glfw")
+add_subdirectory("${GLFW_DIR}" "${GLFW_DIR}/out" EXCLUDE_FROM_ALL)
+target_include_directories("glfw" PRIVATE "${GLFW_DIR}/include")
+target_include_directories("glfw" PRIVATE "${GLFW_DIR}/deps")
+target_link_libraries(${PROJECT_NAME} "glfw" "${GLFW_LIBRARIES}")
+
+# glad (OpenGL)
+set(GLAD_DIR "C:/GL/glad")
+add_library("glad" "${GLAD_DIR}/src/glad.c")
+target_include_directories("glad" PRIVATE "${GLAD_DIR}/include")
+target_include_directories(${PROJECT_NAME} PRIVATE "${GLAD_DIR}/include")
+target_link_libraries(${PROJECT_NAME} "glad" "${CMAKE_DL_LIBS}")
+target_include_directories(${PROJECT_NAME} PRIVATE "${GLFW_DIR}/include")
+
+
 
 
