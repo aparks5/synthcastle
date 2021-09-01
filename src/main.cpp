@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <thread>
 #include <string>
 #include <iostream>
 #include "portaudio.h"
@@ -11,11 +12,9 @@
 constexpr auto SAMPLE_RATE = (44100);
 constexpr auto FRAMES_PER_BUFFER = (256);
 
-int main(void);
-
-int main(void)
+void audioThread();
+void audioThread()
 {
-
     MixerStream stream;
 
     printf("PortAudio Test: output triangle wave. SR = %d, BufSize = %d\n", SAMPLE_RATE, FRAMES_PER_BUFFER);
@@ -62,7 +61,13 @@ int main(void)
 
         stream.close();
     }
+}
+int main(void);
 
+int main(void)
+{
+    std::thread audio(audioThread);
+    audio.join();
 	return 0;
 }
 
