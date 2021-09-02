@@ -4,10 +4,6 @@
 
 #include "portaudio.h"
 
-#ifndef M_PI
-#define M_PI  (3.14159265)
-#endif
-
 constexpr auto TABLE_SIZE = (2048);
 
 class Sine

@@ -121,7 +121,7 @@ static int graphicsThread(void)
 		glLoadIdentity();
         glViewport(0, 0, width, height);
 		// load the identity matrix
-        glOrtho(0, 256.0f, -1.0f, 1.0f, -1.0f, 1.0f);
+        glOrtho(0, 256.0f, -2.0f, 2.0f, -2.0f, 2.0f);
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
 

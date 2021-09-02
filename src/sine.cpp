@@ -1,12 +1,11 @@
 /// Copyright (c) 2021. Anthony Parks. All rights reserved.
 #include "sine.h" 
+#include "constants.h"
 #include "stdio.h"
 #include <cmath>
 #include <iostream>
 
 constexpr auto NUM_SECONDS = (2);
-constexpr auto SAMPLE_RATE = (44100);
-constexpr auto FRAMES_PER_BUFFER = (256);
 
 Sine::Sine()
 	: m_targetFreq(125)

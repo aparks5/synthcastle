@@ -9,8 +9,7 @@
 #include "portaudiohandler.h"
 #include "mixerstream.h"
 
-constexpr auto SAMPLE_RATE = (44100);
-constexpr auto FRAMES_PER_BUFFER = (256);
+#include "constants.h"
 
 void audioThread();
 void audioThread()
