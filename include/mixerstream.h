@@ -43,6 +43,11 @@ private:
     PaStream* stream;
     Saw m_saw;
     std::thread m_gfx;
+    size_t metronomeCounter;
+    size_t durationCounter;
+	bool bOnBeat = true;
+
+
 };
 
 
