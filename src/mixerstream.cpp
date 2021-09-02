@@ -2,8 +2,9 @@
 #include "mixerstream.h" 
 #include "stdio.h"
 #include "math.h"
-
+#include "graphics.h"
 #include <iostream>
+#include <thread>
 
 constexpr auto NUM_SECONDS = (2);
 constexpr auto SAMPLE_RATE = (44100);
@@ -11,6 +12,7 @@ constexpr auto FRAMES_PER_BUFFER = (256);
 
 MixerStream::MixerStream()
 	: stream(0)
+	, m_gfx(graphicsThread)
 {
 }
 
@@ -72,6 +74,8 @@ bool MixerStream::close()
 	PaError err = Pa_CloseStream(stream);
 	stream = 0;
 
+	m_gfx.join();
+
 	return (err == paNoError);
 
 }
@@ -128,7 +132,10 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 		// get samples from system
 		*out++ = output;
 		*out++ = output;
+		g_buffer[sampIdx] = static_cast<float>(output);
 	}
+	
+	g_ready = true;
 
 	return paContinue;
 }
