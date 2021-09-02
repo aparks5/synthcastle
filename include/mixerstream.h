@@ -3,6 +3,7 @@
 #define STREAM_H_ 
 
 #include "portaudio.h"
+#include "metronome.h"
 #include "saw.h"
 #include <thread>
 
@@ -43,7 +44,7 @@ private:
     PaStream* stream;
     Saw m_saw;
     std::thread m_gfx;
-    size_t metronomeCounter;
+    Metronome m_metronome;
     size_t durationCounter;
 	bool bOnBeat = true;
 

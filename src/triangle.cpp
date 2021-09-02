@@ -1,13 +1,12 @@
 /// Copyright (c) 2021. Anthony Parks. All rights reserved.
 #include "triangle.h" 
+#include "constants.h"
 #include "stdio.h"
 #include "math.h"
 
 #include <iostream>
 
 constexpr auto NUM_SECONDS = (2);
-constexpr auto SAMPLE_RATE = (44100);
-constexpr auto FRAMES_PER_BUFFER = (256);
 
 Triangle::Triangle()
 	: m_targetFreq(220)
