@@ -13,6 +13,8 @@ constexpr auto FRAMES_PER_BUFFER = (256);
 MixerStream::MixerStream()
 	: stream(0)
 	, m_gfx(graphicsThread)
+	, metronomeCounter(0)
+	, durationCounter(0)
 {
 }
 
@@ -126,9 +128,33 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 	
 	processUpdates();
 
+	// metronome - 60 BPM
+	auto samplesPerBeat = SAMPLE_RATE * 60 / 60;
+    // duration = 250ms
+	auto samplesPerDuration = SAMPLE_RATE * 0.250;
+
 	for (size_t sampIdx = 0; sampIdx < framesPerBuffer; sampIdx++)
 	{
-		output = m_saw.generate();
+		if (bOnBeat) {
+			output = m_saw.generate();
+			durationCounter++;
+		}
+		else {
+			output = 0;
+		}
+
+		metronomeCounter++;
+
+		if (metronomeCounter > samplesPerBeat) {
+			metronomeCounter = 0;
+			bOnBeat = true;
+		}
+
+		if (durationCounter > samplesPerDuration) {
+			durationCounter = 0;
+			bOnBeat = false;
+		}
+		
 		// get samples from system
 		*out++ = output;
 		*out++ = output;

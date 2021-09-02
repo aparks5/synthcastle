@@ -4,14 +4,9 @@
 #include <glad/gl.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
-
 #include "linmath.h"
-
-#include <atomic>
-
 #include <stdlib.h>
 #include <stdio.h>
-
 #include <windows.h>
 
 void usleep(__int64 usec)
@@ -116,7 +111,10 @@ static int graphicsThread(void)
     while (!glfwWindowShouldClose(window))
     {
 
-		while (!g_ready) usleep(3000);
+        while (!g_ready) {
+            usleep(3000);
+        }
+
         g_ready = false;
 		glMatrixMode(GL_PROJECTION);
 		// load the identity matrix
