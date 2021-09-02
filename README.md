@@ -9,7 +9,7 @@ This project aims to create a musical instrument and prototyping ground for new 
 
 I have only built this on Windows 10, compiled in Visual Studio.
 
-It uses cmake and PortAudio.
+It uses cmake, PortAudio, and OpenGL (GLAD + GLFW).
 
 The syntax once you run `main.cpp` is very simple:
 
