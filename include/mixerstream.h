@@ -4,6 +4,7 @@
 
 #include "portaudio.h"
 #include "saw.h"
+#include <thread>
 
 class MixerStream
 {
@@ -41,6 +42,7 @@ private:
 
     PaStream* stream;
     Saw m_saw;
+    std::thread m_gfx;
 };
 
 

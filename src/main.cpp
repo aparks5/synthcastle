@@ -8,7 +8,6 @@
 #include "portaudio.h"
 #include "portaudiohandler.h"
 #include "mixerstream.h"
-#include "graphics.h"
 
 constexpr auto SAMPLE_RATE = (44100);
 constexpr auto FRAMES_PER_BUFFER = (256);
@@ -68,9 +67,7 @@ int main(void);
 int main(void)
 {
     std::thread audio(audioThread);
-    std::thread gfx(graphicsThread);
     audio.join();
-    gfx.join();
 	return 0;
 }
 
