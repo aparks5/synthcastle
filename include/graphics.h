@@ -7,6 +7,8 @@
 
 #include "linmath.h"
 
+#include <atomic>
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -31,9 +33,8 @@ void usleep(__int64 usec)
 GLint g_buffer_size = BUFFER_SIZE;
 float g_buffer[BUFFER_SIZE];
 float g_window[BUFFER_SIZE];
-unsigned int g_channels = 1;
 
-GLboolean g_ready = false;
+GLboolean g_ready = true;
 
 
 void drawWindowedTimeDomain(float* buffer) {
@@ -42,14 +43,13 @@ void drawWindowedTimeDomain(float* buffer) {
     glPushMatrix();
     {
         // Blue Color
-        glColor3f(0, 0, 1.0);
+        glColor3f(0, 1.0, 1.0);
 
         glBegin(GL_LINE_STRIP);
 
         // Draw Windowed Time Domain
-        for (int i = 0; i < g_buffer_size; i++)
-        {
-            glVertex2f(i * 1.f, buffer[i]);
+        for (int i = 0; i < 256; i++) {
+            glVertex3f(i, buffer[i], 0);
         }
 
         glEnd();
@@ -73,13 +73,14 @@ static int graphicsThread(void)
     GLFWwindow* window;
 
     // wait for data
+    
 
     glfwSetErrorCallback(error_callback);
 
     if (!glfwInit())
         exit(EXIT_FAILURE);
 
-    window = glfwCreateWindow(640, 480, "Simple example", NULL, NULL);
+    window = glfwCreateWindow(640, 480, "Scope", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -98,6 +99,8 @@ static int graphicsThread(void)
 	int width, height;
 
 
+    glEnable(GL_POINT_SMOOTH);
+    glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
 
 	glfwGetFramebufferSize(window, &width, &height);
 
@@ -108,23 +111,21 @@ static int graphicsThread(void)
     // save the new window size
     // map the view port to the client area
     // set the matrix mode to project
-    //gluLookAt(0.0f, 0.0f, 10.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
 
 
     while (!glfwWindowShouldClose(window))
     {
 
-		while (!g_ready) usleep(1000);
+		while (!g_ready) usleep(3000);
         g_ready = false;
 		glMatrixMode(GL_PROJECTION);
 		// load the identity matrix
 		glLoadIdentity();
         glViewport(0, 0, width, height);
-		glMatrixMode(GL_MODELVIEW);
 		// load the identity matrix
+        glOrtho(0, 256.0f, -1.0f, 1.0f, -1.0f, 1.0f);
+		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
-        glOrtho(0, 256, -1, 1, 0, 1);
-
 
         // local variables
         float buffer[256];

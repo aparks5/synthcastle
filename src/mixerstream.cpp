@@ -132,7 +132,7 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 		// get samples from system
 		*out++ = output;
 		*out++ = output;
-		g_buffer[sampIdx] = static_cast<float>(output);
+		g_buffer[sampIdx] = static_cast<float>(output*1.0f);
 	}
 	
 	g_ready = true;
