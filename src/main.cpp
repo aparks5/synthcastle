@@ -35,7 +35,7 @@ void audioThread()
  
         if (stream.start()) {
 			while (true) {
-                std::cout << ">> commands: start, stop, freq, exit" << std::endl;
+                std::cout << ">> commands: start, stop, freq, gain, exit" << std::endl;
 				std::cin >> prompt;
                 if (prompt == "stop") {
                     stream.stop();
@@ -52,8 +52,17 @@ void audioThread()
                     auto freq = std::stof(prompt);
                     freq = (freq > 0) ? freq : 0 ;
                     freq = (freq < 10000) ? freq : 10000;
-                    stream.update(freq);
+                    stream.updateFreq(freq);
                 }
+                if (prompt == "gain") {
+					std::cout << ">> enter gain in dB (0 to -60)" << std::endl;
+    				std::cin >> prompt;
+                    auto gain = std::stod(prompt);
+                    gain = (gain < -60) ? -60 : gain;
+                    gain = (gain > 0) ? 0 : gain;
+                    stream.updateGain(gain);
+                }
+	
 			}
             stream.stop();
         }

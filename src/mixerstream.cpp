@@ -102,10 +102,17 @@ bool MixerStream::stop()
 	return (err == paNoError);
 }
 
-void MixerStream::update(float freq)
+void MixerStream::updateFreq(float freq)
 {
 	m_saw.setFrequency(freq);
 }
+
+void MixerStream::updateGain(int gaindB)
+{
+	m_gain.setGaindB(gaindB);
+}
+
+
 
 void MixerStream::processUpdates()
 {
@@ -142,6 +149,7 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 		m_metronome.tick();
 		if (durationCounter < samplesPerDuration) {
 			output = m_saw.generate();
+			output = m_gain.apply(output);
 			durationCounter++;
 		}
 		else {

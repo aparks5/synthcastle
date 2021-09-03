@@ -5,6 +5,7 @@
 #include "portaudio.h"
 #include "metronome.h"
 #include "saw.h"
+#include "gain.h"
 #include <thread>
 
 class MixerStream
@@ -15,7 +16,8 @@ public:
     bool close();
     bool start();
     bool stop();
-    void update(float freq);
+    void updateFreq(float freq);
+    void updateGain(int gaindB);
 
 
 private:
@@ -42,11 +44,12 @@ private:
     void processUpdates();
 
     PaStream* stream;
-    Saw m_saw;
     std::thread m_gfx;
     Metronome m_metronome;
     size_t durationCounter;
-	bool bOnBeat = true;
+
+    Saw m_saw;
+    Gain m_gain;
 
 
 };
