@@ -1,5 +1,6 @@
 /// Copyright (c) 2021. Anthony Parks. All rights reserved.
 #include "mixerstream.h" 
+#include "constants.h"
 #include "stdio.h"
 #include "math.h"
 #include "graphics.h"
@@ -7,14 +8,14 @@
 #include <thread>
 
 constexpr auto NUM_SECONDS = (2);
-constexpr auto SAMPLE_RATE = (44100);
-constexpr auto FRAMES_PER_BUFFER = (256);
 
 MixerStream::MixerStream()
 	: stream(0)
 	, m_gfx(graphicsThread)
 	, durationCounter(0)
 {
+	EnvelopeParams env(250, 0, 0, 500);
+	m_env.setParams(env);
 }
 
 bool MixerStream::open(PaDeviceIndex index)
@@ -136,8 +137,8 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 
 	// metronome - 60 BPM
 	auto samplesPerBeat = SAMPLE_RATE * 60 / 60;
-    // duration = 250ms
-	auto samplesPerDuration = SAMPLE_RATE * 0.250;
+    // duration = 1s
+	auto samplesPerDuration = SAMPLE_RATE;
 
 	for (size_t sampIdx = 0; sampIdx < framesPerBuffer; sampIdx++)
 	{
@@ -150,10 +151,12 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 		if (durationCounter < samplesPerDuration) {
 			output = m_saw.generate();
 			output = m_gain.apply(output);
+			output = m_env.apply(output);
 			durationCounter++;
 		}
 		else {
 			output = 0;
+			m_env.reset();
 		}
 	
 
