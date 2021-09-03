@@ -6,6 +6,7 @@
 #include "metronome.h"
 #include "saw.h"
 #include "gain.h"
+#include "envelope.h"
 #include <thread>
 
 class MixerStream
@@ -50,6 +51,7 @@ private:
 
     Saw m_saw;
     Gain m_gain;
+    Envelope m_env;
 
 
 };
