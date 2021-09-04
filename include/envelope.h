@@ -9,17 +9,17 @@ struct EnvelopeParams
 {
 	size_t attackTimeSamps;
 	size_t decayTimeSamps;
-	int sustainLevelf;
+	int sustainLeveldB;
 	size_t releaseTimeSamps;
 	EnvelopeParams()
 		: attackTimeSamps(0)
 		, decayTimeSamps(0)
-		, sustainLevelf(0)
+		, sustainLeveldB(0)
 		, releaseTimeSamps(0) {}
-	EnvelopeParams(size_t attMs, size_t decMs, int susf, size_t relMs)
+	EnvelopeParams(size_t attMs, size_t decMs, int susdB, size_t relMs)
 		: attackTimeSamps((attMs == 0) ? 0 : SAMPLE_RATE * 1.f * (attMs / 1000.f))
 		, decayTimeSamps((decMs == 0 ) ? 0 : SAMPLE_RATE * 1.f * (decMs / 1000.f))
-		, sustainLevelf(pow(10, susf / 20.f))
+		, sustainLeveldB(susdB)
 		, releaseTimeSamps((relMs == 0) ? 0 : SAMPLE_RATE * 1.f * (relMs / 1000.f)) {}
 };
 

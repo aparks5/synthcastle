@@ -6,7 +6,7 @@ Gain::Gain()
 {
 }
 
-void Gain::setGaindB(int gaindB)
+void Gain::setGaindB(float gaindB)
 {
 	m_fgain = dBtoFloat(gaindB);
 }

@@ -32,6 +32,7 @@ public:
     void updateGain(int gaindB);
     void updateBPM(size_t bpm);
     void updateOsc(Oscillator osc);
+    void updateEnv(EnvelopeParams params);
 
 
 private:
@@ -40,6 +41,8 @@ private:
         unsigned long framesPerBuffer,
         const PaStreamCallbackTimeInfo* timeInfo,
         PaStreamCallbackFlags statusFlags);
+
+    void oscillate(float& output);
  
     /// @brief This routine will be called by the PortAudio engine when audio is needed.
     /// It may called at interrupt level on some machines so don't do anything
@@ -70,6 +73,8 @@ private:
 
     Gain m_gain;
     Envelope m_env;
+    EnvelopeParams m_envParams;
+    bool m_bParamChanged;
 
 
 };
