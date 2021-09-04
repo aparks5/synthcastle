@@ -19,6 +19,7 @@ public:
     bool stop();
     void updateFreq(float freq);
     void updateGain(int gaindB);
+    void updateBPM(size_t bpm);
 
 
 private:

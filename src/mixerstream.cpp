@@ -113,6 +113,10 @@ void MixerStream::updateGain(int gaindB)
 	m_gain.setGaindB(gaindB);
 }
 
+void MixerStream::updateBPM(size_t bpm)
+{
+	m_metronome.bpm(bpm);
+}
 
 
 void MixerStream::processUpdates()
@@ -135,8 +139,6 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 	
 	processUpdates();
 
-	// metronome - 60 BPM
-	auto samplesPerBeat = SAMPLE_RATE * 60 / 60;
     // duration = 1s
 	auto samplesPerDuration = SAMPLE_RATE;
 
@@ -145,9 +147,10 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 		
 		if (m_metronome.isOnBeat()) {
 			durationCounter = 0;
+			m_env.reset();
 		}
-
 		m_metronome.tick();
+
 		if (durationCounter < samplesPerDuration) {
 			output = m_saw.generate();
 			output = m_gain.apply(output);
@@ -159,7 +162,6 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 			m_env.reset();
 		}
 	
-
 		// get samples from system
 		*out++ = output;
 		*out++ = output;
