@@ -9,12 +9,12 @@ class Square
 public:
     Square();
     virtual ~Square() {};
-    void setSampleFreq(float frequency) { m_targetFreq = frequency; }
+    void freq(float frequency) { m_freq = frequency; }
     void update();
     float generate();
 
 private:
-	float m_targetFreq;
+	float m_freq;
     float m_output;
     float m_increment;
 

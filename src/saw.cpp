@@ -8,7 +8,7 @@
 
 
 Saw::Saw()
-	: m_targetFreq(220)
+	: m_freq(220)
 	, m_output(-1.0f)
 	, m_increment(0.0f)
 {
@@ -17,7 +17,7 @@ Saw::Saw()
 
 void Saw::update()
 {
-	auto samplesPerCycle = SAMPLE_RATE * 1.0f / m_targetFreq;
+	auto samplesPerCycle = SAMPLE_RATE * 1.0f / m_freq;
 	m_increment = 2.0f / samplesPerCycle;
 }
 

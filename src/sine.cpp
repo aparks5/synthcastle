@@ -8,7 +8,7 @@
 constexpr auto NUM_SECONDS = (2);
 
 Sine::Sine()
-	: m_targetFreq(125)
+	: m_freq(125)
 	, m_phase(0.0f)
 	, m_increment(0.0f)
 {
@@ -22,7 +22,7 @@ Sine::Sine()
 
 void Sine::update()
 {
-	m_increment = (TABLE_SIZE * m_targetFreq) / SAMPLE_RATE * 1.0f;
+	m_increment = (TABLE_SIZE * m_freq) / SAMPLE_RATE * 1.0f;
 }
 
 float Sine::generate()

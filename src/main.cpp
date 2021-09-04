@@ -14,19 +14,31 @@
 void audioThread();
 void audioThread()
 {
-    MixerStream stream;
 
-    printf("PortAudio Test: output triangle wave. SR = %d, BufSize = %d\n", SAMPLE_RATE, FRAMES_PER_BUFFER);
+    std::cout << R"(
+  _______     ___   _ _______ _    _  _____           _____ _______ _      ______ 
+ / ____\ \   / / \ | |__   __| |  | |/ ____|   /\    / ____|__   __| |    |  ____|
+| (___  \ \_/ /|  \| |  | |  | |__| | |       /  \  | (___    | |  | |    | |__   
+ \___ \  \   / | . ` |  | |  |  __  | |      / /\ \  \___ \   | |  | |    |  __|  
+ ____) |  | |  | |\  |  | |  | |  | | |____ / ____ \ ____) |  | |  | |____| |____ 
+|_____/   |_|  |_| \_|  |_|  |_|  |_|\_____/_/    \_\_____/   |_|  |______|______|
+    )" << std::endl;
+
+
+    std::cout << "PortAudio: sample rate " << SAMPLE_RATE << ", buffer size " << FRAMES_PER_BUFFER << std::endl;
 
     PortAudioHandler paInit;
+     
+    MixerStream stream;
 
 	std::string prompt;
 
     if (stream.open(Pa_GetDefaultOutputDevice()))
     {
+
+		std::cout << ">> enter start to start streaming" << std::endl;
         while (true) {
             std::cout << std::endl << std::endl;
-            std::cout << ">> enter start to start streaming" << std::endl;
             std::cin >> prompt;
             if (prompt == "start") {
                 break;
@@ -35,7 +47,7 @@ void audioThread()
  
         if (stream.start()) {
 			while (true) {
-                std::cout << ">> commands: start, stop, freq, gain, bpm, exit" << std::endl;
+                std::cout << ">> commands: start, stop, osc, freq, gain, bpm, exit" << std::endl;
 				std::cin >> prompt;
                 if (prompt == "stop") {
                     stream.stop();
@@ -70,6 +82,25 @@ void audioThread()
                     bpm = (bpm > 200) ? 200 : bpm ;
                     stream.updateBPM(bpm);
                 }
+                if (prompt == "osc") {
+					std::cout << ">> enter sine, saw, tri, square" << std::endl;
+    				std::cin >> prompt;
+                    Oscillator osc = Oscillator::SINE;
+                    if (prompt == "sine") {
+                        osc = Oscillator::SINE;
+                    }
+                    if (prompt == "saw") {
+                        osc = Oscillator::SAW;
+                    }
+                    if (prompt == "tri") {
+                        osc = Oscillator::TRIANGLE;
+                    }
+                    if (prompt == "square") {
+                        osc = Oscillator::SQUARE;
+                    }
+                    stream.updateOsc(osc);
+                }
+	
 	
 	
 			}
