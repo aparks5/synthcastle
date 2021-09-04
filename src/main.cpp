@@ -12,25 +12,14 @@
 #include "constants.h"
 
 void audioThread();
+void banner();
 void audioThread()
 {
-
-    std::cout << R"(
-  _______     ___   _ _______ _    _  _____           _____ _______ _      ______ 
- / ____\ \   / / \ | |__   __| |  | |/ ____|   /\    / ____|__   __| |    |  ____|
-| (___  \ \_/ /|  \| |  | |  | |__| | |       /  \  | (___    | |  | |    | |__   
- \___ \  \   / | . ` |  | |  |  __  | |      / /\ \  \___ \   | |  | |    |  __|  
- ____) |  | |  | |\  |  | |  | |  | | |____ / ____ \ ____) |  | |  | |____| |____ 
-|_____/   |_|  |_| \_|  |_|  |_|  |_|\_____/_/    \_\_____/   |_|  |______|______|
-    )" << std::endl;
-
-
+    banner();
     std::cout << "PortAudio: sample rate " << SAMPLE_RATE << ", buffer size " << FRAMES_PER_BUFFER << std::endl;
 
     PortAudioHandler paInit;
-     
     MixerStream stream;
-
 	std::string prompt;
 
     if (stream.open(Pa_GetDefaultOutputDevice()))
@@ -100,7 +89,34 @@ void audioThread()
                     }
                     stream.updateOsc(osc);
                 }
-	
+                if (prompt == "env") {
+                    std::cout << ">> enter adsr envelope parameters (attack ms, decay ms, sustain dB (< 0), release ms) (e.g. 250 10 -10 500) " << std::endl;
+                    std::vector<std::string> param;
+                    size_t paramCount = 0;
+                    std::string envP;
+                    while (paramCount < 4 && std::cin >> envP) {
+                        param.push_back(envP);
+                        paramCount++;
+                    }
+                    size_t attMs = 0;
+                    size_t decMs = 0;
+                    int susdB = 0;
+                    size_t relMs = 0;
+
+                    std::sscanf(param[0].c_str(), "%zu", &attMs);
+                    std::sscanf(param[1].c_str(), "%zu", &decMs);
+                    std::sscanf(param[2].c_str(), "%d", &susdB);
+                    std::sscanf(param[3].c_str(), "%zu", &relMs);
+
+                    attMs = (attMs > 500) ? 500 : attMs;
+                    decMs = (decMs > 500) ? 500 : decMs;
+                    susdB = (susdB > 0) ? 0 : susdB;
+                    relMs = (relMs > 500) ? 500 : relMs;
+
+                    EnvelopeParams params(attMs, decMs, susdB, relMs);
+                    stream.updateEnv(params);
+                }
+                
 	
 	
 			}
@@ -109,6 +125,17 @@ void audioThread()
 
         stream.close();
     }
+}
+void banner()
+{
+    std::cout << R"(
+  _______     ___   _ _______ _    _  _____           _____ _______ _      ______ 
+ / ____\ \   / / \ | |__   __| |  | |/ ____|   /\    / ____|__   __| |    |  ____|
+| (___  \ \_/ /|  \| |  | |  | |__| | |       /  \  | (___    | |  | |    | |__   
+ \___ \  \   / | . ` |  | |  |  __  | |      / /\ \  \___ \   | |  | |    |  __|  
+ ____) |  | |  | |\  |  | |  | |  | | |____ / ____ \ ____) |  | |  | |____| |____ 
+|_____/   |_|  |_| \_|  |_|  |_|  |_|\_____/_/    \_\_____/   |_|  |______|______|
+    )" << std::endl;
 }
 int main(void);
 

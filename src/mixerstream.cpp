@@ -14,6 +14,7 @@ MixerStream::MixerStream()
 	, m_gfx(graphicsThread)
 	, durationCounter(0)
 	, m_osc(Oscillator::SINE)
+	, m_bParamChanged(false)
 {
 	EnvelopeParams env(250, 0, 0, 500);
 	m_env.setParams(env);
@@ -110,22 +111,32 @@ void MixerStream::updateFreq(float freq)
 	m_tri.freq(freq);
 	m_square.freq(freq);
 	m_sine.freq(freq);
+	m_bParamChanged = true;
 }
 
 void MixerStream::updateGain(int gaindB)
 {
 	m_gain.setGaindB(gaindB);
+	m_bParamChanged = true;
 }
 
 void MixerStream::updateBPM(size_t bpm)
 {
 	m_metronome.bpm(bpm);
+	m_bParamChanged = true;
 }
 
 
 void MixerStream::updateOsc(Oscillator osc)
 {
 	m_osc = osc;
+	m_bParamChanged = true;
+}
+
+void MixerStream::updateEnv(EnvelopeParams params)
+{
+	m_envParams = params;
+	m_bParamChanged = true;
 }
 
 
@@ -135,7 +146,7 @@ void MixerStream::processUpdates()
 	m_tri.update();
 	m_square.update();
 	m_sine.update();
-
+	m_env.setParams(m_envParams);
 }
 
 int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
@@ -151,7 +162,10 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 
 	auto output = 0.0f;
 	
-	processUpdates();
+	if (m_bParamChanged) {
+		processUpdates();
+		m_bParamChanged = false;
+	}
 
     // duration = 1s
 	auto samplesPerDuration = SAMPLE_RATE;
@@ -166,21 +180,7 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 		m_metronome.tick();
 
 		if (durationCounter < samplesPerDuration) {
-			switch (m_osc) {
-			case Oscillator::SAW:
-				output = m_saw.generate();
-				break;
-			case Oscillator::SINE:
-				output = m_sine.generate();
-				break;
-			case Oscillator::TRIANGLE:
-				output = m_tri.generate();
-				break;
-			case Oscillator::SQUARE:
-				output = m_square.generate();
-				break;
-			}
-
+			oscillate(output);
 			output = m_env.apply(output);
 			output = m_gain.apply(output);
 			durationCounter++;
@@ -199,6 +199,24 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 	g_ready = true;
 
 	return paContinue;
+}
+
+void MixerStream::oscillate(float& output)
+{
+	switch (m_osc) {
+	case Oscillator::SAW:
+		output = m_saw.generate();
+		break;
+	case Oscillator::SINE:
+		output = m_sine.generate();
+		break;
+	case Oscillator::TRIANGLE:
+		output = m_tri.generate();
+		break;
+	case Oscillator::SQUARE:
+		output = m_square.generate();
+		break;
+	}
 }
 
 int MixerStream::paCallback(const void* inputBuffer, void* outputBuffer,

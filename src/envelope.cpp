@@ -11,12 +11,13 @@ Envelope::Envelope()
 void Envelope::setParams(EnvelopeParams params)
 {
 	m_params = params;
+	reset();
 }
 
 void Envelope::reset()
 {
-	m_counter = 0;
 	m_stage = ATTACK;
+	m_counter = 0;
 }
 
 float Envelope::apply(float sample)
@@ -37,34 +38,37 @@ float Envelope::apply(float sample)
 		break;
 	case DECAY:
 		m_counter++;
-		// TODO: once sustain level is accounted for, some variation of subtracting from 1
-		// and proceeding to sustain level will be needed
-		// m_gain.setGaindB(20 * log10(1 - m_counter / m_params.attackTimeSamps * 1.f));
-		m_gain.setGaindB(0);
 		if (m_counter > m_params.decayTimeSamps) {
 			m_counter = 0;
 			m_stage = SUSTAIN;
 		}
+		else {
+			auto decayGaindB = 0;
+			if (m_params.decayTimeSamps > 0) {
+				decayGaindB = static_cast<float>((1.f * m_counter / m_params.decayTimeSamps) * m_params.sustainLeveldB);
+			}
+			m_gain.setGaindB(decayGaindB);
+		}
 		break;
 	case SUSTAIN:
 		m_counter++;
-		m_gain.setGaindB(0);
-		if (m_counter > (0.25*SAMPLE_RATE)) {
+		m_gain.setGaindB(m_params.sustainLeveldB);
+		if (m_counter > (0.500*SAMPLE_RATE)) {
 			m_counter = 0;
 			m_stage = RELEASE;
 		}
 		break;
 	case RELEASE:
 		m_counter++;
-		if (m_params.releaseTimeSamps) {
+		if (m_counter < m_params.releaseTimeSamps) {
 			auto relGain = 20 * log10(1.f - (static_cast<double>(1.f * m_counter / m_params.releaseTimeSamps)));
-			m_gain.setGaindB(relGain);
+			m_gain.setGaindB(m_params.sustainLeveldB + relGain);
 		}
-		if (m_counter > m_params.releaseTimeSamps) {
-			m_counter = 0;
-			m_gain.setGaindB(-60);
+		else if (m_counter > m_params.releaseTimeSamps) {
+			m_gain.setGaindB(-200);
 		}
-		break;
+
+	break;
 	}
 
 	output = m_gain.apply(output);

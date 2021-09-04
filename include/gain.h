@@ -5,7 +5,7 @@ class Gain
 {
 public:
 	Gain();
-	void setGaindB(int gaindB);
+	void setGaindB(float gaindB);
 	float apply(float samp);
 
 private:
