@@ -28,7 +28,7 @@ float Envelope::apply(float sample)
 	case ATTACK:
 		m_counter++;
 		if (m_params.attackTimeSamps) {
-			m_gain.setGaindB(20 * log10(m_counter * 1.f / m_params.attackTimeSamps));
+			m_gain.setGaindB(20 * log10(static_cast<double>(1.f * m_counter / m_params.attackTimeSamps)));
 		}
 		if (m_counter > m_params.attackTimeSamps) {
 			m_counter = 0;
@@ -57,9 +57,10 @@ float Envelope::apply(float sample)
 	case RELEASE:
 		m_counter++;
 		if (m_params.releaseTimeSamps) {
-			m_gain.setGaindB(20 * log10(1 - (m_counter / m_params.releaseTimeSamps * 1.f)));
+			auto relGain = 20 * log10(1.f - (static_cast<double>(1.f * m_counter / m_params.releaseTimeSamps)));
+			m_gain.setGaindB(relGain);
 		}
-		if (m_counter > m_params.decayTimeSamps) {
+		if (m_counter > m_params.releaseTimeSamps) {
 			m_counter = 0;
 			m_gain.setGaindB(-60);
 		}
