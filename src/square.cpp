@@ -9,7 +9,7 @@
 constexpr auto NUM_SECONDS = (2);
 
 Square::Square()
-	: m_targetFreq(220)
+	: m_freq(220)
     , m_output(-1)
 	, m_increment(0)
 {
@@ -18,7 +18,7 @@ Square::Square()
 
 void Square::update()
 {
-	auto samplesPerCycle = SAMPLE_RATE / m_targetFreq;
+	auto samplesPerCycle = SAMPLE_RATE / m_freq;
 	m_increment = 2.0f / samplesPerCycle;
 }
 

@@ -11,13 +11,13 @@ class Sine
 public:
     Sine();
     virtual ~Sine() {};
-    void setSampleFreq(float frequency) { m_targetFreq = frequency; }
+    void freq(float frequency) { m_freq = frequency; }
     void update();
     float generate();
 
 private:
 	float m_sine[TABLE_SIZE];
-    float m_targetFreq;
+    float m_freq;
     float m_phase;
     float m_increment;
 

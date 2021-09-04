@@ -5,9 +5,20 @@
 #include "portaudio.h"
 #include "metronome.h"
 #include "saw.h"
+#include "triangle.h"
+#include "square.h"
+#include "sine.h"
 #include "gain.h"
 #include "envelope.h"
 #include <thread>
+
+enum class Oscillator
+{
+    SINE,
+    SAW,
+    TRIANGLE,
+    SQUARE
+};
 
 class MixerStream
 {
@@ -20,6 +31,7 @@ public:
     void updateFreq(float freq);
     void updateGain(int gaindB);
     void updateBPM(size_t bpm);
+    void updateOsc(Oscillator osc);
 
 
 private:
@@ -50,7 +62,12 @@ private:
     Metronome m_metronome;
     size_t durationCounter;
 
+    Oscillator m_osc;
     Saw m_saw;
+    Triangle m_tri;
+    Square m_square;
+    Sine m_sine;
+
     Gain m_gain;
     Envelope m_env;
 

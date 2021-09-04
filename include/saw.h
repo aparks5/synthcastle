@@ -6,14 +6,14 @@ class Saw
 {
 public:
     Saw();
-    void setFrequency(float frequency) { m_targetFreq = frequency; }
-    /// @brief uppdate increment based on target frequency
+    void freq(float frequency) { m_freq = frequency; }
+    /// @brief update increment based on target frequency
     void update();
     /// @brief output the next sample
     float generate();
 
 private:
-    float m_targetFreq;
+    float m_freq;
     float m_output;
     float m_increment;
 };

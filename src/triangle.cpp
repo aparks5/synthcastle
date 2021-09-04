@@ -6,10 +6,8 @@
 
 #include <iostream>
 
-constexpr auto NUM_SECONDS = (2);
-
 Triangle::Triangle()
-	: m_targetFreq(220)
+	: m_freq(220)
     , m_output(-1.0f)
 	, m_increment(0)
 	, m_incrementBase(0)
@@ -19,7 +17,7 @@ Triangle::Triangle()
 
 void Triangle::update()
 {
-	auto samplesPerCycle = SAMPLE_RATE / m_targetFreq;
+	auto samplesPerCycle = SAMPLE_RATE / m_freq;
 	m_incrementBase = 4.0f / samplesPerCycle;
 }
 
@@ -28,6 +26,7 @@ float Triangle::generate()
 		if ((m_output >= 0.99f)) {
 			m_increment = -1 * m_incrementBase;
 		}
+
 		if ((m_output <= -0.99f)) {
 			m_increment = m_incrementBase;
 		}
