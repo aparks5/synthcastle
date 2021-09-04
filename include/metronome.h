@@ -5,9 +5,10 @@ class Metronome
 {
 public:
 	Metronome();
-	void updateBPM(size_t beatsPerMinute);
+	void bpm(size_t beatsPerMinute);
 	void tick();
 	bool isOnBeat() const;
+	void reset();
 
 private:
 

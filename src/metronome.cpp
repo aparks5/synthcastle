@@ -6,13 +6,20 @@ Metronome::Metronome()
 	, m_bOnBeat(true)
 	, m_samplesElapsed(0)
 {
-	updateBPM(m_bpm);
+	bpm(m_bpm);
 }
 
-void Metronome::updateBPM(size_t beatsPerMinute)
+void Metronome::bpm(size_t beatsPerMinute)
 {
 	m_bpm = beatsPerMinute;
+	reset();
+}
+
+void Metronome::reset()
+{
 	m_samplesPerBeat = SAMPLE_RATE * secondsPerMinute / m_bpm;
+	m_samplesElapsed = 0;
+	m_bOnBeat = true;
 }
 
 bool Metronome::isOnBeat() const
