@@ -36,6 +36,7 @@ void audioThread()
  
         if (stream.start()) {
 			while (true) {
+                stream.processUpdates();
                 std::cout << ">> commands: start, stop, osc, freq, gain, bpm, exit" << std::endl;
 				std::cin >> prompt;
                 if (prompt == "stop") {

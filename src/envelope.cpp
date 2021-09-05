@@ -20,6 +20,9 @@ void Envelope::reset()
 	m_counter = 0;
 }
 
+// TODO: envelope should just return a value, and then use that to convert to dB or apply to filter cutoff etc.
+// as it is written it is only an amplitude envelope
+// it should not be coupled to Gain in its class definition
 float Envelope::apply(float sample)
 {
 	auto output = sample;

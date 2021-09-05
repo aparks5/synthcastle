@@ -142,11 +142,15 @@ void MixerStream::updateEnv(EnvelopeParams params)
 
 void MixerStream::processUpdates()
 {
-	m_saw.update();
-	m_tri.update();
-	m_square.update();
-	m_sine.update();
-	m_env.setParams(m_envParams);
+
+	if (m_bParamChanged) {
+		m_saw.update();
+		m_tri.update();
+		m_square.update();
+		m_sine.update();
+		m_env.setParams(m_envParams);
+		m_bParamChanged = false;
+	}
 }
 
 int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
@@ -162,11 +166,6 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 
 	auto output = 0.0f;
 	
-	if (m_bParamChanged) {
-		processUpdates();
-		m_bParamChanged = false;
-	}
-
     // duration = 1s
 	auto samplesPerDuration = SAMPLE_RATE;
 
@@ -195,7 +194,8 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 		*out++ = output;
 		g_buffer[sampIdx] = static_cast<float>(output*1.0f);
 	}
-	
+
+
 	g_ready = true;
 
 	return paContinue;

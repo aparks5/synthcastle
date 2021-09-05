@@ -44,7 +44,5 @@ private:
 	EnvelopeStage m_stage;
 	size_t m_counter;
 	Gain m_gain;
-
-
 };
 #endif // ENVELOPE_H_

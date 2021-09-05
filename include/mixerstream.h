@@ -33,6 +33,7 @@ public:
     void updateBPM(size_t bpm);
     void updateOsc(Oscillator osc);
     void updateEnv(EnvelopeParams params);
+    void processUpdates();
 
 
 private:
@@ -58,7 +59,6 @@ private:
      /// @brief This routine is called by portaudio when playback is done.
     static void paStreamFinished(void* userData);
 
-    void processUpdates();
 
     PaStream* stream;
     std::thread m_gfx;
