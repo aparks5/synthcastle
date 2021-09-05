@@ -51,9 +51,9 @@ exit
 ```
 
 # Excellent reference books used to help make this:
-Will Pirkle - Designing Software Synthesizer Plugins in C++ 
-Will Pirkle - Designing Audio Effect Plugins in C++
-Andrist and Sehr - C++ High Performance
-Scott Meyers - Effective Modern C++
-Anthony Williams - C++ Concurrency in Action
-https://learnopengl.com/Getting-started/Hello-Window
+- Will Pirkle - Designing Software Synthesizer Plugins in C++ 
+- Will Pirkle - Designing Audio Effect Plugins in C++
+- Andrist and Sehr - C++ High Performance
+- Scott Meyers - Effective Modern C++
+- Anthony Williams - C++ Concurrency in Action
+- https://learnopengl.com/Getting-started/Hello-Window
