@@ -5,6 +5,7 @@
 Envelope::Envelope()
 	: m_stage(ATTACK)
 	, m_counter(0)
+	, m_gain(0)
 {
 }
 
@@ -23,59 +24,55 @@ void Envelope::reset()
 // TODO: envelope should just return a value, and then use that to convert to dB or apply to filter cutoff etc.
 // as it is written it is only an amplitude envelope
 // it should not be coupled to Gain in its class definition
-float Envelope::apply(float sample)
+float Envelope::apply(size_t numSamples)
 {
-	auto output = sample;
-	m_gain.setGaindB(0);
+	m_counter += numSamples;
 
 	switch (m_stage) {
 	case ATTACK:
-		m_counter++;
-		if (m_params.attackTimeSamps) {
-			m_gain.setGaindB(20 * log10(static_cast<double>(1.f * m_counter / m_params.attackTimeSamps)));
-		}
 		if (m_counter > m_params.attackTimeSamps) {
 			m_counter = 0;
 			m_stage = DECAY;
 		}
-		break;
+		else if (m_params.attackTimeSamps != 0) {
+			m_gain = static_cast<double>(1.f * m_counter / m_params.attackTimeSamps);
+		}
+		else {
+			m_gain = 0;
+		}
+	break;
 	case DECAY:
-		m_counter++;
 		if (m_counter > m_params.decayTimeSamps) {
 			m_counter = 0;
 			m_stage = SUSTAIN;
 		}
+		else if (m_params.decayTimeSamps > 0) {
+			m_gain = static_cast<float>((1.f * m_counter / m_params.decayTimeSamps) * pow(10, 1.f * m_params.sustainLeveldB / 20));
+		}
 		else {
-			auto decayGaindB = 0;
-			if (m_params.decayTimeSamps > 0) {
-				decayGaindB = static_cast<float>((1.f * m_counter / m_params.decayTimeSamps) * m_params.sustainLeveldB);
-			}
-			m_gain.setGaindB(decayGaindB);
+			m_gain = pow(10, 1.f * m_params.sustainLeveldB / 20);
 		}
 		break;
 	case SUSTAIN:
-		m_counter++;
-		m_gain.setGaindB(m_params.sustainLeveldB);
+        m_gain = pow(10, 1.f * m_params.sustainLeveldB / 20);
 		if (m_counter > (0.500*SAMPLE_RATE)) {
 			m_counter = 0;
 			m_stage = RELEASE;
 		}
 		break;
 	case RELEASE:
-		m_counter++;
-		if (m_counter < m_params.releaseTimeSamps) {
-			auto relGain = 20 * log10(1.f - (static_cast<double>(1.f * m_counter / m_params.releaseTimeSamps)));
-			m_gain.setGaindB(m_params.sustainLeveldB + relGain);
+		if (m_counter > m_params.releaseTimeSamps) {
+			m_gain = 0;
 		}
-		else if (m_counter > m_params.releaseTimeSamps) {
-			m_gain.setGaindB(-200);
+		else if (m_counter < m_params.releaseTimeSamps) {
+			auto relGain = static_cast<double>(1.f * m_counter / m_params.releaseTimeSamps);
+			m_gain = pow(10, (m_params.sustainLeveldB * 1.f / 20)) - relGain;
 		}
-
-	break;
+		else {
+			m_gain = 0;
+		}
+		break;
 	}
 
-	output = m_gain.apply(output);
-
-	return output;
-
+	return m_gain;
 }

@@ -3,14 +3,17 @@
 #define STREAM_H_ 
 
 #include "portaudio.h"
+
+#include <thread>
+
+#include "envelope.h"
+#include "gain.h"
+#include "KrajeskiMoog.h"
 #include "metronome.h"
 #include "saw.h"
-#include "triangle.h"
 #include "square.h"
 #include "sine.h"
-#include "gain.h"
-#include "envelope.h"
-#include <thread>
+#include "triangle.h"
 
 enum class Oscillator
 {
@@ -70,10 +73,12 @@ private:
     Triangle m_tri;
     Square m_square;
     Sine m_sine;
+    Triangle m_lfo;
 
     Gain m_gain;
     Envelope m_env;
     EnvelopeParams m_envParams;
+    KrajeskiMoog m_moogFilter;
     bool m_bParamChanged;
 
 

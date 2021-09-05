@@ -7,17 +7,22 @@
 #include <iostream>
 #include <thread>
 
-constexpr auto NUM_SECONDS = (2);
-
 MixerStream::MixerStream()
 	: stream(0)
 	, m_gfx(graphicsThread)
 	, durationCounter(0)
 	, m_osc(Oscillator::SINE)
+	, m_moogFilter(SAMPLE_RATE)
 	, m_bParamChanged(false)
 {
 	EnvelopeParams env(250, 0, 0, 500);
 	m_env.setParams(env);
+
+	m_moogFilter.freq(400);
+	m_moogFilter.q(3);
+	m_lfo.freq(8);
+	m_lfo.update();
+	
 }
 
 bool MixerStream::open(PaDeviceIndex index)
@@ -149,6 +154,7 @@ void MixerStream::processUpdates()
 		m_square.update();
 		m_sine.update();
 		m_env.setParams(m_envParams);
+
 		m_bParamChanged = false;
 	}
 }
@@ -169,8 +175,13 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
     // duration = 1s
 	auto samplesPerDuration = SAMPLE_RATE;
 
+
+	processUpdates();
+	auto envGain = 0;
+
 	for (size_t sampIdx = 0; sampIdx < framesPerBuffer; sampIdx++)
 	{
+
 		
 		if (m_metronome.isOnBeat()) {
 			durationCounter = 0;
@@ -179,8 +190,12 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 		m_metronome.tick();
 
 		if (durationCounter < samplesPerDuration) {
+			envGain = m_env.apply(1);
+			m_gain.setGainf(envGain);
 			oscillate(output);
-			output = m_env.apply(output);
+			auto filtLfo = abs(m_lfo.generate());
+			m_moogFilter.freq(filtLfo * 1000.f);
+			m_moogFilter.apply(&output, 1);
 			output = m_gain.apply(output);
 			durationCounter++;
 		}
@@ -194,6 +209,8 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 		*out++ = output;
 		g_buffer[sampIdx] = static_cast<float>(output*1.0f);
 	}
+
+
 
 
 	g_ready = true;

@@ -7,10 +7,12 @@ project ("synthcastle")
 
 file(GLOB source
 	"${PROJECT_SOURCE_DIR}/include/*.h"
+	"${PROJECT_SOURCE_DIR}/include/moog/*.h"
 	"${PROJECT_SOURCE_DIR}/src/*.cpp")
 
 include_directories(
     ${PROJECT_SOURCE_DIR}/include 
+	${PROJECT_SOURCE_DIR}/include/moog
     ${PROJECT_SOURCE_DIR}/src)
 
 add_executable (${PROJECT_NAME} ${source})
