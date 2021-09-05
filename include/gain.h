@@ -5,8 +5,10 @@ class Gain
 {
 public:
 	Gain();
-	void setGaindB(float gaindB);
 	float apply(float samp);
+
+	void setGaindB(float gaindB);
+	void setGainf(float gainf);
 
 private:
 	int floatTodB(float f) const;

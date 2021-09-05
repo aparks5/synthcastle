@@ -3,14 +3,17 @@
 #define STREAM_H_ 
 
 #include "portaudio.h"
+
+#include <thread>
+
+#include "envelope.h"
+#include "gain.h"
+#include "KrajeskiMoog.h"
 #include "metronome.h"
 #include "saw.h"
-#include "triangle.h"
 #include "square.h"
 #include "sine.h"
-#include "gain.h"
-#include "envelope.h"
-#include <thread>
+#include "triangle.h"
 
 enum class Oscillator
 {
@@ -33,6 +36,7 @@ public:
     void updateBPM(size_t bpm);
     void updateOsc(Oscillator osc);
     void updateEnv(EnvelopeParams params);
+    void processUpdates();
 
 
 private:
@@ -58,7 +62,6 @@ private:
      /// @brief This routine is called by portaudio when playback is done.
     static void paStreamFinished(void* userData);
 
-    void processUpdates();
 
     PaStream* stream;
     std::thread m_gfx;
@@ -70,10 +73,12 @@ private:
     Triangle m_tri;
     Square m_square;
     Sine m_sine;
+    Triangle m_lfo;
 
     Gain m_gain;
     Envelope m_env;
     EnvelopeParams m_envParams;
+    KrajeskiMoog m_moogFilter;
     bool m_bParamChanged;
 
 

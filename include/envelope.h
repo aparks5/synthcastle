@@ -36,15 +36,13 @@ class Envelope
 public:
 	Envelope();
 	void setParams(EnvelopeParams params);
-	float apply(float sample);
+	float apply(size_t numSamples);
 	void reset();
 
 private:
 	EnvelopeParams m_params;
 	EnvelopeStage m_stage;
 	size_t m_counter;
-	Gain m_gain;
-
-
+	float m_gain;
 };
 #endif // ENVELOPE_H_
