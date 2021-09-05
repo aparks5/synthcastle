@@ -9,10 +9,117 @@
 #include "portaudiohandler.h"
 #include "mixerstream.h"
 
+#include <cstdlib>
+#include "RtMidi.h"
+
 #include "constants.h"
 
 void audioThread();
 void banner();
+
+size_t g_noteVal = 0;
+
+
+void midiThread();
+
+bool chooseMidiPort(RtMidiIn* rtmidi);
+
+void midiCallback(double deltatime, std::vector< unsigned char >* message, void*/*userData*/)
+{
+    unsigned int nBytes = message->size();
+    for (unsigned int i = 0; i < nBytes; i++) {
+        auto midiByte = (int)message->at(i);
+        if (midiByte != 248) {
+            std::cout << "Byte " << i << " = " << midiByte << ", ";
+            if (nBytes > 0) {
+                std::cout << "stamp = " << deltatime << std::endl;
+            }
+        }
+   }
+
+	if ((int)message->at(0) == 144) {
+        g_noteVal = (size_t)message->at(1);
+        // velocity = (size_t)message->at(2);
+	}
+ 
+}
+
+void midiThread()
+{
+	RtMidiIn* midiin = 0;
+
+    try {
+
+        // RtMidiIn constructor
+        midiin = new RtMidiIn();
+
+        // Call function to select port.
+        if (chooseMidiPort(midiin) == false) goto cleanup;
+
+        // Set our callback function.  This should be done immediately after
+        // opening the port to avoid having incoming messages written to the
+        // queue instead of sent to the callback function.
+        midiin->setCallback(&midiCallback);
+
+        // Don't ignore sysex, timing, or active sensing messages.
+        midiin->ignoreTypes(false, false, false);
+
+        std::cout << "\nReading MIDI input ... press <enter> to quit.\n";
+        char input;
+        std::cin.get(input);
+
+    }
+    catch (RtMidiError& error) {
+        error.printMessage();
+    }
+
+cleanup:
+
+    delete midiin;
+
+}
+
+bool chooseMidiPort(RtMidiIn* rtmidi)
+{
+    std::cout << "\nWould you like to open a virtual input port? [y/N] ";
+
+    std::string keyHit;
+    std::getline(std::cin, keyHit);
+    if (keyHit == "y") {
+        rtmidi->openVirtualPort();
+        return true;
+    }
+
+    std::string portName;
+    unsigned int i = 0, nPorts = rtmidi->getPortCount();
+    if (nPorts == 0) {
+        std::cout << "No input ports available!" << std::endl;
+        return false;
+    }
+
+    if (nPorts == 1) {
+        std::cout << "\nOpening " << rtmidi->getPortName() << std::endl;
+    }
+    else {
+        for (i = 0; i < nPorts; i++) {
+            portName = rtmidi->getPortName(i);
+            std::cout << "  Input port #" << i << ": " << portName << '\n';
+        }
+
+        do {
+            std::cout << "\nChoose a port number: ";
+            std::cin >> i;
+        } while (i >= nPorts);
+        std::getline(std::cin, keyHit);  // used to clear out stdin
+    }
+
+    rtmidi->openPort(i);
+
+    return true;
+}
+
+
+
 void audioThread()
 {
     banner();
@@ -36,7 +143,15 @@ void audioThread()
  
         if (stream.start()) {
 			while (true) {
-                std::cout << ">> commands: start, stop, osc, freq, gain, bpm, exit" << std::endl;
+                if (g_noteVal != 0) {
+                    auto freq = pow(2, (g_noteVal - 69) / 12) * 440.f;
+                    freq = (freq > 0) ? freq : 0 ;
+                    freq = (freq < 10000) ? freq : 10000;
+                    stream.updateFreq(freq);
+
+
+                }
+                std::cout << ">> commands: start, stop, osc, freq, note, gain, bpm, exit" << std::endl;
 				std::cin >> prompt;
                 if (prompt == "stop") {
                     stream.stop();
@@ -55,6 +170,17 @@ void audioThread()
                     freq = (freq < 10000) ? freq : 10000;
                     stream.updateFreq(freq);
                 }
+                if (prompt == "note") {
+					std::cout << ">> enter midi note (21-108)" << std::endl;
+                    // midi note to freq formula https://newt.phys.unsw.edu.au/jw/notes.html
+    				std::cin >> prompt;
+                    auto note = std::stod(prompt);
+                    auto freq = pow(2, (note - 69) / 12) * 440.f;
+                    freq = (freq > 0) ? freq : 0 ;
+                    freq = (freq < 10000) ? freq : 10000;
+                    stream.updateFreq(freq);
+                }
+ 
                 if (prompt == "gain") {
 					std::cout << ">> enter gain in dB (0 to -60)" << std::endl;
     				std::cin >> prompt;
@@ -142,6 +268,7 @@ int main(void);
 int main(void)
 {
     std::thread audio(audioThread);
+    midiThread();
     audio.join();
 	return 0;
 }

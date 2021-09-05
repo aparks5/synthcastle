@@ -20,7 +20,7 @@ MixerStream::MixerStream()
 
 	m_moogFilter.freq(400);
 	m_moogFilter.q(3);
-	m_lfo.freq(8);
+	m_lfo.freq(0.25);
 	m_lfo.update();
 	
 }
