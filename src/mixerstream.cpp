@@ -116,6 +116,7 @@ bool MixerStream::stop()
 void MixerStream::updateFreq(float freq)
 {
 	m_saw.freq(freq);
+	m_saw2.freq(freq * 1.3348);
 	m_tri.freq(freq);
 	m_square.freq(freq);
 	m_sine.freq(freq);
@@ -195,6 +196,7 @@ void MixerStream::processUpdates()
 
 	if (m_bParamChanged) {
 		m_saw.update();
+		m_saw2.update();
 		m_lfo.update();
 		m_tri.update();
 		m_square.update();
@@ -228,6 +230,9 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 	if (m_bEnableFilterLFO) {
 		float filtLfo = (1 + m_lfo.generate()) * 0.5f;
 		m_moogFilter.freq(m_filtFreq * filtLfo);
+	}
+	else {
+		m_moogFilter.freq(m_filtFreq);
 	}
 
 	for (size_t sampIdx = 0; sampIdx < framesPerBuffer; sampIdx++)
@@ -264,7 +269,7 @@ void MixerStream::oscillate(float& output)
 {
 	switch (m_osc) {
 	case Oscillator::SAW:
-		output = m_saw.generate();
+		output = (m_saw.generate() + m_saw2.generate()) * 0.5f;
 		break;
 	case Oscillator::SINE:
 		output = m_sine.generate();

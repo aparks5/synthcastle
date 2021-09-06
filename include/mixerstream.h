@@ -78,6 +78,7 @@ private:
 
     Oscillator m_osc;
     Saw m_saw;
+    Saw m_saw2;
     Triangle m_tri;
     Square m_square;
     Sine m_sine;
