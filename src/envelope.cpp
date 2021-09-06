@@ -32,11 +32,11 @@ float Envelope::apply(size_t numSamples)
 	switch (m_stage) {
 	case EnvelopeStage::ATTACK:
 		if (m_counter > m_params.attackTimeSamps) {
-			m_counter = 0;
+			// m_counter = 0;
 			m_stage = EnvelopeStage::DECAY;
 		}
 		else if (m_params.attackTimeSamps != 0) {
-			m_gain = 0.00001 + static_cast<double>(1.f * m_counter / m_params.attackTimeSamps);
+			m_gain = 0.001 + static_cast<double>(1.f * m_counter / m_params.attackTimeSamps);
 			if (m_gain > 1) {
 				m_gain = 1;
 				m_stage = EnvelopeStage::DECAY;
@@ -44,7 +44,7 @@ float Envelope::apply(size_t numSamples)
 			
 		}
 		else {
-			m_gain = 0.00001;
+			m_gain = 1.0f;
 		}
 	break;
 	case EnvelopeStage::DECAY:

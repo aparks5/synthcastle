@@ -147,6 +147,16 @@ void MixerStream::updateEnv(EnvelopeParams params)
 	m_bParamChanged = true;
 }
 
+void MixerStream::enableFiltLFO()
+{
+	m_bEnableFilterLFO = true;
+}
+
+void MixerStream::disableFiltLFO()
+{
+	m_bEnableFilterLFO = false;
+}
+
 void MixerStream::noteOn()
 {
 	m_env.noteOn();
@@ -215,8 +225,10 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 	processUpdates();
 	double envGain = 0;
 
-	float filtLfo = (1 + m_lfo.generate()) * 0.5f;
-	m_moogFilter.freq(m_filtFreq * filtLfo);
+	if (m_bEnableFilterLFO) {
+		float filtLfo = (1 + m_lfo.generate()) * 0.5f;
+		m_moogFilter.freq(m_filtFreq * filtLfo);
+	}
 
 	for (size_t sampIdx = 0; sampIdx < framesPerBuffer; sampIdx++)
 	{
@@ -227,7 +239,9 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 		envGain = m_env.apply(1);
 		m_gain.setGainf(envGain);
 		oscillate(output);
-		float filtLfo = m_lfo.generate();
+		if (m_bEnableFilterLFO) {
+			m_lfo.generate();
+		}
      	m_moogFilter.apply(&output, 1);
 		output = m_gain.apply(output);
 	

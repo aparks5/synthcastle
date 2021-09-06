@@ -36,6 +36,9 @@ public:
     void updateBPM(size_t bpm);
     void updateOsc(Oscillator osc);
     void updateEnv(EnvelopeParams params);
+    void enableFiltLFO();
+    void disableFiltLFO();
+
     void processUpdates();
     void noteOn();
     void noteOff();
@@ -79,6 +82,7 @@ private:
     Square m_square;
     Sine m_sine;
     Triangle m_lfo;
+    bool m_bEnableFilterLFO;
 
     Gain m_gain;
     Envelope m_env;
