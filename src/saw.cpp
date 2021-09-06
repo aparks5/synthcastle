@@ -15,6 +15,11 @@ Saw::Saw()
 	update();
 }
 
+void Saw::reset()
+{
+	m_increment = 0;
+}
+
 void Saw::update()
 {
 	auto samplesPerCycle = SAMPLE_RATE * 1.0f / m_freq;

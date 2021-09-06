@@ -31,6 +31,8 @@ public:
 		memset(state, 0, sizeof(state));
 		memset(delay, 0, sizeof(delay));
 
+		cutoff = 1000.0f;
+
 		drive = 1.0;
 		gComp = 1.0;
 
@@ -72,6 +74,18 @@ public:
 		wc = 2 * MOOG_PI * cutoff / sampleRate;
 		g = 0.9892 * wc - 0.4342 * pow(wc, 2) + 0.1381 * pow(wc, 3) - 0.0202 * pow(wc, 4);
 	}
+
+	void modFreq(float mod)
+	{
+		freq(mod);
+	}
+
+	void modQ(float mod)
+	{
+		q(mod);
+	}
+
+
 
 private:
 

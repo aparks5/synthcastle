@@ -36,10 +36,15 @@ public:
     void updateBPM(size_t bpm);
     void updateOsc(Oscillator osc);
     void updateEnv(EnvelopeParams params);
+    void enableFiltLFO();
+    void disableFiltLFO();
+
     void processUpdates();
     void noteOn();
     void noteOff();
-    void resetLfoPhase();
+    void updateLfoRate(double freq);
+    void updateFilterCutoff(double freq);
+    void updateFilterResonance(double q);
 
 
 private:
@@ -73,15 +78,19 @@ private:
 
     Oscillator m_osc;
     Saw m_saw;
+    Saw m_saw2;
     Triangle m_tri;
     Square m_square;
     Sine m_sine;
     Triangle m_lfo;
+    bool m_bEnableFilterLFO;
 
     Gain m_gain;
     Envelope m_env;
+    float m_prevSample;
     EnvelopeParams m_envParams;
     KrajeskiMoog m_moogFilter;
+    float m_filtFreq;
     bool m_bParamChanged;
 
 

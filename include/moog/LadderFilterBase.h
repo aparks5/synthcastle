@@ -16,7 +16,7 @@ public:
 	virtual void q(float r) = 0;
 	virtual void freq(float c) = 0;
 
-	float GetResonance() { return resonance; }
+ 	float GetResonance() { return resonance; }
 	float GetCutoff() { return cutoff; }
 
 protected:

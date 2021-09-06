@@ -8,7 +8,7 @@ class Triangle
 {
 public:
     Triangle();
-    void phase(double phase);
+    void reset();
     virtual ~Triangle() {};
 	void freq(double frequency) { m_freq = frequency; }
 	void update();

@@ -25,13 +25,13 @@
 void audioThread();
 void banner();
 
-static std::string getAnswer()
+float semitoneToRatio(int semitone)
 {
-	std::string answer;
-	std::cin >> answer;
-	return answer;
-}
+    semitone = (semitone < -12) ? -12 : semitone;
+    semitone = (semitone > 12) ? 12 : semitone;
 
+    return powf(2., (1.f * semitone / 12));
+}
 
 size_t g_noteVal = 0;
 
@@ -70,7 +70,7 @@ void audioThread()
  
         if (stream.start()) {
 			while (true) {
-                std::cout << ">> commands: start, stop, osc, freq, note, gain, bpm, exit" << std::endl;
+                std::cout << ">> commands: start, stop, osc, freq, filter-freq, filter-q, lfo-freq, lfo-on, lfo-off, note, gain, bpm, exit" << std::endl;
 				std::cin >> prompt;
                 if (prompt == "stop") {
                     stream.stop();
@@ -88,6 +88,66 @@ void audioThread()
                     freq = (freq > 0) ? freq : 0 ;
                     freq = (freq < 10000) ? freq : 10000;
                     stream.updateFreq(freq);
+                }
+                // TODO: add oscillator 2 semitone ratio, mix, type
+                /*
+                if (prompt == "osc2-on") {
+					std::cout << ">> enter semitone ratio (-12 to 12)" << std::endl;
+    				std::cin >> prompt;
+                    semitoneToRatio(std::stod(prompt));
+                }
+                if (prompt == "osc2-off") {
+					std::cout << ">> enter semitone ratio (-12 to 12)" << std::endl;
+    				std::cin >> prompt;
+                    semitoneToRatio(std::stod(prompt));
+                }
+                if (prompt == "osc2-semitone") {
+					std::cout << ">> enter semitone ratio (-12 to 12)" << std::endl;
+    				std::cin >> prompt;
+                    semitoneToRatio(std::stod(prompt));
+                }
+                if (prompt == "osc2-mix") {
+					std::cout << ">> enter semitone ratio (-12 to 12)" << std::endl;
+    				std::cin >> prompt;
+                    semitoneToRatio(std::stod(prompt));
+                }
+                if (prompt == "osc2-type") {
+					std::cout << ">> enter semitone ratio (-12 to 12)" << std::endl;
+    				std::cin >> prompt;
+                    semitoneToRatio(std::stod(prompt));
+                }
+	
+	
+				*/
+                if (prompt == "filter-freq") {
+					std::cout << ">> enter filter cutoff frequency in Hz" << std::endl;
+    				std::cin >> prompt;
+                    auto freq = std::stof(prompt);
+                    freq = (freq > 0) ? freq : 0 ;
+                    freq = (freq < 10000) ? freq : 10000;
+                    stream.updateFilterCutoff(freq);
+                }
+                if (prompt == "filter-q") {
+					std::cout << ">> enter filter resonance (0 - 10)" << std::endl;
+    				std::cin >> prompt;
+                    auto q = std::stof(prompt);
+                    q = (q > 0) ? q : 0 ;
+                    q = (q < 10000) ? q : 10000;
+                    stream.updateFilterResonance(q);
+                }
+                if (prompt == "lfo-freq") {
+                    std::cout << ">> enter filter LFO frequency (0 - 40)" << std::endl;
+                    std::cin >> prompt;
+                    auto freq = std::stof(prompt);
+                    freq = (freq > 0) ? freq : 0;
+                    freq = (freq < 40) ? freq : 40;
+                    stream.updateLfoRate(freq);
+                }
+				if (prompt == "lfo-on") {
+                     stream.enableFiltLFO();
+                }
+                if (prompt == "lfo-off") {
+                     stream.disableFiltLFO();
                 }
                 if (prompt == "note") {
 					std::cout << ">> enter midi note (21-108)" << std::endl;
