@@ -23,7 +23,7 @@ struct EnvelopeParams
 		, releaseTimeSamps((relMs == 0) ? 0 : SAMPLE_RATE * 1.f * (relMs / 1000.f)) {}
 };
 
-enum EnvelopeStage
+enum class EnvelopeStage
 {
 	ATTACK,
 	DECAY,

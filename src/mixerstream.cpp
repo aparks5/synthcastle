@@ -18,22 +18,13 @@ MixerStream::MixerStream()
 	EnvelopeParams env(250, 0, 0, 500);
 	m_env.setParams(env);
 
-	m_moogFilter.freq(400);
+	m_moogFilter.freq(1000);
 	m_moogFilter.q(3);
-	m_lfo.freq(0.25);
+	m_lfo.freq(1);
 	m_lfo.update();
 	
 }
 
-void MixerStream::noteOn()
-{
-	m_env.noteOn();
-}
-
-void MixerStream::noteOff()
-{
-	m_env.noteOff();
-}
 bool MixerStream::open(PaDeviceIndex index)
 {
 	PaStreamParameters outputParameters;
@@ -153,6 +144,22 @@ void MixerStream::updateEnv(EnvelopeParams params)
 	m_bParamChanged = true;
 }
 
+void MixerStream::noteOn()
+{
+	m_env.noteOn();
+}
+
+void MixerStream::noteOff()
+{
+	m_env.noteOff();
+}
+
+void MixerStream::resetLfoPhase()
+{
+	m_lfo.phase(0);
+}
+
+
 
 void MixerStream::processUpdates()
 {
@@ -186,7 +193,7 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 
 
 	processUpdates();
-	auto envGain = 0;
+	double envGain = 0;
 
 	for (size_t sampIdx = 0; sampIdx < framesPerBuffer; sampIdx++)
 	{

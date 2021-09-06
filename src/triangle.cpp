@@ -15,6 +15,11 @@ Triangle::Triangle()
 	update();
 }
 
+void Triangle::phase(double phase)
+{
+	m_increment = phase;
+}
+
 void Triangle::update()
 {
 	auto samplesPerCycle = SAMPLE_RATE / m_freq;

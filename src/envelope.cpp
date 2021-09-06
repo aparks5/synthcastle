@@ -3,9 +3,10 @@
 #include "constants.h"
 
 Envelope::Envelope()
-	: m_stage(ATTACK)
+	: m_stage(EnvelopeStage::ATTACK)
 	, m_counter(0)
 	, m_gain(0)
+	, m_bNoteOn(false)
 {
 }
 
@@ -17,7 +18,7 @@ void Envelope::setParams(EnvelopeParams params)
 
 void Envelope::reset()
 {
-	m_stage = ATTACK;
+	m_stage = EnvelopeStage::ATTACK;
 	m_counter = 0;
 }
 
@@ -29,22 +30,24 @@ float Envelope::apply(size_t numSamples)
 	m_counter += numSamples;
 
 	switch (m_stage) {
-	case ATTACK:
+	case EnvelopeStage::ATTACK:
 		if (m_counter > m_params.attackTimeSamps) {
 			m_counter = 0;
-			m_stage = DECAY;
+			m_stage = EnvelopeStage::DECAY;
 		}
 		else if (m_params.attackTimeSamps != 0) {
+			
 			m_gain = static_cast<double>(1.f * m_counter / m_params.attackTimeSamps);
+			
 		}
 		else {
-			m_gain = 0;
+			m_gain = 0.000;
 		}
 	break;
-	case DECAY:
+	case EnvelopeStage::DECAY:
 		if (m_counter > m_params.decayTimeSamps) {
 			m_counter = 0;
-			m_stage = SUSTAIN;
+			m_stage = EnvelopeStage::SUSTAIN;
 		}
 		else if (m_params.decayTimeSamps > 0) {
 			m_gain = static_cast<float>((1.f * m_counter / m_params.decayTimeSamps) * pow(10, 1.f * m_params.sustainLeveldB / 20));
@@ -53,20 +56,21 @@ float Envelope::apply(size_t numSamples)
 			m_gain = pow(10, 1.f * m_params.sustainLeveldB / 20);
 		}
 		break;
-	case SUSTAIN:
-        m_gain = pow(10, 1.f * m_params.sustainLeveldB / 20);
+	case EnvelopeStage::SUSTAIN:
 		if (!m_bNoteOn) {
+			m_stage = EnvelopeStage::RELEASE;
 			m_counter = 0;
-			m_stage = RELEASE;
 		}
+        m_gain = pow(10, 1.f * m_params.sustainLeveldB / 20);
 		break;
-	case RELEASE:
+	case EnvelopeStage::RELEASE:
 		if (m_counter > m_params.releaseTimeSamps) {
-			m_gain = 0;
+			m_gain = 0.001;
 		}
 		else if (m_counter < m_params.releaseTimeSamps) {
 			auto relGain = static_cast<double>(1.f * m_counter / m_params.releaseTimeSamps);
 			m_gain = pow(10, (m_params.sustainLeveldB * 1.f / 20)) - relGain;
+			m_gain = (m_gain < 0) ? 0 : m_gain;
 		}
 		else {
 			m_gain = 0;
