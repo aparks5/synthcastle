@@ -16,8 +16,6 @@ void Gain::setGainf(float fgain)
 	m_fgain = fgain;
 }
 
-
-
 int Gain::floatTodB(float f) const
 {
 	return 20 * log10(f);

@@ -39,6 +39,7 @@ public:
     void processUpdates();
     void noteOn();
     void noteOff();
+    void resetLfoPhase();
 
 
 private:

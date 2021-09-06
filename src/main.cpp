@@ -40,34 +40,6 @@ void midiThread();
 
 
 
-// https://try2explore.com/questions/11493302 
-bool getline_async(std::istream& is, std::string& str, char delim = '\n') {
-
-    static std::string lineSoFar;
-    char inChar;
-    int charsRead = 0;
-    bool lineRead = false;
-    str = "";
-
-    do {
-        charsRead = is.readsome(&inChar, 1);
-        if (charsRead == 1) {
-            // if the delimiter is read then return the string so far
-            if (inChar == delim) {
-                str = lineSoFar;
-                lineSoFar = "";
-                lineRead = true;
-            }
-            else {  // otherwise add it to the string so far
-                lineSoFar.append(1, inChar);
-            }
-        }
-    } while (charsRead != 0 && !lineRead);
-
-    return lineRead;
-}
-
-
 void audioThread()
 {
     banner();
@@ -130,17 +102,18 @@ void audioThread()
                             if (byte0 == 144) {
                                 g_noteVal = (int)message.at(1);
                                 float velocity = (int)message.at(2);
-                                float freq = pow(2.f, (g_noteVal - 69.f) / 12.f) * 440.f;
-                                freq = (freq > 0) ? freq : 0;
-                                freq = (freq < 10000) ? freq : 10000;
-                                stream.updateFreq(freq);
                                 if (velocity != 0) {
                                     stream.noteOn();
+									float freq = pow(2.f, (g_noteVal - 69.f) / 12.f) * 440.f;
+									freq = (freq > 0) ? freq : 0;
+									freq = (freq < 10000) ? freq : 10000;
+									stream.updateFreq(freq);
                                 }
                                 else {
                                     stream.noteOff();
                                 }
-                            }
+ 
+                          }
                         }
                     } while (!kbhit());
  
