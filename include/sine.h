@@ -10,6 +10,7 @@ class Sine
 {
 public:
     Sine();
+    void reset();
     virtual ~Sine() {};
     void freq(float frequency) { m_freq = frequency; }
     void update();

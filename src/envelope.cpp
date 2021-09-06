@@ -36,12 +36,15 @@ float Envelope::apply(size_t numSamples)
 			m_stage = EnvelopeStage::DECAY;
 		}
 		else if (m_params.attackTimeSamps != 0) {
-			
-			m_gain = static_cast<double>(1.f * m_counter / m_params.attackTimeSamps);
+			m_gain = 0.00001 + static_cast<double>(1.f * m_counter / m_params.attackTimeSamps);
+			if (m_gain > 1) {
+				m_gain = 1;
+				m_stage = EnvelopeStage::DECAY;
+			}
 			
 		}
 		else {
-			m_gain = 0.000;
+			m_gain = 0.00001;
 		}
 	break;
 	case EnvelopeStage::DECAY:
@@ -70,10 +73,11 @@ float Envelope::apply(size_t numSamples)
 		else if (m_counter < m_params.releaseTimeSamps) {
 			auto relGain = static_cast<double>(1.f * m_counter / m_params.releaseTimeSamps);
 			m_gain = pow(10, (m_params.sustainLeveldB * 1.f / 20)) - relGain;
+			m_gain += 0.00001; // bias
 			m_gain = (m_gain < 0) ? 0 : m_gain;
 		}
 		else {
-			m_gain = 0;
+			m_gain = 0.00001;
 		}
 		break;
 	}

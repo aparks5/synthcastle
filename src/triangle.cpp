@@ -15,9 +15,9 @@ Triangle::Triangle()
 	update();
 }
 
-void Triangle::phase(double phase)
+void Triangle::reset()
 {
-	m_increment = phase;
+	m_increment = 0.f;
 }
 
 void Triangle::update()

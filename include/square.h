@@ -8,6 +8,7 @@ class Square
 {
 public:
     Square();
+    void reset();
     virtual ~Square() {};
     void freq(float frequency) { m_freq = frequency; }
     void update();

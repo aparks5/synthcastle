@@ -70,7 +70,7 @@ void audioThread()
  
         if (stream.start()) {
 			while (true) {
-                std::cout << ">> commands: start, stop, osc, freq, note, gain, bpm, exit" << std::endl;
+                std::cout << ">> commands: start, stop, osc, freq, filter-freq, filter-q, lfo-freq, note, gain, bpm, exit" << std::endl;
 				std::cin >> prompt;
                 if (prompt == "stop") {
                     stream.stop();
@@ -89,6 +89,33 @@ void audioThread()
                     freq = (freq < 10000) ? freq : 10000;
                     stream.updateFreq(freq);
                 }
+                if (prompt == "filter-freq") {
+					std::cout << ">> enter filter cutoff frequency in Hz" << std::endl;
+    				std::cin >> prompt;
+                    auto freq = std::stof(prompt);
+                    freq = (freq > 0) ? freq : 0 ;
+                    freq = (freq < 10000) ? freq : 10000;
+                    stream.updateFilterCutoff(freq);
+                }
+                if (prompt == "filter-q") {
+					std::cout << ">> enter filter resonance (0 - 10)" << std::endl;
+    				std::cin >> prompt;
+                    auto q = std::stof(prompt);
+                    q = (q > 0) ? q : 0 ;
+                    q = (q < 10000) ? q : 10000;
+                    stream.updateFilterResonance(q);
+                }
+ 
+                if (prompt == "lfo-freq") {
+					std::cout << ">> enter lfo rate in Hz" << std::endl;
+    				std::cin >> prompt;
+                    auto freq = std::stod(prompt);
+                    freq = (freq > 0) ? freq : 0 ;
+                    freq = (freq < 40) ? freq : 40;
+                    stream.updateLfoRate(freq);
+                }
+ 
+ 
                 if (prompt == "note") {
 					std::cout << ">> enter midi note (21-108)" << std::endl;
                     // midi note to freq formula https://newt.phys.unsw.edu.au/jw/notes.html

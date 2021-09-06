@@ -6,6 +6,7 @@ class Saw
 {
 public:
     Saw();
+    void reset();
     void freq(float frequency) { m_freq = frequency; }
     /// @brief update increment based on target frequency
     void update();

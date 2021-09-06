@@ -13,14 +13,17 @@ MixerStream::MixerStream()
 	, durationCounter(0)
 	, m_osc(Oscillator::SINE)
 	, m_moogFilter(SAMPLE_RATE)
+	, m_filtFreq(0.f)
 	, m_bParamChanged(false)
+	, m_prevSample(0.f)
 {
 	EnvelopeParams env(250, 0, 0, 500);
 	m_env.setParams(env);
 
-	m_moogFilter.freq(1000);
-	m_moogFilter.q(3);
-	m_lfo.freq(1);
+	m_moogFilter.freq(1000.f);
+	m_filtFreq = 1000.f;
+	m_moogFilter.q(3.f);
+	m_lfo.freq(1.f);
 	m_lfo.update();
 	
 }
@@ -147,6 +150,10 @@ void MixerStream::updateEnv(EnvelopeParams params)
 void MixerStream::noteOn()
 {
 	m_env.noteOn();
+	m_tri.reset();
+	m_saw.reset();
+	m_sine.reset();
+	m_square.reset();
 }
 
 void MixerStream::noteOff()
@@ -154,9 +161,21 @@ void MixerStream::noteOff()
 	m_env.noteOff();
 }
 
-void MixerStream::resetLfoPhase()
+void MixerStream::updateLfoRate(double freq)
 {
-	m_lfo.phase(0);
+	m_lfo.freq(freq);
+	m_bParamChanged = true;
+}
+
+void MixerStream::updateFilterCutoff(double freq)
+{
+	m_moogFilter.freq(freq);
+	m_filtFreq = freq;
+}
+
+void MixerStream::updateFilterResonance(double q)
+{
+	m_moogFilter.q(q);
 }
 
 
@@ -166,6 +185,7 @@ void MixerStream::processUpdates()
 
 	if (m_bParamChanged) {
 		m_saw.update();
+		m_lfo.update();
 		m_tri.update();
 		m_square.update();
 		m_sine.update();
@@ -195,23 +215,27 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 	processUpdates();
 	double envGain = 0;
 
+	float filtLfo = (1 + m_lfo.generate()) * 0.5f;
+	m_moogFilter.freq(m_filtFreq * filtLfo);
+
 	for (size_t sampIdx = 0; sampIdx < framesPerBuffer; sampIdx++)
 	{
 
 		m_metronome.tick();
 
+		// generate sample
 		envGain = m_env.apply(1);
 		m_gain.setGainf(envGain);
 		oscillate(output);
-		auto filtLfo = abs(m_lfo.generate());
-		m_moogFilter.freq(filtLfo * 1000.f);
+		float filtLfo = m_lfo.generate();
      	m_moogFilter.apply(&output, 1);
 		output = m_gain.apply(output);
 	
-		// get samples from system
+		// write output
 		*out++ = output;
 		*out++ = output;
 		g_buffer[sampIdx] = static_cast<float>(output*1.0f);
+		m_prevSample = output;
 	}
 
 

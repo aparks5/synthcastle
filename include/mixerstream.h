@@ -39,7 +39,9 @@ public:
     void processUpdates();
     void noteOn();
     void noteOff();
-    void resetLfoPhase();
+    void updateLfoRate(double freq);
+    void updateFilterCutoff(double freq);
+    void updateFilterResonance(double q);
 
 
 private:
@@ -80,8 +82,10 @@ private:
 
     Gain m_gain;
     Envelope m_env;
+    float m_prevSample;
     EnvelopeParams m_envParams;
     KrajeskiMoog m_moogFilter;
+    float m_filtFreq;
     bool m_bParamChanged;
 
 

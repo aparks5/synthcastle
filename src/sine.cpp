@@ -20,6 +20,11 @@ Sine::Sine()
 	update();
 }
 
+void Sine::reset()
+{
+	m_increment = 0.0f;
+}
+
 void Sine::update()
 {
 	m_increment = (TABLE_SIZE * m_freq) / SAMPLE_RATE * 1.0f;

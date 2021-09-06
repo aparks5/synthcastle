@@ -16,6 +16,11 @@ Square::Square()
 	update();
 }
 
+void Square::reset()
+{
+	m_increment = 0;
+}
+
 void Square::update()
 {
 	auto samplesPerCycle = SAMPLE_RATE / m_freq;
