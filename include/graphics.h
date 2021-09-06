@@ -7,7 +7,11 @@
 #include "linmath.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include <windows.h>
+#include "constants.h"
+
+#define BUFFER_SIZE (FRAMES_PER_BUFFER)
+
+#include "windows.h"
 
 void usleep(__int64 usec)
 {
@@ -22,7 +26,7 @@ void usleep(__int64 usec)
     CloseHandle(timer);
 }
 
-#define BUFFER_SIZE (256)
+
 
 // GL global variables
 GLint g_buffer_size = BUFFER_SIZE;

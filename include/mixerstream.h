@@ -37,6 +37,8 @@ public:
     void updateOsc(Oscillator osc);
     void updateEnv(EnvelopeParams params);
     void processUpdates();
+    void noteOn();
+    void noteOff();
 
 
 private:

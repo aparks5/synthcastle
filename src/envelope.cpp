@@ -55,7 +55,7 @@ float Envelope::apply(size_t numSamples)
 		break;
 	case SUSTAIN:
         m_gain = pow(10, 1.f * m_params.sustainLeveldB / 20);
-		if (m_counter > (0.500*SAMPLE_RATE)) {
+		if (!m_bNoteOn) {
 			m_counter = 0;
 			m_stage = RELEASE;
 		}
