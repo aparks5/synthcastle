@@ -20,11 +20,20 @@ MixerStream::MixerStream()
 
 	m_moogFilter.freq(400);
 	m_moogFilter.q(3);
-	m_lfo.freq(8);
+	m_lfo.freq(0.25);
 	m_lfo.update();
 	
 }
 
+void MixerStream::noteOn()
+{
+	m_env.noteOn();
+}
+
+void MixerStream::noteOff()
+{
+	m_env.noteOff();
+}
 bool MixerStream::open(PaDeviceIndex index)
 {
 	PaStreamParameters outputParameters;
@@ -182,27 +191,15 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 	for (size_t sampIdx = 0; sampIdx < framesPerBuffer; sampIdx++)
 	{
 
-		
-		if (m_metronome.isOnBeat()) {
-			durationCounter = 0;
-			m_env.reset();
-		}
 		m_metronome.tick();
 
-		if (durationCounter < samplesPerDuration) {
-			envGain = m_env.apply(1);
-			m_gain.setGainf(envGain);
-			oscillate(output);
-			auto filtLfo = abs(m_lfo.generate());
-			m_moogFilter.freq(filtLfo * 1000.f);
-			m_moogFilter.apply(&output, 1);
-			output = m_gain.apply(output);
-			durationCounter++;
-		}
-		else {
-			output = 0;
-			m_env.reset();
-		}
+		envGain = m_env.apply(1);
+		m_gain.setGainf(envGain);
+		oscillate(output);
+		auto filtLfo = abs(m_lfo.generate());
+		m_moogFilter.freq(filtLfo * 1000.f);
+     	m_moogFilter.apply(&output, 1);
+		output = m_gain.apply(output);
 	
 		// get samples from system
 		*out++ = output;

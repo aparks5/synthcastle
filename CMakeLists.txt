@@ -21,6 +21,12 @@ add_executable (${PROJECT_NAME} ${source})
 add_subdirectory("C:/portaudio" "C:/portaudio/out" EXCLUDE_FROM_ALL)
 target_link_libraries(${PROJECT_NAME} portaudio_static)
 
+# RtMidi
+add_subdirectory("C:/rtmidi " "C:/rtmidi/out" EXCLUDE_FROM_ALL)
+target_link_libraries(${PROJECT_NAME} rtmidi)
+
+
+
 # GLFW (OpenGL)
 set(GLFW_DIR "C:/GL/glfw")
 add_subdirectory("${GLFW_DIR}" "${GLFW_DIR}/out" EXCLUDE_FROM_ALL)

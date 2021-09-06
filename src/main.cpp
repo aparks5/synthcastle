@@ -1,18 +1,73 @@
 ﻿/// Copyright (c) 2021. Anthony Parks. All rights reserved.
 
 #include <stdio.h>
+#include "conio.h"
+
 #include <math.h>
 #include <thread>
+#include <future>
+#include <chrono>
 #include <string>
 #include <iostream>
 #include "portaudio.h"
 #include "portaudiohandler.h"
 #include "mixerstream.h"
 
+#include <cstdlib>
+#include "RtMidi.h"
+
 #include "constants.h"
+
+#include "windows.h"
+
+
 
 void audioThread();
 void banner();
+
+static std::string getAnswer()
+{
+	std::string answer;
+	std::cin >> answer;
+	return answer;
+}
+
+
+size_t g_noteVal = 0;
+
+
+void midiThread();
+
+
+
+// https://try2explore.com/questions/11493302 
+bool getline_async(std::istream& is, std::string& str, char delim = '\n') {
+
+    static std::string lineSoFar;
+    char inChar;
+    int charsRead = 0;
+    bool lineRead = false;
+    str = "";
+
+    do {
+        charsRead = is.readsome(&inChar, 1);
+        if (charsRead == 1) {
+            // if the delimiter is read then return the string so far
+            if (inChar == delim) {
+                str = lineSoFar;
+                lineSoFar = "";
+                lineRead = true;
+            }
+            else {  // otherwise add it to the string so far
+                lineSoFar.append(1, inChar);
+            }
+        }
+    } while (charsRead != 0 && !lineRead);
+
+    return lineRead;
+}
+
+
 void audioThread()
 {
     banner();
@@ -21,6 +76,10 @@ void audioThread()
     PortAudioHandler paInit;
     MixerStream stream;
 	std::string prompt;
+
+	RtMidiIn* midiin = 0;
+    midiin = new RtMidiIn();
+    midiin->openPort(0); 
 
     if (stream.open(Pa_GetDefaultOutputDevice()))
     {
@@ -33,10 +92,13 @@ void audioThread()
                 break;
             }
         }
+
+        std::vector<unsigned char> message;
+
  
         if (stream.start()) {
 			while (true) {
-                std::cout << ">> commands: start, stop, osc, freq, gain, bpm, exit" << std::endl;
+                std::cout << ">> commands: start, stop, osc, freq, note, gain, bpm, exit" << std::endl;
 				std::cin >> prompt;
                 if (prompt == "stop") {
                     stream.stop();
@@ -55,6 +117,35 @@ void audioThread()
                     freq = (freq < 10000) ? freq : 10000;
                     stream.updateFreq(freq);
                 }
+                if (prompt == "note") {
+					std::cout << ">> enter midi note (21-108)" << std::endl;
+                    // midi note to freq formula https://newt.phys.unsw.edu.au/jw/notes.html
+                    do {
+                        double stamp = 0;
+                        auto nBytes = 0;
+                        stamp = midiin->getMessage(&message);
+                        nBytes = message.size();
+                        if (nBytes == 3) {
+                            int byte0 = (int)message.at(0);
+                            if (byte0 == 144) {
+                                g_noteVal = (int)message.at(1);
+                                float velocity = (int)message.at(2);
+                                float freq = pow(2.f, (g_noteVal - 69.f) / 12.f) * 440.f;
+                                freq = (freq > 0) ? freq : 0;
+                                freq = (freq < 10000) ? freq : 10000;
+                                stream.updateFreq(freq);
+                                if (velocity != 0) {
+                                    stream.noteOn();
+                                }
+                                else {
+                                    stream.noteOff();
+                                }
+                            }
+                        }
+                    } while (!kbhit());
+ 
+                }
+ 
                 if (prompt == "gain") {
 					std::cout << ">> enter gain in dB (0 to -60)" << std::endl;
     				std::cin >> prompt;
