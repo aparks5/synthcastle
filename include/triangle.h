@@ -10,12 +10,12 @@ public:
     Triangle();
     void reset();
     virtual ~Triangle() {};
-	void freq(double frequency) { m_freq = frequency; }
+	void freq(float frequency) { m_freq = frequency; }
 	void update();
 	float generate();
 
 private:
-    double m_freq;
+    float m_freq;
     float m_output;
     float m_incrementBase;
     float m_increment;

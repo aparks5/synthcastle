@@ -67,7 +67,6 @@ void audioThread()
 
         std::vector<unsigned char> message;
 
- 
         if (stream.start()) {
 			while (true) {
                 std::cout << ">> commands: start, stop, osc, freq, filter-freq, filter-q, lfo-freq, lfo-on, lfo-off, note, gain, bpm, exit" << std::endl;

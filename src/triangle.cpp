@@ -17,12 +17,12 @@ Triangle::Triangle()
 
 void Triangle::reset()
 {
-	m_increment = 0.f;
+	m_increment = m_incrementBase;
 }
 
 void Triangle::update()
 {
-	auto samplesPerCycle = SAMPLE_RATE / m_freq;
+	auto samplesPerCycle = 1. * SAMPLE_RATE / m_freq;
 	m_incrementBase = 4.0f / samplesPerCycle;
 }
 

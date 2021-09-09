@@ -224,7 +224,6 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
     // duration = 1s
 	auto samplesPerDuration = SAMPLE_RATE;
 
-
 	processUpdates();
 	double envGain = 0;
 
