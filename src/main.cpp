@@ -232,10 +232,10 @@ void audioThread()
                     std::sscanf(param[2].c_str(), "%d", &susdB);
                     std::sscanf(param[3].c_str(), "%zu", &relMs);
 
-                    attMs = (attMs > 500) ? 500 : attMs;
-                    decMs = (decMs > 500) ? 500 : decMs;
+                    attMs = (attMs > 5000) ? 500 : attMs;
+                    decMs = (decMs > 5000) ? 500 : decMs;
                     susdB = (susdB > 0) ? 0 : susdB;
-                    relMs = (relMs > 500) ? 500 : relMs;
+                    relMs = (relMs > 5000) ? 500 : relMs;
 
                     EnvelopeParams params(attMs, decMs, susdB, relMs);
                     stream.updateEnv(params);
