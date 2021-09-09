@@ -28,7 +28,8 @@ enum class EnvelopeStage
 	ATTACK,
 	DECAY,
 	SUSTAIN,
-	RELEASE
+	RELEASE,
+	OFF
 };
 
 class Envelope
@@ -38,13 +39,12 @@ public:
 	void setParams(EnvelopeParams params);
 	float apply(size_t numSamples);
 	void reset();
-	void noteOn() { m_bNoteOn = true; }
-	void noteOff() { m_bNoteOn = false; }
+	void noteOn() { m_bNoteOn = true; m_stage = EnvelopeStage::ATTACK; }
+	void noteOff() { m_bNoteOn = false; m_stage = EnvelopeStage::RELEASE; }
 
 private:
 	EnvelopeParams m_params;
 	EnvelopeStage m_stage;
-	size_t m_counter;
 	float m_gain;
 	bool m_bNoteOn;
 };

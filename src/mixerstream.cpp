@@ -161,6 +161,7 @@ void MixerStream::disableFiltLFO()
 void MixerStream::noteOn()
 {
 	m_env.noteOn();
+	m_env.reset();
 	m_tri.reset();
 	m_saw.reset();
 	m_sine.reset();
