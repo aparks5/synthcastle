@@ -3,7 +3,7 @@
 #include "constants.h"
 
 Envelope::Envelope()
-	: m_stage(EnvelopeStage::ATTACK)
+	: m_stage(EnvelopeStage::OFF)
 	, m_gain(0)
 	, m_bNoteOn(false)
 {
@@ -12,7 +12,6 @@ Envelope::Envelope()
 void Envelope::setParams(EnvelopeParams params)
 {
 	m_params = params;
-	reset();
 }
 
 void Envelope::reset()
