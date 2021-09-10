@@ -15,7 +15,7 @@
 #include "sine.h"
 #include "triangle.h"
 
-enum class Oscillator
+enum class OscillatorType
 {
     SINE,
     SAW,
@@ -35,7 +35,7 @@ public:
     void modFreq(float freq);
     void updateGain(int gaindB);
     void updateBPM(size_t bpm);
-    void updateOsc(Oscillator osc);
+    void updateOsc(OscillatorType osc);
     void updateEnv(EnvelopeParams params);
     void enableFiltLFO();
     void disableFiltLFO();
@@ -80,7 +80,7 @@ private:
     size_t durationCounter;
     float m_freq;
 
-    Oscillator m_osc;
+    OscillatorType m_osc;
     Saw m_saw;
     Saw m_saw2;
     Triangle m_tri;

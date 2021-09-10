@@ -2,24 +2,17 @@
 #ifndef TRIANGLE_H_ 
 #define TRIANGLE_H_ 
 
-#include "portaudio.h"
+#include "oscillator.h"
 
-class Triangle
+class Triangle : public Oscillator<float>
 {
 public:
-    Triangle();
-    void reset();
-    virtual ~Triangle() {};
-	void freq(float frequency) { m_freq = frequency; }
-	void update();
-	float generate();
+    Triangle(float fs);
+    void freq(float frequency) override;
+    float operator()() override;
 
 private:
-    float m_freq;
-    float m_output;
-    float m_incrementBase;
-    float m_increment;
-
+    bool m_bRising;
 };
 
 #endif // TRIANGLE_H_ 

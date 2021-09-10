@@ -2,21 +2,15 @@
 #ifndef SAW_H_ 
 #define SAW_H_
 
-class Saw
+#include "oscillator.h"
+
+class Saw : public Oscillator<float>
 {
 public:
-    Saw();
-    void reset();
-    void freq(float frequency) { m_freq = frequency; }
-    /// @brief update increment based on target frequency
-    void update();
-    /// @brief output the next sample
-    float generate();
+    Saw(float fs);
+    void freq(float frequency) override;
+    float operator()() override;
 
-private:
-    float m_freq;
-    float m_output;
-    float m_increment;
 };
 
 #endif // SAW_H_

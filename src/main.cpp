@@ -212,18 +212,18 @@ void audioThread()
                 if (prompt == "osc") {
 					std::cout << ">> enter sine, saw, tri, square" << std::endl;
     				std::cin >> prompt;
-                    Oscillator osc = Oscillator::SINE;
+                    OscillatorType osc = OscillatorType::SINE;
                     if (prompt == "sine") {
-                        osc = Oscillator::SINE;
+                        osc = OscillatorType::SINE;
                     }
                     if (prompt == "saw") {
-                        osc = Oscillator::SAW;
+                        osc = OscillatorType::SAW;
                     }
                     if (prompt == "tri") {
-                        osc = Oscillator::TRIANGLE;
+                        osc = OscillatorType::TRIANGLE;
                     }
                     if (prompt == "square") {
-                        osc = Oscillator::SQUARE;
+                        osc = OscillatorType::SQUARE;
                     }
                     stream.updateOsc(osc);
                 }

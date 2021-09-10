@@ -1,39 +1,26 @@
 /// Copyright (c) 2021. Anthony Parks. All rights reserved.
 #include "saw.h" 
-#include "constants.h"
-#include "stdio.h"
-#include "math.h"
 
-#include <iostream>
-
-
-Saw::Saw()
-	: m_freq(220)
-	, m_output(-1.0f)
-	, m_increment(0.0f)
+Saw::Saw(float fs)
+	: Oscillator<float>(fs, 0.f, 0.f, 0.f)
 {
-	update();
 }
 
-void Saw::reset()
+void Saw::freq(float frequency)
 {
-	m_increment = 0;
+	m_freq = frequency;
+	auto samplesPerCycle = m_fs * 1.0f / m_freq;
+	m_step = 2.0f / samplesPerCycle;
 }
 
-void Saw::update()
+float Saw::operator()()
 {
-	auto samplesPerCycle = SAMPLE_RATE * 1.0f / m_freq;
-	m_increment = 2.0f / samplesPerCycle;
-}
-
-float Saw::generate()
-{
-	if (m_output >= 1.0f) {
-		m_output = -1.0f;
+	if (m_out>= 1.0f) {
+		m_out = -1.0f;
 	}
 
-	m_output += m_increment;
+	m_out += m_step;
 
-	return m_output;
+	return m_out;
 }
 
