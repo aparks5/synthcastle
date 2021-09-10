@@ -8,33 +8,26 @@
 
 constexpr auto NUM_SECONDS = (2);
 
-Square::Square()
-	: m_freq(220)
-    , m_output(-1)
-	, m_increment(0)
+Square::Square(float fs)
+	: Oscillator<float>(fs, 0.f, 0.f, 0.f)
 {
-	update();
 }
 
-void Square::reset()
+void Square::freq(float frequency)
 {
-	m_increment = 0;
-}
-
-void Square::update()
-{
+	m_freq = frequency;
 	auto samplesPerCycle = SAMPLE_RATE / m_freq;
-	m_increment = 2.0f / samplesPerCycle;
+	m_step = 2.0f / samplesPerCycle;
 }
 
-float Square::generate()
+float Square::operator()()
 {
-	if (m_output>= 1.0f) {
-		m_output = -1;
+	if (m_out >= 1.0f) {
+		m_out = -1;
 	}
 
-	m_output += m_increment;
+	m_out += m_step;
 
-	return (m_output > 0.0f) ? 1.0f : -1.0f;
+	return (m_out > 0.0f) ? 1.0f : -1.0f;
 }
 

@@ -6,38 +6,37 @@
 
 #include <iostream>
 
-Triangle::Triangle()
-	: m_freq(220)
-    , m_output(-1.0f)
-	, m_increment(0)
-	, m_incrementBase(0)
+
+Triangle::Triangle(float fs)
+	: Oscillator<float>(fs, 0.f, 0.f, 0.f)
+	, m_bRising(true)
 {
-	update();
 }
 
-void Triangle::reset()
+void Triangle::freq(float frequency)
 {
-	m_increment = m_incrementBase;
+	m_freq = frequency;
+	auto samplesPerCycle = 1. * m_fs / m_freq;
+	m_step = 4.0f / samplesPerCycle;
 }
 
-void Triangle::update()
+float Triangle::operator()()
 {
-	auto samplesPerCycle = 1. * SAMPLE_RATE / m_freq;
-	m_incrementBase = 4.0f / samplesPerCycle;
-}
-
-float Triangle::generate()
-{
-		if ((m_output >= 0.99f)) {
-			m_increment = -1 * m_incrementBase;
+		if ((m_out >= 0.99f)) {
+			m_bRising = false;
 		}
 
-		if ((m_output <= -0.99f)) {
-			m_increment = m_incrementBase;
+		if ((m_out <= -0.99f)) {
+			m_bRising = true;
 		}
 
-		m_output += m_increment;
+		if (m_bRising) {
+			m_out += m_step;
+		}
+		else {
+			m_out -= m_step;
+		}
 
-		return m_output;
+		return m_out;
 }
 

@@ -2,26 +2,19 @@
 #ifndef SINE_H_
 #define SINE_H_
 
-#include "portaudio.h"
+#include "oscillator.h"
 
-constexpr auto TABLE_SIZE = (2048);
+constexpr auto TABLE_SIZE = 2048;
 
-class Sine
+class Sine : public Oscillator<float>
 {
 public:
-    Sine();
-    void reset();
-    virtual ~Sine() {};
-    void freq(float frequency) { m_freq = frequency; }
-    void update();
-    float generate();
+    Sine(float fs);
+    void freq(float frequency) override;
+    float operator()() override;
 
 private:
 	float m_sine[TABLE_SIZE];
-    float m_freq;
-    float m_phase;
-    float m_increment;
-
 
 };
 

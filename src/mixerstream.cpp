@@ -11,12 +11,22 @@ MixerStream::MixerStream()
 	: stream(0)
 	, m_gfx(graphicsThread)
 	, durationCounter(0)
-	, m_osc(Oscillator::SINE)
+	, m_freq(0.)
+	, m_osc(OscillatorType::SINE)
+	, m_saw(SAMPLE_RATE)
+	, m_saw2(SAMPLE_RATE)
+	, m_tri(SAMPLE_RATE)
+	, m_square(SAMPLE_RATE)
+	, m_sine(SAMPLE_RATE)
+	, m_lfo(SAMPLE_RATE)
+	, m_bEnableFilterLFO(false)
+	, m_bEnablePitchLFO(false)
 	, m_moogFilter(SAMPLE_RATE)
 	, m_filtFreq(0.f)
 	, m_bParamChanged(false)
-	, m_prevSample(0.f)
+	, m_env1out(0.f)
 {
+
 	EnvelopeParams env(250, 0, 0, 500);
 	m_env.setParams(env);
 
@@ -24,7 +34,6 @@ MixerStream::MixerStream()
 	m_filtFreq = 1000.f;
 	m_moogFilter.q(3.f);
 	m_lfo.freq(1.f);
-	m_lfo.update();
 	
 }
 
@@ -115,6 +124,7 @@ bool MixerStream::stop()
 
 void MixerStream::updateFreq(float freq)
 {
+	m_freq = freq;
 	m_saw.freq(freq);
 	m_saw2.freq(freq * 1.3348);
 	m_tri.freq(freq);
@@ -122,6 +132,18 @@ void MixerStream::updateFreq(float freq)
 	m_sine.freq(freq);
 	m_bParamChanged = true;
 }
+
+void MixerStream::modFreq(float freq)
+{
+	m_saw.freq(freq);
+	m_saw2.freq(freq * 1.3348);
+	m_tri.freq(freq);
+	m_square.freq(freq);
+	m_sine.freq(freq);
+}
+
+
+
 
 void MixerStream::updateGain(int gaindB)
 {
@@ -136,7 +158,7 @@ void MixerStream::updateBPM(size_t bpm)
 }
 
 
-void MixerStream::updateOsc(Oscillator osc)
+void MixerStream::updateOsc(OscillatorType osc)
 {
 	m_osc = osc;
 	m_bParamChanged = true;
@@ -162,10 +184,12 @@ void MixerStream::noteOn()
 {
 	m_env.noteOn();
 	m_env.reset();
+	/*
 	m_tri.reset();
 	m_saw.reset();
 	m_sine.reset();
 	m_square.reset();
+	*/
 }
 
 void MixerStream::noteOff()
@@ -196,12 +220,6 @@ void MixerStream::processUpdates()
 {
 
 	if (m_bParamChanged) {
-		m_saw.update();
-		m_saw2.update();
-		m_lfo.update();
-		m_tri.update();
-		m_square.update();
-		m_sine.update();
 		m_env.setParams(m_envParams);
 
 		m_bParamChanged = false;
@@ -223,38 +241,47 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 	
     // duration = 1s
 	auto samplesPerDuration = SAMPLE_RATE;
+	auto lfo1depth = 0.1f;
 
-	processUpdates();
-	double envGain = 0;
 
+	auto lfoSamp = m_lfo();
 	if (m_bEnableFilterLFO) {
-		float filtLfo = (1 + m_lfo.generate()) * 0.5f;
+		float filtLfo = (1 + lfoSamp * 0.5f);
 		m_moogFilter.freq(m_filtFreq * filtLfo);
+
 	}
 	else {
 		m_moogFilter.freq(m_filtFreq);
 	}
 
+	if (m_bEnablePitchLFO)
+	{
+		modFreq(m_freq + (lfoSamp *  m_freq));
+	}
+
+	processUpdates();
+
 	for (size_t sampIdx = 0; sampIdx < framesPerBuffer; sampIdx++)
 	{
-
 		m_metronome.tick();
 
 		// generate sample
-		envGain = m_env.apply(1);
-		m_gain.setGainf(envGain);
+		m_env1out = m_env.apply(1);
+		
+		m_gain.setGainf(m_env1out);
 		oscillate(output);
-		if (m_bEnableFilterLFO) {
-			m_lfo.generate();
-		}
+		m_lfo();
+
      	m_moogFilter.apply(&output, 1);
 		output = m_gain.apply(output);
+		Gain gain;
+		gain.setGaindB(-10);
+		output = gain.apply(output);
 	
 		// write output
 		*out++ = output;
 		*out++ = output;
 		g_buffer[sampIdx] = static_cast<float>(output*1.0f);
-		m_prevSample = output;
 	}
 
 
@@ -268,17 +295,17 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 void MixerStream::oscillate(float& output)
 {
 	switch (m_osc) {
-	case Oscillator::SAW:
-		output = (m_saw.generate() + m_saw2.generate()) * 0.5f;
+	case OscillatorType::SAW:
+		output = (m_saw() + m_saw2()) * 0.5f;
 		break;
-	case Oscillator::SINE:
-		output = m_sine.generate();
+	case OscillatorType::SINE:
+		output = m_sine();
 		break;
-	case Oscillator::TRIANGLE:
-		output = m_tri.generate();
+	case OscillatorType::TRIANGLE:
+		output = m_tri();
 		break;
-	case Oscillator::SQUARE:
-		output = m_square.generate();
+	case OscillatorType::SQUARE:
+		output = m_square();
 		break;
 	}
 }
