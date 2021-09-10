@@ -69,7 +69,8 @@ void audioThread()
 
         if (stream.start()) {
 			while (true) {
-                std::cout << ">> commands: start, stop, osc, freq, filter-freq, filter-q, lfo-freq, lfo-on, lfo-off, note, gain, bpm, exit" << std::endl;
+                std::cout << ">>> commands: start, stop, osc, freq, filter-freq, filter-q, filt-lfo-freq, pitch/filt-lfo-on/off, " << std::endl;
+                std::cout << ">>> note, gain, bpm, exit" << std::endl;
 				std::cin >> prompt;
                 if (prompt == "stop") {
                     stream.stop();
@@ -100,7 +101,12 @@ void audioThread()
     				std::cin >> prompt;
                     semitoneToRatio(std::stod(prompt));
                 }
-                if (prompt == "osc2-semitone") {
+                if (prompt == "osc2-coarse") {
+					std::cout << ">> enter semitone ratio (-12 to 12)" << std::endl;
+    				std::cin >> prompt;
+                    semitoneToRatio(std::stod(prompt));
+                }
+                if (prompt == "osc2-fine") {
 					std::cout << ">> enter semitone ratio (-12 to 12)" << std::endl;
     				std::cin >> prompt;
                     semitoneToRatio(std::stod(prompt));
@@ -142,12 +148,19 @@ void audioThread()
                     freq = (freq < 40) ? freq : 40;
                     stream.updateLfoRate(freq);
                 }
-				if (prompt == "lfo-on") {
+				if (prompt == "filt-lfo-on") {
                      stream.enableFiltLFO();
                 }
-                if (prompt == "lfo-off") {
+                if (prompt == "filt-lfo-off") {
                      stream.disableFiltLFO();
                 }
+				if (prompt == "pitch-lfo-on") {
+                     stream.enablePitchLFO();
+                }
+                if (prompt == "pitch-lfo-off") {
+                     stream.disablePitchLFO();
+                }
+ 
                 if (prompt == "note") {
 					std::cout << ">> enter midi note (21-108)" << std::endl;
                     // midi note to freq formula https://newt.phys.unsw.edu.au/jw/notes.html
@@ -160,21 +173,23 @@ void audioThread()
                             int byte0 = (int)message.at(0);
                             if (byte0 == 144) {
                                 g_noteVal = (int)message.at(1);
-                                float velocity = (int)message.at(2);
-                                if (velocity != 0) {
-                                    stream.noteOn();
-									float freq = pow(2.f, (g_noteVal - 69.f) / 12.f) * 440.f;
-									freq = (freq > 0) ? freq : 0;
-									freq = (freq < 10000) ? freq : 10000;
-									stream.updateFreq(freq);
+                                if (g_noteVal > 36) {
+                                    float velocity = (int)message.at(2);
+                                    if (velocity != 0) {
+                                        stream.noteOn();
+                                        float freq = pow(2.f, (g_noteVal - 69.f) / 12.f) * 440.f;
+                                        freq = (freq > 0) ? freq : 0;
+                                        freq = (freq < 10000) ? freq : 10000;
+                                        stream.updateFreq(freq);
+                                    }
+                                    else {
+                                        stream.noteOff();
+                                    }
                                 }
-                                else {
-                                    stream.noteOff();
-                                }
- 
-                          }
+                            }
                         }
                     } while (!kbhit());
+                    stream.noteOff();
  
                 }
  

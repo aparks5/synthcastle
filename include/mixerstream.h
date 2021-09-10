@@ -32,6 +32,7 @@ public:
     bool start();
     bool stop();
     void updateFreq(float freq);
+    void modFreq(float freq);
     void updateGain(int gaindB);
     void updateBPM(size_t bpm);
     void updateOsc(Oscillator osc);
@@ -45,6 +46,8 @@ public:
     void updateLfoRate(double freq);
     void updateFilterCutoff(double freq);
     void updateFilterResonance(double q);
+    void enablePitchLFO() { m_bEnablePitchLFO = true; }
+    void disablePitchLFO() { m_bEnablePitchLFO = false; }
 
 
 private:
@@ -75,6 +78,7 @@ private:
     std::thread m_gfx;
     Metronome m_metronome;
     size_t durationCounter;
+    float m_freq;
 
     Oscillator m_osc;
     Saw m_saw;
@@ -84,10 +88,12 @@ private:
     Sine m_sine;
     Triangle m_lfo;
     bool m_bEnableFilterLFO;
+    bool m_bEnablePitchLFO;
 
     Gain m_gain;
     Envelope m_env;
-    float m_prevSample;
+    Envelope m_env1;
+    float m_env1out;
     EnvelopeParams m_envParams;
     KrajeskiMoog m_moogFilter;
     float m_filtFreq;
