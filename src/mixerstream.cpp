@@ -187,7 +187,7 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 		// write output
 		*out++ = output;
 		*out++ = output;
-		g_buffer[sampIdx] = static_cast<float>(output*1.0f);
+		g_buffer[sampIdx] = static_cast<float>(output*1.0);
 	}
 
 	g_ready = true;
