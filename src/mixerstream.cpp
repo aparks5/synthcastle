@@ -10,6 +10,7 @@
 MixerStream::MixerStream()
 	: stream(0)
 	, m_gfx(graphicsThread)
+	, m_delay(SAMPLE_RATE, 1.f)
 {
 	auto nVoices = 4;
 
@@ -17,6 +18,9 @@ MixerStream::MixerStream()
 		std::shared_ptr<Voice> v = std::make_shared<Voice>();
 		m_voices.push_back(v);
 	}
+
+
+	m_delay.update(250);
 }
 
 void MixerStream::noteOn(float freq)
@@ -49,6 +53,7 @@ void MixerStream::noteOff()
 	for (auto voice : m_voices) {
 		voice->noteOff();
 	}
+	
 }
 
 
@@ -139,6 +144,8 @@ bool MixerStream::stop()
 
 void MixerStream::update(VoiceParams params)
 {
+
+
 	for (auto voice : m_voices) {
 		voice->updateFilterCutoff(params.filtFreq);
 		(params.bEnableFiltLFO) ? voice->enableFiltLFO() : voice->disableFiltLFO();
@@ -166,6 +173,7 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 	}
 	auto nVoices = m_voices.size();
 
+
 	for (size_t sampIdx = 0; sampIdx < framesPerBuffer; sampIdx++)
 	{
 		auto output = 0.f;
@@ -173,6 +181,9 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 		for (auto voice : m_voices) {
 			output += voice->apply() / nVoices;
 		}
+
+		output = 0.5f * (output + 0.25f*m_delay(output));
+
 		// write output
 		*out++ = output;
 		*out++ = output;

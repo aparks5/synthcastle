@@ -15,7 +15,7 @@ include_directories(
 	${PROJECT_SOURCE_DIR}/include/moog
     ${PROJECT_SOURCE_DIR}/src)
 
-add_executable (${PROJECT_NAME} ${source})
+add_executable (${PROJECT_NAME} ${source} "include/delay.h")
 
 # PortAudio
 add_subdirectory("C:/portaudio" "C:/portaudio/out" EXCLUDE_FROM_ALL)
@@ -34,9 +34,10 @@ target_include_directories(${PROJECT_NAME} PRIVATE "${GLFW_DIR}/include")
 target_include_directories(${PROJECT_NAME} PRIVATE "${GLFW_DIR}/deps")
 target_link_libraries(${PROJECT_NAME} "glfw" "${GLFW_LIBRARIES}")
 
+
 # glad (OpenGL)
 set(GLAD_DIR "C:/GL/glad")
-add_library("glad" "${GLAD_DIR}/src/glad.c")
+add_library("glad" "${GLAD_DIR}/src/glad.c" "include/delay.h")
 target_include_directories("glad" PRIVATE "${GLAD_DIR}/include")
 target_link_libraries(${PROJECT_NAME} "glad" "${CMAKE_DL_LIBS}")
 target_include_directories(${PROJECT_NAME} PRIVATE "${GLAD_DIR}/include")
