@@ -36,10 +36,6 @@ float semitoneToRatio(int semitone)
 size_t g_noteVal = 0;
 
 
-void midiThread();
-
-
-
 void audioThread()
 {
     banner();
@@ -56,21 +52,22 @@ void audioThread()
     if (stream.open(Pa_GetDefaultOutputDevice()))
     {
 
-		std::cout << ">> enter start to start streaming" << std::endl;
-        while (true) {
-            std::cout << std::endl << std::endl;
-            std::cin >> prompt;
-            if (prompt == "start") {
-                break;
-            }
-        }
-
         std::vector<unsigned char> message;
+        VoiceParams params;
+        params.bEnableFiltLFO = false;
+        params.bEnablePitchLFO = false;
+        params.osc = OscillatorType::TRIANGLE;
+        params.filtQ = 0.7f;
+        params.filtFreq = 1000.f;
+        params.pitchLFOfreq = 1.f;
+        params.filtLFOFreq = 1.f;
+        params.envParams = { 3,0,0,3 };
+        params.freq = 220;
 
         if (stream.start()) {
 			while (true) {
-                std::cout << ">>> commands: start, stop, osc, freq, filter-freq, filter-q, filt-lfo-freq, pitch/filt-lfo-on/off, " << std::endl;
-                std::cout << ">>> note, gain, bpm, exit" << std::endl;
+                std::cout << ">>> commands: stop, osc, freq, filter-freq, filter-q, filt-lfo-freq, pitch/filt-lfo-on/off, " << std::endl;
+                std::cout << ">>> note, gain, exit" << std::endl;
 				std::cin >> prompt;
                 if (prompt == "stop") {
                     stream.stop();
@@ -87,50 +84,15 @@ void audioThread()
                     auto freq = std::stof(prompt);
                     freq = (freq > 0) ? freq : 0 ;
                     freq = (freq < 10000) ? freq : 10000;
-                    stream.updateFreq(freq);
+                    params.freq = freq;
                 }
-                // TODO: add oscillator 2 semitone ratio, mix, type
-                /*
-                if (prompt == "osc2-on") {
-					std::cout << ">> enter semitone ratio (-12 to 12)" << std::endl;
-    				std::cin >> prompt;
-                    semitoneToRatio(std::stod(prompt));
-                }
-                if (prompt == "osc2-off") {
-					std::cout << ">> enter semitone ratio (-12 to 12)" << std::endl;
-    				std::cin >> prompt;
-                    semitoneToRatio(std::stod(prompt));
-                }
-                if (prompt == "osc2-coarse") {
-					std::cout << ">> enter semitone ratio (-12 to 12)" << std::endl;
-    				std::cin >> prompt;
-                    semitoneToRatio(std::stod(prompt));
-                }
-                if (prompt == "osc2-fine") {
-					std::cout << ">> enter semitone ratio (-12 to 12)" << std::endl;
-    				std::cin >> prompt;
-                    semitoneToRatio(std::stod(prompt));
-                }
-                if (prompt == "osc2-mix") {
-					std::cout << ">> enter semitone ratio (-12 to 12)" << std::endl;
-    				std::cin >> prompt;
-                    semitoneToRatio(std::stod(prompt));
-                }
-                if (prompt == "osc2-type") {
-					std::cout << ">> enter semitone ratio (-12 to 12)" << std::endl;
-    				std::cin >> prompt;
-                    semitoneToRatio(std::stod(prompt));
-                }
-	
-	
-				*/
-                if (prompt == "filter-freq") {
+               if (prompt == "filter-freq") {
 					std::cout << ">> enter filter cutoff frequency in Hz" << std::endl;
     				std::cin >> prompt;
                     auto freq = std::stof(prompt);
                     freq = (freq > 0) ? freq : 0 ;
                     freq = (freq < 10000) ? freq : 10000;
-                    stream.updateFilterCutoff(freq);
+                    params.filtFreq = freq;
                 }
                 if (prompt == "filter-q") {
 					std::cout << ">> enter filter resonance (0 - 10)" << std::endl;
@@ -138,7 +100,7 @@ void audioThread()
                     auto q = std::stof(prompt);
                     q = (q > 0) ? q : 0 ;
                     q = (q < 10000) ? q : 10000;
-                    stream.updateFilterResonance(q);
+                    params.filtQ = q;
                 }
                 if (prompt == "lfo-freq") {
                     std::cout << ">> enter filter LFO frequency (0 - 40)" << std::endl;
@@ -146,19 +108,19 @@ void audioThread()
                     auto freq = std::stof(prompt);
                     freq = (freq > 0) ? freq : 0;
                     freq = (freq < 40) ? freq : 40;
-                    stream.updateLfoRate(freq);
+                    params.filtLFOFreq = freq;
                 }
 				if (prompt == "filt-lfo-on") {
-                     stream.enableFiltLFO();
+                    params.bEnableFiltLFO = true;
                 }
                 if (prompt == "filt-lfo-off") {
-                     stream.disableFiltLFO();
+                    params.bEnableFiltLFO = false;
                 }
 				if (prompt == "pitch-lfo-on") {
-                     stream.enablePitchLFO();
+                    params.bEnablePitchLFO = true;
                 }
                 if (prompt == "pitch-lfo-off") {
-                     stream.disablePitchLFO();
+                    params.bEnablePitchLFO = false;
                 }
  
                 if (prompt == "note") {
@@ -176,11 +138,10 @@ void audioThread()
                                 if (g_noteVal > 36) {
                                     float velocity = (int)message.at(2);
                                     if (velocity != 0) {
-                                        stream.noteOn();
                                         float freq = pow(2.f, (g_noteVal - 69.f) / 12.f) * 440.f;
                                         freq = (freq > 0) ? freq : 0;
                                         freq = (freq < 10000) ? freq : 10000;
-                                        stream.updateFreq(freq);
+                                        stream.noteOn(freq);
                                     }
                                     else {
                                         stream.noteOff();
@@ -193,23 +154,7 @@ void audioThread()
  
                 }
  
-                if (prompt == "gain") {
-					std::cout << ">> enter gain in dB (0 to -60)" << std::endl;
-    				std::cin >> prompt;
-                    auto gain = std::stod(prompt);
-                    gain = (gain < -60) ? -60 : gain;
-                    gain = (gain > 0) ? 0 : gain;
-                    stream.updateGain(gain);
-                }
-                if (prompt == "bpm") {
-					std::cout << ">> enter bpm (40 to 200)" << std::endl;
-    				std::cin >> prompt;
-                    auto bpm = std::stod(prompt);
-                    bpm = (bpm < 40) ? 40 : bpm;
-                    bpm = (bpm > 200) ? 200 : bpm ;
-                    stream.updateBPM(bpm);
-                }
-                if (prompt == "osc") {
+              if (prompt == "osc") {
 					std::cout << ">> enter sine, saw, tri, square" << std::endl;
     				std::cin >> prompt;
                     OscillatorType osc = OscillatorType::SINE;
@@ -225,7 +170,7 @@ void audioThread()
                     if (prompt == "square") {
                         osc = OscillatorType::SQUARE;
                     }
-                    stream.updateOsc(osc);
+                    params.osc = osc;
                 }
                 if (prompt == "env") {
                     std::cout << ">> enter adsr envelope parameters (attack ms, decay ms, sustain dB (< 0), release ms) (e.g. 250 10 -10 500) " << std::endl;
@@ -251,9 +196,11 @@ void audioThread()
                     susdB = (susdB > 0) ? 0 : susdB;
                     relMs = (relMs > 5000) ? 500 : relMs;
 
-                    EnvelopeParams params(attMs, decMs, susdB, relMs);
-                    stream.updateEnv(params);
+                    EnvelopeParams env(attMs, decMs, susdB, relMs);
+                    params.envParams = env;
                 }
+
+                stream.update(params);
                 
 	
 	
