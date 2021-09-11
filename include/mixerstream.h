@@ -4,6 +4,7 @@
 
 #include "portaudio.h"
 #include "voice.h"
+#include "delay.h"
 #include <vector>
 #include <thread>
 
@@ -45,6 +46,8 @@ private:
     PaStream* stream;
     std::thread m_gfx;
     std::vector<std::shared_ptr<Voice>> m_voices;
+    Delay m_delay;
+
 
 };
 
