@@ -12,12 +12,43 @@ MixerStream::MixerStream()
 	, m_gfx(graphicsThread)
 {
 	auto nVoices = 4;
-	for (auto i = 0; i < nVoices; i++)
-	{
+
+	for (auto i = 0; i < nVoices; i++) {
 		std::shared_ptr<Voice> v = std::make_shared<Voice>();
 		m_voices.push_back(v);
 	}
+}
 
+void MixerStream::noteOn(float freq)
+{
+	auto activeVoices = 0;
+	for (auto voice : m_voices) {
+		if (voice->active()) {
+
+			activeVoices++;
+		}
+		else { // we found an unused voice
+			voice->updateFreq(freq);
+			voice->noteOn();
+			return;
+		}
+	}
+
+	// all voices are exhausted, we need to turn one off
+	if (activeVoices >= m_voices.size()) {
+		m_voices[0]->noteOff();
+	}
+
+	m_voices[0]->noteOn();
+
+
+}
+
+void MixerStream::noteOff()
+{
+	for (auto voice : m_voices) {
+		voice->noteOff();
+	}
 }
 
 
@@ -104,6 +135,19 @@ bool MixerStream::stop()
 	PaError err = Pa_StopStream(stream);
 
 	return (err == paNoError);
+}
+
+void MixerStream::update(VoiceParams params)
+{
+	for (auto voice : m_voices) {
+		voice->updateFilterCutoff(params.filtFreq);
+		(params.bEnableFiltLFO) ? voice->enableFiltLFO() : voice->disableFiltLFO();
+		(params.bEnablePitchLFO) ? voice->enablePitchLFO() : voice->disablePitchLFO();
+		voice->updateFilterResonance(params.filtQ);
+		voice->updateEnv(params.envParams);
+		voice->updateLfoRate(params.filtLFOFreq);
+		voice->updateOsc(params.osc);
+	}
 }
 
 int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,

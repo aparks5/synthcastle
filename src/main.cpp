@@ -54,6 +54,15 @@ void audioThread()
 
         std::vector<unsigned char> message;
         VoiceParams params;
+        params.bEnableFiltLFO = false;
+        params.bEnablePitchLFO = false;
+        params.osc = OscillatorType::TRIANGLE;
+        params.filtQ = 0.7f;
+        params.filtFreq = 1000.f;
+        params.pitchLFOfreq = 1.f;
+        params.filtLFOFreq = 1.f;
+        params.envParams = { 3,0,0,3 };
+        params.freq = 220;
 
         if (stream.start()) {
 			while (true) {
@@ -129,11 +138,10 @@ void audioThread()
                                 if (g_noteVal > 36) {
                                     float velocity = (int)message.at(2);
                                     if (velocity != 0) {
-                                        stream.noteOn();
                                         float freq = pow(2.f, (g_noteVal - 69.f) / 12.f) * 440.f;
                                         freq = (freq > 0) ? freq : 0;
                                         freq = (freq < 10000) ? freq : 10000;
-                                        params.freq = freq;
+                                        stream.noteOn(freq);
                                     }
                                     else {
                                         stream.noteOff();

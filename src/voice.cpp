@@ -2,8 +2,8 @@
 #include "voice.h"
 
 Voice::Voice()
-	: durationCounter(0)
-	, m_freq(0.)
+	: m_bIsActive(false)
+	, m_freq(0.f)
 	, m_osc(OscillatorType::SINE)
 	, m_saw(SAMPLE_RATE)
 	, m_saw2(SAMPLE_RATE)
@@ -53,7 +53,6 @@ void Voice::update()
 float Voice::apply()
 {
 	auto output = 0.f;
-	m_metronome.tick();
 
 	// OSCILLATOR
 	oscillate(output);
@@ -141,12 +140,15 @@ void Voice::disableFiltLFO()
 
 void Voice::noteOn()
 {
+	m_bIsActive = true;
 	m_env.noteOn();
 	m_env.reset();
 }
 
 void Voice::noteOff()
 {
+
+	m_bIsActive = false;
 	m_env.noteOff();
 }
 

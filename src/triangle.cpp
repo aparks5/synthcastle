@@ -22,11 +22,11 @@ void Triangle::freq(float frequency)
 
 float Triangle::operator()()
 {
-		if ((m_out >= 0.99f)) {
+		if ((m_out >= 0.9999f)) {
 			m_bRising = false;
 		}
 
-		if ((m_out <= -0.99f)) {
+		if ((m_out <= -0.9999f)) {
 			m_bRising = true;
 		}
 

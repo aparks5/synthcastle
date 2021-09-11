@@ -37,6 +37,7 @@ public:
 	Voice();
 	float apply();
     void update();
+    bool active() { return m_bIsActive; }
 
     void updateFreq(float freq);
     void oscillate(float& output);
@@ -56,7 +57,7 @@ public:
     void disablePitchLFO() { m_bEnablePitchLFO = false; }
 
 private:
-    size_t durationCounter;
+    bool m_bIsActive;
     float m_freq;
     OscillatorType m_osc;
     Saw m_saw;
