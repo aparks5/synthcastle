@@ -10,32 +10,16 @@
 MixerStream::MixerStream()
 	: stream(0)
 	, m_gfx(graphicsThread)
-	, durationCounter(0)
-	, m_freq(0.)
-	, m_osc(OscillatorType::SINE)
-	, m_saw(SAMPLE_RATE)
-	, m_saw2(SAMPLE_RATE)
-	, m_tri(SAMPLE_RATE)
-	, m_square(SAMPLE_RATE)
-	, m_sine(SAMPLE_RATE)
-	, m_lfo(SAMPLE_RATE)
-	, m_bEnableFilterLFO(false)
-	, m_bEnablePitchLFO(false)
-	, m_moogFilter(SAMPLE_RATE)
-	, m_filtFreq(0.f)
-	, m_bParamChanged(false)
-	, m_env1out(0.f)
 {
+	auto nVoices = 4;
+	for (auto i = 0; i < nVoices; i++)
+	{
+		std::shared_ptr<Voice> v = std::make_shared<Voice>();
+		m_voices.push_back(v);
+	}
 
-	EnvelopeParams env(250, 0, 0, 500);
-	m_env.setParams(env);
-
-	m_moogFilter.freq(1000.f);
-	m_filtFreq = 1000.f;
-	m_moogFilter.q(3.f);
-	m_lfo.freq(1.f);
-	
 }
+
 
 bool MixerStream::open(PaDeviceIndex index)
 {
@@ -122,110 +106,6 @@ bool MixerStream::stop()
 	return (err == paNoError);
 }
 
-void MixerStream::updateFreq(float freq)
-{
-	m_freq = freq;
-	m_saw.freq(freq);
-	m_saw2.freq(freq * 1.3348);
-	m_tri.freq(freq);
-	m_square.freq(freq);
-	m_sine.freq(freq);
-	m_bParamChanged = true;
-}
-
-void MixerStream::modFreq(float freq)
-{
-	m_saw.freq(freq);
-	m_saw2.freq(freq * 1.3348);
-	m_tri.freq(freq);
-	m_square.freq(freq);
-	m_sine.freq(freq);
-}
-
-
-
-
-void MixerStream::updateGain(int gaindB)
-{
-	m_gain.setGaindB(gaindB);
-	m_bParamChanged = true;
-}
-
-void MixerStream::updateBPM(size_t bpm)
-{
-	m_metronome.bpm(bpm);
-	m_bParamChanged = true;
-}
-
-
-void MixerStream::updateOsc(OscillatorType osc)
-{
-	m_osc = osc;
-	m_bParamChanged = true;
-}
-
-void MixerStream::updateEnv(EnvelopeParams params)
-{
-	m_envParams = params;
-	m_bParamChanged = true;
-}
-
-void MixerStream::enableFiltLFO()
-{
-	m_bEnableFilterLFO = true;
-}
-
-void MixerStream::disableFiltLFO()
-{
-	m_bEnableFilterLFO = false;
-}
-
-void MixerStream::noteOn()
-{
-	m_env.noteOn();
-	m_env.reset();
-	/*
-	m_tri.reset();
-	m_saw.reset();
-	m_sine.reset();
-	m_square.reset();
-	*/
-}
-
-void MixerStream::noteOff()
-{
-	m_env.noteOff();
-}
-
-void MixerStream::updateLfoRate(double freq)
-{
-	m_lfo.freq(freq);
-	m_bParamChanged = true;
-}
-
-void MixerStream::updateFilterCutoff(double freq)
-{
-	m_moogFilter.freq(freq);
-	m_filtFreq = freq;
-}
-
-void MixerStream::updateFilterResonance(double q)
-{
-	m_moogFilter.q(q);
-}
-
-
-
-void MixerStream::processUpdates()
-{
-
-	if (m_bParamChanged) {
-		m_env.setParams(m_envParams);
-
-		m_bParamChanged = false;
-	}
-}
-
 int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 	unsigned long framesPerBuffer,
 	const PaStreamCallbackTimeInfo* timeInfo,
@@ -237,77 +117,27 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 	(void)statusFlags;
 	(void)inputBuffer;
 
-	auto output = 0.0f;
-	
-    // duration = 1s
-	auto samplesPerDuration = SAMPLE_RATE;
-	auto lfo1depth = 0.1f;
-
-
-	auto lfoSamp = m_lfo();
-	if (m_bEnableFilterLFO) {
-		float filtLfo = (1 + lfoSamp * 0.5f);
-		m_moogFilter.freq(m_filtFreq * filtLfo);
-
+	for (auto voice : m_voices) {
+		voice->update();
 	}
-	else {
-		m_moogFilter.freq(m_filtFreq);
-	}
-
-	if (m_bEnablePitchLFO)
-	{
-		modFreq(m_freq + (lfoSamp *  m_freq));
-	}
-
-	processUpdates();
+	auto nVoices = m_voices.size();
 
 	for (size_t sampIdx = 0; sampIdx < framesPerBuffer; sampIdx++)
 	{
-		m_metronome.tick();
+		auto output = 0.f;
 
-		// generate sample
-		m_env1out = m_env.apply(1);
-		
-		m_gain.setGainf(m_env1out);
-		oscillate(output);
-		m_lfo();
-
-     	m_moogFilter.apply(&output, 1);
-		output = m_gain.apply(output);
-		Gain gain;
-		gain.setGaindB(-10);
-		output = gain.apply(output);
-	
+		for (auto voice : m_voices) {
+			output += voice->apply() / nVoices;
+		}
 		// write output
 		*out++ = output;
 		*out++ = output;
 		g_buffer[sampIdx] = static_cast<float>(output*1.0f);
 	}
 
-
-
-
 	g_ready = true;
 
 	return paContinue;
-}
-
-void MixerStream::oscillate(float& output)
-{
-	switch (m_osc) {
-	case OscillatorType::SAW:
-		output = (m_saw() + m_saw2()) * 0.5f;
-		break;
-	case OscillatorType::SINE:
-		output = m_sine();
-		break;
-	case OscillatorType::TRIANGLE:
-		output = m_tri();
-		break;
-	case OscillatorType::SQUARE:
-		output = m_square();
-		break;
-	}
 }
 
 int MixerStream::paCallback(const void* inputBuffer, void* outputBuffer,
