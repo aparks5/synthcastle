@@ -13,6 +13,7 @@ MixerStream::MixerStream()
 	, delay(SAMPLE_RATE, 1.f)
 	, delay2(SAMPLE_RATE, 1.f)
 	, chorus(SAMPLE_RATE)
+	, lastActiveVoice(0)
 {
 	auto nVoices = 4;
 
@@ -31,23 +32,29 @@ void MixerStream::noteOn(float freq)
 	auto activeVoices = 0;
 	for (auto voice : m_voices) {
 		if (voice->active()) {
-
 			activeVoices++;
 		}
 		else { // we found an unused voice
 			voice->updateFreq(freq);
 			voice->noteOn();
+			lastActiveVoice++;
+			if (lastActiveVoice>= 4) {
+				lastActiveVoice = 0;
+			}
 			return;
 		}
 	}
 
 	// all voices are exhausted, we need to turn one off
 	if (activeVoices >= m_voices.size()) {
-		m_voices[0]->noteOff();
+		m_voices[lastActiveVoice]->noteOff();
+		m_voices[lastActiveVoice]->updateFreq(freq);
+		m_voices[lastActiveVoice]->noteOn();
+		lastActiveVoice++;
+		if (lastActiveVoice >= 4) {
+			lastActiveVoice = 0;
+		}
 	}
-
-	m_voices[0]->noteOn();
-
 
 }
 
@@ -178,7 +185,7 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 			output += voice->apply() / m_voices.capacity();
 		}
 
-		output = (output + 0.5f * delay(output) + 0.5 * delay2(output)) / 3.f;
+		//output = (output + 0.5f * delay(output) + 0.5 * delay2(output)) / 3.f;
 		//output = chorus(output);
 
 		// write output

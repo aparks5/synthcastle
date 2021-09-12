@@ -50,6 +50,7 @@ private:
     Delay delay;
     Delay delay2;
     Chorus chorus;
+    size_t lastActiveVoice;
 
 };
 
