@@ -1,20 +1,18 @@
-#include "..\include\voice.h"
 #include "voice.h"
+#include "util.h"
+
 
 Voice::Voice()
-	: m_bIsActive(false)
-	, m_freq(0.f)
-	, m_osc(OscillatorType::SINE)
-	, m_saw(SAMPLE_RATE)
-	, m_saw2(SAMPLE_RATE)
+	: m_saw(SAMPLE_RATE)
 	, m_tri(SAMPLE_RATE)
 	, m_square(SAMPLE_RATE)
 	, m_sine(SAMPLE_RATE)
 	, m_lfo(SAMPLE_RATE)
-	, m_bEnableFilterLFO(false)
-	, m_bEnablePitchLFO(false)
+	, m_saw2(SAMPLE_RATE)
+	, m_tri2(SAMPLE_RATE)
+	, m_square2(SAMPLE_RATE)
+	, m_sine2(SAMPLE_RATE)
 	, m_moogFilter(SAMPLE_RATE)
-	, m_filtFreq(0.f)
 	, m_bParamChanged(false)
 	, m_env1out(0.f)
 
@@ -27,32 +25,42 @@ Voice::Voice()
 	m_lfo.freq(1.f);
 }
 
-void Voice::update()
+void Voice::update(VoiceParams params)
 {
-	// UPDATE PARAMS ONCE PER BLOCK
-	auto samplesPerDuration = SAMPLE_RATE;
-	auto lfo1depth = 0.1f;
+	m_params = params;
+
+	m_env.setParams(m_params.envParams);
+	m_env.reset();
+	m_lfo.freq(m_params.filtLFOFreq);
+
+}
+
+
+void Voice::modUpdate()
+{
 	auto lfoSamp = m_lfo();
-	if (m_bEnableFilterLFO) {
+	if (m_params.bEnableFiltLFO) {
 		float filtLfo = (1 + lfoSamp * 0.5f);
-		m_moogFilter.freq(m_filtFreq * filtLfo);
+		m_moogFilter.freq(m_params.filtFreq * filtLfo);
 
 	}
 	else {
-		m_moogFilter.freq(m_filtFreq);
+		m_moogFilter.freq(m_params.filtFreq);
 	}
 
-	if (m_bEnablePitchLFO)
+	if (m_params.bEnablePitchLFO)
 	{
-		modFreq(m_freq + (lfoSamp *  m_freq));
+		modFreq(m_params.freq + (lfoSamp * m_params.freq));
+		modFreqOsc2(m_params.freq + (lfoSamp * m_params.freq));
 	}
-
-	processUpdates();
 }
+
+
 
 float Voice::apply()
 {
 	auto output = 0.f;
+
 
 	// OSCILLATOR
 	oscillate(output);
@@ -76,9 +84,9 @@ float Voice::apply()
 
 void Voice::oscillate(float& output)
 {
-	switch (m_osc) {
+	switch (m_params.osc) {
 	case OscillatorType::SAW:
-		output = (m_saw() + m_saw2()) * 0.5f;
+		output = m_saw();
 		break;
 	case OscillatorType::SINE:
 		output = m_sine();
@@ -90,57 +98,60 @@ void Voice::oscillate(float& output)
 		output = m_square();
 		break;
 	}
+
+	if (m_params.bEnableOsc2) {
+		auto osc2out = 0.f;
+		switch (m_params.osc2) {
+		case OscillatorType::SAW:
+			osc2out = m_saw2();
+			break;
+		case OscillatorType::SINE:
+			osc2out = m_sine2();
+			break;
+		case OscillatorType::TRIANGLE:
+			osc2out = m_tri2();
+			break;
+		case OscillatorType::SQUARE:
+			osc2out = m_square2();
+			break;
+		}
+		output += 0.707 * m_osc2gain.apply(osc2out);
+	}
+
 }
-
-
 
 void Voice::updateFreq(float freq)
 {
-	m_freq = freq;
+	m_params.freq = freq;
 	modFreq(freq);
+	if (m_params.bEnableOsc2)
+	{
+		m_osc2gain.setGaindB(m_params.osc2gain);
+		modFreqOsc2(freq);
+	}
 	m_bParamChanged = true;
 }
 
 void Voice::modFreq(float freq)
 {
 	m_saw.freq(freq);
-	m_saw2.freq(freq * 1.3348);
 	m_tri.freq(freq);
 	m_square.freq(freq);
 	m_sine.freq(freq);
 }
 
-void Voice::updateGain(int gaindB)
+void Voice::modFreqOsc2(float freq)
 {
-	m_gain.setGaindB(gaindB);
-	m_bParamChanged = true;
-}
-
-void Voice::updateOsc(OscillatorType osc)
-{
-	m_osc = osc;
-	m_bParamChanged = true;
-}
-
-void Voice::updateEnv(EnvelopeParams params)
-{
-	m_envParams = params;
-	m_bParamChanged = true;
-}
-
-void Voice::enableFiltLFO()
-{
-	m_bEnableFilterLFO = true;
-}
-
-void Voice::disableFiltLFO()
-{
-	m_bEnableFilterLFO = false;
+	freq = freq * semitoneToRatio(m_params.osc2coarse) * semitoneToRatio(m_params.osc2fine);
+	m_saw2.freq(freq);
+	m_tri2.freq(freq);
+	m_square2.freq(freq);
+	m_sine2.freq(freq);
 }
 
 void Voice::noteOn()
 {
-	m_bIsActive = true;
+	m_params.bIsActive = true;
 	m_env.noteOn();
 	m_env.reset();
 }
@@ -148,35 +159,6 @@ void Voice::noteOn()
 void Voice::noteOff()
 {
 
-	m_bIsActive = false;
+	m_params.bIsActive = false;
 	m_env.noteOff();
 }
-
-void Voice::updateLfoRate(double freq)
-{
-	m_lfo.freq(freq);
-	m_bParamChanged = true;
-}
-
-void Voice::updateFilterCutoff(double freq)
-{
-	m_moogFilter.freq(freq);
-	m_filtFreq = freq;
-}
-
-void Voice::updateFilterResonance(double q)
-{
-	m_moogFilter.q(q);
-}
-
-void Voice::processUpdates()
-{
-
-	if (m_bParamChanged) {
-		m_env.setParams(m_envParams);
-
-		m_bParamChanged = false;
-	}
-}
-
-

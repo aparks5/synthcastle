@@ -20,15 +20,42 @@ enum class OscillatorType
 
 struct VoiceParams
 {
+    bool bIsActive;
     OscillatorType osc;
+    OscillatorType osc2;
+    bool bEnableOsc2;
+    float osc2coarse;
+    float osc2fine;
+    float osc2gain;
     float freq;
     float filtFreq;
     float filtQ;
     EnvelopeParams envParams;
     float filtLFOFreq;
-    float pitchLFOfreq;
+    float pitchLFOFreq;
     bool bEnableFiltLFO;
     bool bEnablePitchLFO;
+    bool bEnableFiltEG;
+    bool bEnablePitchEG;
+    VoiceParams()
+        : bIsActive(false)
+        , osc(OscillatorType::SAW)
+        , osc2(OscillatorType::SAW)
+        , bEnableOsc2(false)
+        , osc2coarse(0.f)
+        , osc2fine(0.f)
+        , osc2gain(0.f)
+        , freq(0.f)
+        , filtFreq(3000.f)
+        , filtQ(0.7f)
+        , envParams({1,0,0,1})
+        , filtLFOFreq(1.)
+        , pitchLFOFreq(1.)
+        , bEnableFiltLFO(false)
+        , bEnablePitchLFO(false)
+        , bEnableFiltEG(false)
+        , bEnablePitchEG(false)
+    {}
 };
 
 class Voice
@@ -36,38 +63,35 @@ class Voice
 public:
 	Voice();
 	float apply();
-    void update();
-    bool active() { return m_bIsActive; }
+    void update(VoiceParams params);
+    void modUpdate();
+    bool active() { return m_params.bIsActive; }
 
     void updateFreq(float freq);
     void oscillate(float& output);
     void modFreq(float freq);
-    void updateGain(int gaindB);
-    void updateOsc(OscillatorType osc);
-    void updateEnv(EnvelopeParams params);
-    void enableFiltLFO();
-    void disableFiltLFO();
-    void processUpdates();
+    void modFreqOsc2(float freq);
     void noteOn();
     void noteOff();
-    void updateLfoRate(double freq);
-    void updateFilterCutoff(double freq);
-    void updateFilterResonance(double q);
-    void enablePitchLFO() { m_bEnablePitchLFO = true; }
-    void disablePitchLFO() { m_bEnablePitchLFO = false; }
 
 private:
-    bool m_bIsActive;
-    float m_freq;
+
+    VoiceParams m_params;
     OscillatorType m_osc;
     Saw m_saw;
-    Saw m_saw2;
     Triangle m_tri;
     Square m_square;
     Sine m_sine;
     Triangle m_lfo;
-    bool m_bEnableFilterLFO;
-    bool m_bEnablePitchLFO;
+
+    OscillatorType m_osc2;
+    Gain m_osc2gain;
+    Saw m_saw2;
+    Triangle m_tri2;
+    Square m_square2;
+    Sine m_sine2;
+
+ 
 
     Gain m_gain;
     Envelope m_env;

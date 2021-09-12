@@ -9,29 +9,19 @@
 #include <chrono>
 #include <string>
 #include <iostream>
+#include <cstdlib>
+
 #include "portaudio.h"
 #include "portaudiohandler.h"
-#include "mixerstream.h"
-
-#include <cstdlib>
 #include "RtMidi.h"
-
-#include "constants.h"
-
 #include "windows.h"
 
-
+#include "constants.h"
+#include "mixerstream.h"
+#include "util.h"
 
 void audioThread();
 void banner();
-
-float semitoneToRatio(int semitone)
-{
-    semitone = (semitone < -12) ? -12 : semitone;
-    semitone = (semitone > 12) ? 12 : semitone;
-
-    return powf(2., (1.f * semitone / 12));
-}
 
 typedef struct
 {
@@ -91,15 +81,6 @@ void audioThread()
 
 		std::vector<unsigned char> message;
 		VoiceParams params;
-		params.bEnableFiltLFO = false;
-		params.bEnablePitchLFO = false;
-		params.osc = OscillatorType::TRIANGLE;
-		params.filtQ = 0.7f;
-		params.filtFreq = 1000.f;
-		params.pitchLFOfreq = 1.f;
-		params.filtLFOFreq = 1.f;
-		params.envParams = { 3,0,0,3 };
-		params.freq = 220;
 
 		if (stream.start()) {
 			while (true) {
@@ -122,7 +103,7 @@ void audioThread()
 					freq = (freq < 10000) ? freq : 10000;
 					params.freq = freq;
 				}
-				if (prompt == "filter-freq") {
+				if (prompt == "filt-freq") {
 					std::cout << ">> enter filter cutoff frequency in Hz" << std::endl;
 					std::cin >> prompt;
 					auto freq = std::stof(prompt);
@@ -130,7 +111,7 @@ void audioThread()
 					freq = (freq < 10000) ? freq : 10000;
 					params.filtFreq = freq;
 				}
-				if (prompt == "filter-q") {
+				if (prompt == "filt-q") {
 					std::cout << ">> enter filter resonance (0 - 10)" << std::endl;
 					std::cin >> prompt;
 					auto q = std::stof(prompt);
@@ -138,7 +119,7 @@ void audioThread()
 					q = (q < 10000) ? q : 10000;
 					params.filtQ = q;
 				}
-				if (prompt == "lfo-freq") {
+				if (prompt == "filt-lfo-freq") {
 					std::cout << ">> enter filter LFO frequency (0 - 40)" << std::endl;
 					std::cin >> prompt;
 					auto freq = std::stof(prompt);
@@ -177,6 +158,45 @@ void audioThread()
 					}
 					params.osc = osc;
 				}
+				if (prompt == "osc2-enable") {
+					params.bEnableOsc2 = true;
+				}
+
+				if (prompt == "osc2-disable") {
+					params.bEnableOsc2 = false;
+				}
+				if (prompt == "osc2") {
+					std::cout << ">> enter sine, saw, tri, square" << std::endl;
+					std::cin >> prompt;
+					OscillatorType osc = OscillatorType::SINE;
+					if (prompt == "sine") {
+						osc = OscillatorType::SINE;
+					}
+					if (prompt == "saw") {
+						osc = OscillatorType::SAW;
+					}
+					if (prompt == "tri") {
+						osc = OscillatorType::TRIANGLE;
+					}
+					if (prompt == "square") {
+						osc = OscillatorType::SQUARE;
+					}
+					params.osc2 = osc;
+				}
+				if (prompt == "osc2-coarse") {
+					std::cin >> prompt;
+					auto coarse = std::stof(prompt);
+					coarse = (coarse < -24.) ? -24 : coarse;
+					coarse = (coarse > 24.) ? 24 : coarse;
+					params.osc2coarse = coarse;
+				}
+				if (prompt == "osc2-fine") {
+					std::cin >> prompt;
+					auto fine = std::stof(prompt);
+					fine = (fine < -1.) ? -1. : fine;
+					fine = (fine > 1.) ? 1. : fine;
+					params.osc2fine = fine;
+				}
 				if (prompt == "env") {
 					std::cout << ">> enter adsr envelope parameters (attack ms, decay ms, sustain dB (< 0), release ms) (e.g. 250 10 -10 500) " << std::endl;
 					std::vector<std::string> param;
@@ -206,9 +226,6 @@ void audioThread()
 				}
 
 				stream.update(params);
-
-
-
 			}
 			stream.stop();
 		}

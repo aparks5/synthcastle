@@ -155,13 +155,7 @@ bool MixerStream::stop()
 void MixerStream::update(VoiceParams params)
 {
 	for (auto voice : m_voices) {
-		voice->updateFilterCutoff(params.filtFreq);
-		(params.bEnableFiltLFO) ? voice->enableFiltLFO() : voice->disableFiltLFO();
-		(params.bEnablePitchLFO) ? voice->enablePitchLFO() : voice->disablePitchLFO();
-		voice->updateFilterResonance(params.filtQ);
-		voice->updateEnv(params.envParams);
-		voice->updateLfoRate(params.filtLFOFreq);
-		voice->updateOsc(params.osc);
+		voice->update(params);
 	}
 }
 
@@ -176,6 +170,9 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 	(void)statusFlags;
 	(void)inputBuffer;
 
+	for (auto voice : m_voices) {
+		voice->modUpdate();
+	}
 
 	for (size_t sampIdx = 0; sampIdx < framesPerBuffer; sampIdx++)
 	{
@@ -196,15 +193,7 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 
 	g_ready = true;
 
-	// update after output
-
-	for (auto voice : m_voices) {
-		voice->update();
-	}
 	chorus.update();
-
-
-
 
 	return paContinue;
 }
