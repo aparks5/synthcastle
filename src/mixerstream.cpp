@@ -47,7 +47,6 @@ void MixerStream::noteOn(float freq)
 
 	// all voices are exhausted, we need to turn one off
 	if (activeVoices >= m_voices.size()) {
-		m_voices[lastActiveVoice]->noteOff();
 		m_voices[lastActiveVoice]->updateFreq(freq);
 		m_voices[lastActiveVoice]->noteOn();
 		lastActiveVoice++;

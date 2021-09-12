@@ -91,8 +91,6 @@ private:
     Square m_square2;
     Sine m_sine2;
 
- 
-
     Gain m_gain;
     Envelope m_env;
     Envelope m_env1;

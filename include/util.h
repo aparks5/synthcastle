@@ -11,4 +11,11 @@ static float semitoneToRatio(float semitone)
     return powf(2., (1.f * semitone / 12));
 }
 
+template <class T>
+static T clamp(T val, T min, T max)
+{
+    val = (val < min) ? min : val;
+    val = (val > max) ? max : val;
+}
+
 #endif // UTIL_H_
