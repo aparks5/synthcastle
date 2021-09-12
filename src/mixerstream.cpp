@@ -10,7 +10,10 @@
 MixerStream::MixerStream()
 	: stream(0)
 	, m_gfx(graphicsThread)
-	, m_delay(SAMPLE_RATE, 1.f)
+	, delay(SAMPLE_RATE, 1.f)
+	, delay2(SAMPLE_RATE, 1.f)
+	, chorus(SAMPLE_RATE)
+	, lastActiveVoice(0)
 {
 	auto nVoices = 4;
 
@@ -20,7 +23,8 @@ MixerStream::MixerStream()
 	}
 
 
-	m_delay.update(250);
+	delay.update(250);
+	delay2.update(133);
 }
 
 void MixerStream::noteOn(float freq)
@@ -28,23 +32,29 @@ void MixerStream::noteOn(float freq)
 	auto activeVoices = 0;
 	for (auto voice : m_voices) {
 		if (voice->active()) {
-
 			activeVoices++;
 		}
 		else { // we found an unused voice
 			voice->updateFreq(freq);
 			voice->noteOn();
+			lastActiveVoice++;
+			if (lastActiveVoice>= 4) {
+				lastActiveVoice = 0;
+			}
 			return;
 		}
 	}
 
 	// all voices are exhausted, we need to turn one off
 	if (activeVoices >= m_voices.size()) {
-		m_voices[0]->noteOff();
+		m_voices[lastActiveVoice]->noteOff();
+		m_voices[lastActiveVoice]->updateFreq(freq);
+		m_voices[lastActiveVoice]->noteOn();
+		lastActiveVoice++;
+		if (lastActiveVoice >= 4) {
+			lastActiveVoice = 0;
+		}
 	}
-
-	m_voices[0]->noteOn();
-
 
 }
 
@@ -144,8 +154,6 @@ bool MixerStream::stop()
 
 void MixerStream::update(VoiceParams params)
 {
-
-
 	for (auto voice : m_voices) {
 		voice->updateFilterCutoff(params.filtFreq);
 		(params.bEnableFiltLFO) ? voice->enableFiltLFO() : voice->disableFiltLFO();
@@ -168,21 +176,17 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 	(void)statusFlags;
 	(void)inputBuffer;
 
-	for (auto voice : m_voices) {
-		voice->update();
-	}
-	auto nVoices = m_voices.size();
-
 
 	for (size_t sampIdx = 0; sampIdx < framesPerBuffer; sampIdx++)
 	{
 		auto output = 0.f;
 
 		for (auto voice : m_voices) {
-			output += voice->apply() / nVoices;
+			output += voice->apply() / m_voices.capacity();
 		}
 
-		output = 0.5f * (output + 0.25f*m_delay(output));
+		//output = (output + 0.5f * delay(output) + 0.5 * delay2(output)) / 3.f;
+		//output = chorus(output);
 
 		// write output
 		*out++ = output;
@@ -191,6 +195,16 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 	}
 
 	g_ready = true;
+
+	// update after output
+
+	for (auto voice : m_voices) {
+		voice->update();
+	}
+	chorus.update();
+
+
+
 
 	return paContinue;
 }
