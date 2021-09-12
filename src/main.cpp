@@ -42,19 +42,15 @@ void midiCallback(double deltatime, std::vector<unsigned char>* message, void* u
 		int byte0 = (int)message->at(0);
 		if (byte0 == 144) {
 			auto noteVal = (int)message->at(1);
-			if (noteVal > 36) {
-				float velocity = (int)message->at(2);
-				if (velocity != 0) {
-					float freq = pow(2.f, (noteVal - 69.f) / 12.f) * 440.f;
-					freq = (freq > 0) ? freq : 0;
-					freq = (freq < 10000) ? freq : 10000;
-					stream->noteOn(freq);
-				}
-				else {
-					if (deltatime > 0.03) {
-						stream->noteOff();
-					}
-				}
+			float velocity = (int)message->at(2);
+			if (velocity != 0) {
+				float freq = pow(2.f, (noteVal - 69.f) / 12.f) * 440.f;
+				freq = (freq > 0) ? freq : 0;
+				freq = (freq < 10000) ? freq : 10000;
+				stream->noteOn(freq);
+			}
+			else {
+				stream->noteOff();
 			}
 		}
 	}
@@ -223,6 +219,23 @@ void audioThread()
 
 					EnvelopeParams env(attMs, decMs, susdB, relMs);
 					params.envParams = env;
+				}
+				if (prompt == "play")
+				{
+					do {
+						stream.noteOn(250);
+						stream.noteOn(500);
+						stream.noteOn(750);
+						Sleep(500);
+						stream.noteOff();
+						Sleep(300);
+						stream.noteOn(250);
+						stream.noteOn(500);
+						stream.noteOn(750);
+						Sleep(250);
+						stream.noteOff();
+						Sleep(1000);
+					} while (!kbhit());
 				}
 
 				stream.update(params);

@@ -27,8 +27,8 @@ Voice::Voice()
 
 void Voice::update(VoiceParams params)
 {
-	m_params = params;
 
+	m_params = params;
 	m_env.setParams(m_params.envParams);
 	m_env.reset();
 	m_lfo.freq(m_params.filtLFOFreq);
@@ -60,7 +60,6 @@ void Voice::modUpdate()
 float Voice::apply()
 {
 	auto output = 0.f;
-
 
 	// OSCILLATOR
 	oscillate(output);
@@ -158,7 +157,6 @@ void Voice::noteOn()
 
 void Voice::noteOff()
 {
-
 	m_params.bIsActive = false;
 	m_env.noteOff();
 }
