@@ -13,7 +13,8 @@ public:
 
 private:
 	float m_fs;
-	float m_curDelaySamps;
+	float m_delayMs;
+	size_t m_delaySamps;
 	float m_maxDelaySamps;
 	std::vector<float> m_circBuff;
 	size_t m_readIdx = 0;
