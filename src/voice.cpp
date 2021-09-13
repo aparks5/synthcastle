@@ -30,6 +30,8 @@ void Voice::update(VoiceParams params)
 
 	m_params = params;
 	m_env.setParams(m_params.envParams);
+	m_moogFilter.q(m_params.filtQ);
+	m_moogFilter.freq(m_params.filtFreq);
 	m_env.reset();
 	m_lfo.freq(m_params.filtLFOFreq);
 

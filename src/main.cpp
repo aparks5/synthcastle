@@ -50,7 +50,9 @@ void midiCallback(double deltatime, std::vector<unsigned char>* message, void* u
 				stream->noteOn(freq);
 			}
 			else {
-				stream->noteOff();
+				if (deltatime > 0.02f) {
+					stream->noteOff();
+				}
 			}
 		}
 	}

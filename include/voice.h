@@ -46,7 +46,7 @@ struct VoiceParams
         , osc2fine(0.f)
         , osc2gain(0.f)
         , freq(0.f)
-        , filtFreq(3000.f)
+        , filtFreq(1200.f)
         , filtQ(0.7f)
         , envParams({1,0,0,1})
         , filtLFOFreq(1.)

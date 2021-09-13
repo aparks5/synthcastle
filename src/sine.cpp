@@ -4,6 +4,7 @@
 #include "stdio.h"
 #include <cmath>
 #include <iostream>
+#include "util.h"
 
 constexpr auto NUM_SECONDS = (2);
 
@@ -31,7 +32,14 @@ float Sine::operator()()
 		m_out -= TABLE_SIZE;
 	}
 
-	auto idx = (m_out) > 0 ? static_cast<size_t>(m_out) : 0;
 
-	return m_sine[idx];
+	float integerIdx = 0;
+	float fractionalIdx = modff(m_out, &integerIdx);
+
+	int nextIdx = integerIdx + 1;
+	if (nextIdx > (TABLE_SIZE - 1)) {
+		nextIdx = 0;
+	}
+
+	return linearInterpolate(m_sine[static_cast<size_t>(integerIdx)], m_sine[nextIdx], fractionalIdx);
 }

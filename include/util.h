@@ -18,4 +18,10 @@ static T clamp(T val, T min, T max)
     val = (val > max) ? max : val;
 }
 
+template <class T>
+static T linearInterpolate(T y1, T y2, T x)
+{
+    return x * y2 + (1. - x) * y1;
+}
+
 #endif // UTIL_H_

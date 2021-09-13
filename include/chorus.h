@@ -2,7 +2,7 @@
 #define CHORUS_H_
 
 #include "delay.h"
-#include "triangle.h"
+#include "sine.h"
 
 class Chorus
 {
@@ -17,9 +17,8 @@ public:
 
 private:
 	Delay delay;
-	Triangle lfo;
+	Sine lfo;
 	float m_depth;
-
 };
 
 #endif 
