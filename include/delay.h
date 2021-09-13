@@ -9,7 +9,7 @@ public:
 	Delay(float sampleRate, float maxDelaySeconds);
 	void update(float delayMs);
 	void reset();
-	float operator()(float val);
+	double operator()(float val);
 
 private:
 	float m_fs;
@@ -17,8 +17,8 @@ private:
 	size_t m_delaySamps;
 	float m_maxDelaySamps;
 	std::vector<float> m_circBuff;
-	size_t m_readIdx = 0;
-	size_t m_writeIdx = 0;
+	size_t m_writeIdx;
+	size_t m_readIdx;
 
 };
 

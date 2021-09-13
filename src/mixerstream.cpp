@@ -25,6 +25,8 @@ MixerStream::MixerStream()
 
 	delay.update(250);
 	delay2.update(133);
+	chorus.depth(.9f);
+	chorus.rate(0.3f);
 }
 
 void MixerStream::noteOn(float freq)
@@ -181,8 +183,9 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 			output += voice->apply() / m_voices.capacity();
 		}
 
-		//output = (output + 0.5f * delay(output) + 0.5 * delay2(output)) / 3.f;
-		//output = chorus(output);
+//		output = (1 / (3 * .707f)) * (output + 0.5f * delay(output) + 0.5 * delay2(output));
+		output = 0.707*output + 0.5*chorus(output);
+		
 
 		// write output
 		*out++ = output;
@@ -190,9 +193,9 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 		g_buffer[sampIdx] = static_cast<float>(output*1.0);
 	}
 
+
 	g_ready = true;
 
-	chorus.update();
 
 	return paContinue;
 }
