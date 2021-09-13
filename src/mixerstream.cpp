@@ -25,7 +25,7 @@ MixerStream::MixerStream()
 
 	delay.update(250);
 	delay2.update(133);
-	chorus.depth(.9f);
+	chorus.depth(1.f);
 	chorus.rate(0.3f);
 }
 
@@ -184,7 +184,7 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 		}
 
 //		output = (1 / (3 * .707f)) * (output + 0.5f * delay(output) + 0.5 * delay2(output));
-		output = 0.707*output + 0.5*chorus(output);
+		output = 0.5*output + 0.5*chorus(output);
 		
 
 		// write output

@@ -3,7 +3,7 @@
 Chorus::Chorus(float sampleRate)
 	: delay(sampleRate, 1.f)
 	, lfo(sampleRate)
-	, m_depth(1.f)
+	, m_depth(.8f)
 {
 	lfo.freq(1.f);
 	delay.update(10);
