@@ -17,7 +17,7 @@ void Chorus::reset()
 void Chorus::update()
 {
 	float mod = m_depth * lfo();
-	delay.update((mod * 10) + 15.);
+	delay.update((mod * 10.) + 15.);
 }
 
 

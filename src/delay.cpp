@@ -34,23 +34,23 @@ float Delay::operator()(float val)
 	m_circBuff[m_writeIdx] = val;
 
 	// find delay index and separte fractional delay for interpolation
-	float integerDelay = 0.f;
-	float fractionalDelay = modff(m_delayMs/1000.f*m_fs, &integerDelay);
+	float fractionalDelay = (m_delayMs / 1000.f * m_fs) - (int)(m_delayMs / 1000.f * m_fs);
+	int integerDelay = (int)(m_delayMs / 1000.f * m_fs);
 
-	if (m_writeIdx - integerDelay <= 0) {
-		m_readIdx = m_bufSize + (m_writeIdx - (size_t)integerDelay);
+	if (static_cast<int>(m_writeIdx) - integerDelay < 0) {
+		m_readIdx = m_bufSize + 1 + (m_writeIdx - integerDelay);
 	}
 	else {
 		m_readIdx = m_writeIdx - static_cast<int>(integerDelay);
 	}
 
-	if (m_delayMs / 1000 * m_fs == 0) {
+	if (static_cast<size_t>(m_delayMs / 1000.f * m_fs) == 0) {
 		return val;
 	}
 
 	// for 0 delay, interpolate the input with the prev output
 	auto yn = 0.f;
-	if ((m_readIdx == m_writeIdx) && integerDelay < 1.) {
+	if ((m_writeIdx == m_readIdx) && integerDelay < 1.) {
 		yn = val;
 	}
 	else {
@@ -59,15 +59,15 @@ float Delay::operator()(float val)
 
 	// find previous delay
 	int prevReadIdx = static_cast<int>(m_readIdx) - 1;
-	if (prevReadIdx <= 0) {
-		prevReadIdx = static_cast<int>(m_bufSize) - 1; 
+	if (prevReadIdx < 0) {
+		prevReadIdx = static_cast<int>(m_bufSize); 
 	}
 
 	auto yn1 = m_circBuff[prevReadIdx];
 
 	// update write idx
 	m_writeIdx++;
-	if (m_writeIdx >= m_bufSize) {
+	if (m_writeIdx > m_bufSize) {
 		m_writeIdx = 0;
 	}
 	
