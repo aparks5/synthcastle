@@ -56,6 +56,131 @@ void midiCallback(double deltatime, std::vector<unsigned char>* message, void* u
 	}
 }
 
+void midiOut(RtMidiOut* midiout)
+{
+
+	std::vector<unsigned char> message;
+	message.push_back(0);
+	message.push_back(0);
+	message.push_back(0);
+
+	// Send out a series of MIDI messages.
+
+	message[0] = 144;
+	message[1] = 64;
+	message[2] = 90;
+	midiout->sendMessage(&message);
+
+	message[0] = 144;
+	message[1] = 67;
+	message[2] = 90;
+	midiout->sendMessage(&message);
+
+	message[0] = 144;
+	message[1] = 69;
+	message[2] = 90;
+	midiout->sendMessage(&message);
+
+	Sleep(500);
+
+	// Note Off: 128, 64, 40
+	message[0] = 128;
+	message[1] = 64;
+	message[2] = 40;
+	midiout->sendMessage(&message);
+
+	message[0] = 128;
+	message[1] = 67;
+	message[2] = 40;
+	midiout->sendMessage(&message);
+
+	message[0] = 128;
+	message[1] = 69;
+	message[2] = 40;
+	midiout->sendMessage(&message);
+
+	Sleep(500);
+}
+
+bool chooseMidiPort(RtMidiOut* rtmidi)
+{
+	std::cout << "\nWould you like to open a virtual output port? [y/N] ";
+
+	std::string keyHit;
+	std::getline(std::cin, keyHit);
+	if (keyHit == "y") {
+		rtmidi->openVirtualPort();
+		return true;
+	}
+
+	std::string portName;
+	unsigned int i = 0, nPorts = rtmidi->getPortCount();
+	if (nPorts == 0) {
+		std::cout << "No output ports available!" << std::endl;
+		return false;
+	}
+
+	if (nPorts == 1) {
+		std::cout << "\nOpening " << rtmidi->getPortName() << std::endl;
+	}
+	else {
+		for (i = 0; i < nPorts; i++) {
+			portName = rtmidi->getPortName(i);
+			std::cout << "  Output port #" << i << ": " << portName << '\n';
+		}
+
+		do {
+			std::cout << "\nChoose a port number: ";
+			std::cin >> i;
+		} while (i >= nPorts);
+	}
+
+	std::cout << "\n";
+	rtmidi->openPort(i);
+
+	return true;
+}
+
+
+bool chooseMidiInPort(RtMidiIn* rtmidi)
+{
+	std::cout << "\nWould you like to open a virtual output port? [y/N] ";
+
+	std::string keyHit;
+	std::getline(std::cin, keyHit);
+	if (keyHit == "y") {
+		rtmidi->openVirtualPort();
+		return true;
+	}
+
+	std::string portName;
+	unsigned int i = 0, nPorts = rtmidi->getPortCount();
+	if (nPorts == 0) {
+		std::cout << "No output ports available!" << std::endl;
+		return false;
+	}
+
+	if (nPorts == 1) {
+		std::cout << "\nOpening " << rtmidi->getPortName() << std::endl;
+	}
+	else {
+		for (i = 0; i < nPorts; i++) {
+			portName = rtmidi->getPortName(i);
+			std::cout << "  Output port #" << i << ": " << portName << '\n';
+		}
+
+		do {
+			std::cout << "\nChoose a port number: ";
+			std::cin >> i;
+		} while (i >= nPorts);
+	}
+
+	std::cout << "\n";
+	rtmidi->openPort(i);
+
+	return true;
+}
+
 
 void audioThread()
 {
@@ -68,9 +193,26 @@ void audioThread()
 
 	RtMidiIn* midiin = 0;
 	midiin = new RtMidiIn();
-	midiin->openPort(0);
+	chooseMidiInPort(midiin);
+
+	RtMidiOut* midiout = 0;
+
+	// RtMidiOut constructor
+	try {
+		midiout = new RtMidiOut();
+		chooseMidiPort(midiout);
+	}
+	catch (RtMidiError& error) {
+		error.printMessage();
+		exit(EXIT_FAILURE);
+	}
+
+
+
 	midiUserData.stream = &stream;
 	midiin->setCallback(&midiCallback, &midiUserData);
+
+
 
 	if (stream.open(Pa_GetDefaultOutputDevice()))
 	{
@@ -219,6 +361,13 @@ void audioThread()
 
 					EnvelopeParams env(attMs, decMs, susdB, relMs);
 					params.envParams = env;
+				}
+				if (prompt == "play") {
+					auto n = 0;
+					while (n < 5) {
+						midiOut(midiout);
+						n++;
+					};
 				}
 				stream.update(params);
 			}

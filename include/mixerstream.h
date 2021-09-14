@@ -49,6 +49,7 @@ private:
     std::vector<std::shared_ptr<Voice>> m_voices;
     Delay delay;
     Delay delay2;
+    Delay delay3;
     Chorus chorus;
     size_t lastActiveVoice;
 

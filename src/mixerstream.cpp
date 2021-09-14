@@ -12,6 +12,7 @@ MixerStream::MixerStream()
 	, m_gfx(graphicsThread)
 	, delay(SAMPLE_RATE, 1.f)
 	, delay2(SAMPLE_RATE, 1.f)
+	, delay3(SAMPLE_RATE, 1.f)
 	, chorus(SAMPLE_RATE)
 	, lastActiveVoice(0)
 {
@@ -23,8 +24,9 @@ MixerStream::MixerStream()
 	}
 
 
-	delay.update(250);
-	delay2.update(133);
+	delay.update(133);
+	delay2.update(250);
+	delay3.update(430);
 	chorus.depth(1.f);
 	chorus.rate(0.3f);
 }
@@ -182,8 +184,9 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 			output += voice->apply() * (1 / (m_voices.capacity() * 0.707));
 		}
 
-//		output = (1 / (3 * .707f)) * (output + 0.5f * delay(output) + 0.5 * delay2(output));
 		output = (1/(2*0.707)) * (output + chorus(output));
+		//output += (1/(3*.707))*(delay(output) + delay2(output) + delay3(output));
+
 		Gain mainGain;
 		mainGain.setGaindB(5);
 		mainGain.apply(output);
