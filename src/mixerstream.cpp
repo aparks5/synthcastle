@@ -10,62 +10,8 @@
 MixerStream::MixerStream()
 	: stream(0)
 	, m_gfx(graphicsThread)
-	, delay(SAMPLE_RATE, 1.f)
-	, delay2(SAMPLE_RATE, 1.f)
-	, chorus(SAMPLE_RATE)
-	, lastActiveVoice(0)
 {
-	auto nVoices = 8;
-
-	for (auto i = 0; i < nVoices; i++) {
-		std::shared_ptr<Voice> v = std::make_shared<Voice>();
-		m_voices.push_back(v);
-	}
-
-
-	delay.update(250);
-	delay2.update(133);
-	chorus.depth(1.f);
-	chorus.rate(0.3f);
 }
-
-void MixerStream::noteOn(int midiNote)
-{
-	auto activeVoices = 0;
-	for (auto voice : m_voices) {
-		if (voice->active()) {
-			activeVoices++;
-		}
-		else { // we found an unused voice
-			voice->noteOn(midiNote);
-			lastActiveVoice++;
-			if (lastActiveVoice>= 4) {
-				lastActiveVoice = 0;
-			}
-			return;
-		}
-	}
-
-	// all voices are exhausted, we need to turn one off
-	if (activeVoices >= m_voices.size()) {
-		m_voices[lastActiveVoice]->noteOn(midiNote);
-		lastActiveVoice++;
-		if (lastActiveVoice >= 4) {
-			lastActiveVoice = 0;
-		}
-	}
-
-}
-
-void MixerStream::noteOff(int midiNote)
-{
-	// which voice should we turn off?
-	for (auto voice : m_voices) {
-		voice->noteOff(midiNote);
-	}
-
-}
-
 
 bool MixerStream::open(PaDeviceIndex index)
 {
@@ -152,11 +98,19 @@ bool MixerStream::stop()
 	return (err == paNoError);
 }
 
+void MixerStream::noteOn(int noteVal)
+{
+	m_synth.noteOn(noteVal);
+}
+
+void MixerStream::noteOff(int noteVal)
+{
+	m_synth.noteOff(noteVal);
+}
+
 void MixerStream::update(VoiceParams params)
 {
-	for (auto voice : m_voices) {
-		voice->update(params);
-	}
+	m_synth.update(params);
 }
 
 int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
@@ -170,24 +124,13 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 	(void)statusFlags;
 	(void)inputBuffer;
 
-	for (auto voice : m_voices) {
-		voice->modUpdate();
-	}
+	m_synth.blockRateUpdate();
 
 	for (size_t sampIdx = 0; sampIdx < framesPerBuffer; sampIdx++)
 	{
 		auto output = 0.f;
 
-		for (auto voice : m_voices) {
-			output += voice->apply() * (1 / (m_voices.capacity() * 0.707));
-		}
-
-//		output = (1 / (3 * .707f)) * (output + 0.5f * delay(output) + 0.5 * delay2(output));
-		output = (1/(2*0.707)) * (output + chorus(output));
-		Gain mainGain;
-		mainGain.setGaindB(5);
-		mainGain.apply(output);
-		
+  		output = m_synth();
 
 		// write output
 		*out++ = output;
@@ -195,9 +138,7 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 		g_buffer[sampIdx] = static_cast<float>(output*1.0);
 	}
 
-
 	g_ready = true;
-
 
 	return paContinue;
 }
