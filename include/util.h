@@ -11,6 +11,12 @@ static float semitoneToRatio(float semitone)
     return powf(2., (1.f * semitone / 12));
 }
 
+
+static float midiNoteToFreq(int noteVal)
+{
+    return pow(2.f, (noteVal - 69.f) / 12.f) * 440.f;
+}
+
 template <class T>
 static T clamp(T val, T min, T max)
 {

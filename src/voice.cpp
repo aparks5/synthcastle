@@ -32,7 +32,6 @@ void Voice::update(VoiceParams params)
 	m_env.setParams(m_params.envParams);
 	m_moogFilter.q(m_params.filtQ);
 	m_moogFilter.freq(m_params.filtFreq);
-	m_env.reset();
 	m_lfo.freq(m_params.filtLFOFreq);
 
 }
@@ -150,15 +149,21 @@ void Voice::modFreqOsc2(float freq)
 	m_sine2.freq(freq);
 }
 
-void Voice::noteOn()
+void Voice::noteOn(int noteVal)
 {
+	m_params.midiNote = noteVal;
+	updateFreq(midiNoteToFreq(noteVal));
 	m_params.bIsActive = true;
 	m_env.noteOn();
 	m_env.reset();
 }
 
-void Voice::noteOff()
+void Voice::noteOff(int noteVal)
 {
-	m_params.bIsActive = false;
-	m_env.noteOff();
+	if (midiNote() == noteVal) {
+		m_params.bIsActive = false;
+		m_params.midiNote = 0;
+		m_env.noteOff();
+	}
 }
+

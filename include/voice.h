@@ -21,6 +21,7 @@ enum class OscillatorType
 struct VoiceParams
 {
     bool bIsActive;
+    size_t midiNote;
     OscillatorType osc;
     OscillatorType osc2;
     bool bEnableOsc2;
@@ -71,8 +72,9 @@ public:
     void oscillate(float& output);
     void modFreq(float freq);
     void modFreqOsc2(float freq);
-    void noteOn();
-    void noteOff();
+    void noteOn(int noteVal);
+    void noteOff(int noteVal);
+    int midiNote() { return m_params.midiNote; }
 
 private:
 
