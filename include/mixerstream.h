@@ -17,8 +17,8 @@ public:
     bool close();
     bool start();
     bool stop();
-    void noteOn(float freq);
-    void noteOff();
+    void noteOn(int midiNote);
+    void noteOff(int midiNote);
     void update(VoiceParams params);
 
 

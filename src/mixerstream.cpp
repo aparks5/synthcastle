@@ -15,7 +15,7 @@ MixerStream::MixerStream()
 	, chorus(SAMPLE_RATE)
 	, lastActiveVoice(0)
 {
-	auto nVoices = 4;
+	auto nVoices = 8;
 
 	for (auto i = 0; i < nVoices; i++) {
 		std::shared_ptr<Voice> v = std::make_shared<Voice>();
@@ -29,7 +29,7 @@ MixerStream::MixerStream()
 	chorus.rate(0.3f);
 }
 
-void MixerStream::noteOn(float freq)
+void MixerStream::noteOn(int midiNote)
 {
 	auto activeVoices = 0;
 	for (auto voice : m_voices) {
@@ -37,8 +37,7 @@ void MixerStream::noteOn(float freq)
 			activeVoices++;
 		}
 		else { // we found an unused voice
-			voice->updateFreq(freq);
-			voice->noteOn();
+			voice->noteOn(midiNote);
 			lastActiveVoice++;
 			if (lastActiveVoice>= 4) {
 				lastActiveVoice = 0;
@@ -49,8 +48,7 @@ void MixerStream::noteOn(float freq)
 
 	// all voices are exhausted, we need to turn one off
 	if (activeVoices >= m_voices.size()) {
-		m_voices[lastActiveVoice]->updateFreq(freq);
-		m_voices[lastActiveVoice]->noteOn();
+		m_voices[lastActiveVoice]->noteOn(midiNote);
 		lastActiveVoice++;
 		if (lastActiveVoice >= 4) {
 			lastActiveVoice = 0;
@@ -59,12 +57,13 @@ void MixerStream::noteOn(float freq)
 
 }
 
-void MixerStream::noteOff()
+void MixerStream::noteOff(int midiNote)
 {
+	// which voice should we turn off?
 	for (auto voice : m_voices) {
-		voice->noteOff();
+		voice->noteOff(midiNote);
 	}
-	
+
 }
 
 
@@ -180,11 +179,14 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 		auto output = 0.f;
 
 		for (auto voice : m_voices) {
-			output += voice->apply() / m_voices.capacity();
+			output += voice->apply() * (1 / (m_voices.capacity() * 0.707));
 		}
 
 //		output = (1 / (3 * .707f)) * (output + 0.5f * delay(output) + 0.5 * delay2(output));
-		output = 0.5*output + 0.5*chorus(output);
+		output = (1/(2*0.707)) * (output + chorus(output));
+		Gain mainGain;
+		mainGain.setGaindB(5);
+		mainGain.apply(output);
 		
 
 		// write output
