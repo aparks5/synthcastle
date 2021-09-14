@@ -3,11 +3,9 @@
 #define STREAM_H_ 
 
 #include "portaudio.h"
-#include "voice.h"
-#include "chorus.h"
-#include "delay.h"
 #include <vector>
 #include <thread>
+#include "synth.h"
 
 class MixerStream
 {
@@ -17,10 +15,9 @@ public:
     bool close();
     bool start();
     bool stop();
-    void noteOn(int midiNote);
-    void noteOff(int midiNote);
     void update(VoiceParams params);
-
+    void noteOn(int noteVal);
+    void noteOff(int noteVal);
 
 private:
     /// @brief The instance callback, where we have access to every method/variable in object of class MixerStream */
@@ -28,7 +25,6 @@ private:
         unsigned long framesPerBuffer,
         const PaStreamCallbackTimeInfo* timeInfo,
         PaStreamCallbackFlags statusFlags);
-
  
     /// @brief This routine will be called by the PortAudio engine when audio is needed.
     /// It may called at interrupt level on some machines so don't do anything
@@ -46,13 +42,7 @@ private:
 
     PaStream* stream;
     std::thread m_gfx;
-    std::vector<std::shared_ptr<Voice>> m_voices;
-    Delay delay;
-    Delay delay2;
-    Delay delay3;
-    Chorus chorus;
-    size_t lastActiveVoice;
-
+    Synth m_synth;
 };
 
 
