@@ -16,8 +16,8 @@ public:
     bool start();
     bool stop();
     void update(VoiceParams params);
-    void noteOn(int noteVal);
-    void noteOff(int noteVal);
+    void noteOn(int noteVal, int track);
+    void noteOff(int noteVal, int track);
 
 private:
     /// @brief The instance callback, where we have access to every method/variable in object of class MixerStream */
@@ -43,6 +43,7 @@ private:
     PaStream* stream;
     std::thread m_gfx;
     Synth m_synth;
+    Synth m_synth2;
 };
 
 
