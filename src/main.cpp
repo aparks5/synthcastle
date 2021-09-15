@@ -1,8 +1,6 @@
 ﻿/// Copyright (c) 2021. Anthony Parks. All rights reserved.
 
 #include <stdio.h>
-#include "conio.h"
-
 #include <math.h>
 #include <thread>
 #include <future>
@@ -10,177 +8,22 @@
 #include <string>
 #include <iostream>
 #include <cstdlib>
+#include <queue>
 
 #include "portaudio.h"
 #include "portaudiohandler.h"
-#include "RtMidi.h"
 #include "windows.h"
+#include "conio.h"
 
 #include "constants.h"
-#include "mixerstream.h"
+#include "midi.h"
+#include "prompt.h"
 #include "util.h"
+
+
 
 void audioThread();
 void banner();
-
-typedef struct
-{
-    MixerStream* stream;
-} MIDIUserData;
-
-static MIDIUserData midiUserData;
-
-void midiCallback(double deltatime, std::vector<unsigned char>* message, void* userData)
-{
-    MIDIUserData* pUserData = (MIDIUserData*)userData;
-    MixerStream* stream = pUserData->stream;
-	// midi note to freq formula https://newt.phys.unsw.edu.au/jw/notes.html
-	double stamp = 0;
-	auto nBytes = 0;
-	nBytes = message->size();
-	if (nBytes == 3) {
-		int byte0 = (int)message->at(0);
-		auto noteVal = (int)message->at(1);
-		float velocity = (int)message->at(2);
-		if (byte0 == 144) {
-			if (velocity != 0) {
-				stream->noteOn(noteVal);
-			}
-			else {
-				stream->noteOff(noteVal);
-			}
-		}
-		else if (byte0 == 128) {
-			stream->noteOff(noteVal);
-		}
-	}
-}
-
-void midiOut(RtMidiOut* midiout)
-{
-
-	std::vector<unsigned char> message;
-	message.push_back(0);
-	message.push_back(0);
-	message.push_back(0);
-
-	// Send out a series of MIDI messages.
-
-	message[0] = 144;
-	message[1] = 64;
-	message[2] = 90;
-	midiout->sendMessage(&message);
-
-	message[0] = 144;
-	message[1] = 67;
-	message[2] = 90;
-	midiout->sendMessage(&message);
-
-	message[0] = 144;
-	message[1] = 69;
-	message[2] = 90;
-	midiout->sendMessage(&message);
-
-	Sleep(500);
-
-	// Note Off: 128, 64, 40
-	message[0] = 128;
-	message[1] = 64;
-	message[2] = 40;
-	midiout->sendMessage(&message);
-
-	message[0] = 128;
-	message[1] = 67;
-	message[2] = 40;
-	midiout->sendMessage(&message);
-
-	message[0] = 128;
-	message[1] = 69;
-	message[2] = 40;
-	midiout->sendMessage(&message);
-
-	Sleep(500);
-}
-
-bool chooseMidiPort(RtMidiOut* rtmidi)
-{
-	std::cout << "\nWould you like to open a virtual output port? [y/N] ";
-
-	std::string keyHit;
-	std::getline(std::cin, keyHit);
-	if (keyHit == "y") {
-		rtmidi->openVirtualPort();
-		return true;
-	}
-
-	std::string portName;
-	unsigned int i = 0, nPorts = rtmidi->getPortCount();
-	if (nPorts == 0) {
-		std::cout << "No output ports available!" << std::endl;
-		return false;
-	}
-
-	if (nPorts == 1) {
-		std::cout << "\nOpening " << rtmidi->getPortName() << std::endl;
-	}
-	else {
-		for (i = 0; i < nPorts; i++) {
-			portName = rtmidi->getPortName(i);
-			std::cout << "  Output port #" << i << ": " << portName << '\n';
-		}
-
-		do {
-			std::cout << "\nChoose a port number: ";
-			std::cin >> i;
-		} while (i >= nPorts);
-	}
-
-	std::cout << "\n";
-	rtmidi->openPort(i);
-
-	return true;
-}
-
-
-bool chooseMidiInPort(RtMidiIn* rtmidi)
-{
-	std::cout << "\nWould you like to open a virtual output port? [y/N] ";
-
-	std::string keyHit;
-	std::getline(std::cin, keyHit);
-	if (keyHit == "y") {
-		rtmidi->openVirtualPort();
-		return true;
-	}
-
-	std::string portName;
-	unsigned int i = 0, nPorts = rtmidi->getPortCount();
-	if (nPorts == 0) {
-		std::cout << "No output ports available!" << std::endl;
-		return false;
-	}
-
-	if (nPorts == 1) {
-		std::cout << "\nOpening " << rtmidi->getPortName() << std::endl;
-	}
-	else {
-		for (i = 0; i < nPorts; i++) {
-			portName = rtmidi->getPortName(i);
-			std::cout << "  Output port #" << i << ": " << portName << '\n';
-		}
-
-		do {
-			std::cout << "\nChoose a port number: ";
-			std::cin >> i;
-		} while (i >= nPorts);
-	}
-
-	std::cout << "\n";
-	rtmidi->openPort(i);
-
-	return true;
-}
-
 
 void audioThread()
 {
@@ -189,189 +32,17 @@ void audioThread()
 
 	PortAudioHandler paInit;
 	MixerStream stream;
-	std::string prompt;
+	MIDI midi(stream);
+	Prompt prompt(stream);
 
-	RtMidiIn* midiin = 0;
-	midiin = new RtMidiIn();
-	chooseMidiInPort(midiin);
-
-	RtMidiOut* midiout = 0;
-
-	// RtMidiOut constructor
-	try {
-		midiout = new RtMidiOut();
-		chooseMidiPort(midiout);
-	}
-	catch (RtMidiError& error) {
-		error.printMessage();
-		exit(EXIT_FAILURE);
-	}
-
-
-
-	midiUserData.stream = &stream;
-	midiin->setCallback(&midiCallback, &midiUserData);
-
-
-
-	if (stream.open(Pa_GetDefaultOutputDevice()))
+if (stream.open(Pa_GetDefaultOutputDevice()))
 	{
 
 		std::vector<unsigned char> message;
 		VoiceParams params;
 
 		if (stream.start()) {
-			while (true) {
-				std::cout << ">>> commands: stop, osc, freq, filter-freq, filter-q, filt-lfo-freq, pitch/filt-lfo-on/off, " << std::endl;
-				std::cin >> prompt;
-				if (prompt == "stop") {
-					stream.stop();
-				}
-				if (prompt == "start") {
-					stream.start();
-				}
-				if (prompt == "exit") {
-					break;
-				}
-				if (prompt == "freq") {
-					std::cout << ">> enter frequency in Hz" << std::endl;
-					std::cin >> prompt;
-					auto freq = std::stof(prompt);
-					freq = (freq > 0) ? freq : 0;
-					freq = (freq < 10000) ? freq : 10000;
-					params.freq = freq;
-				}
-				if (prompt == "filt-freq") {
-					std::cout << ">> enter filter cutoff frequency in Hz" << std::endl;
-					std::cin >> prompt;
-					auto freq = std::stof(prompt);
-					freq = (freq > 0) ? freq : 0;
-					freq = (freq < 10000) ? freq : 10000;
-					params.filtFreq = freq;
-				}
-				if (prompt == "filt-q") {
-					std::cout << ">> enter filter resonance (0 - 10)" << std::endl;
-					std::cin >> prompt;
-					auto q = std::stof(prompt);
-					q = (q > 0) ? q : 0;
-					q = (q < 10000) ? q : 10000;
-					params.filtQ = q;
-				}
-				if (prompt == "filt-lfo-freq") {
-					std::cout << ">> enter filter LFO frequency (0 - 40)" << std::endl;
-					std::cin >> prompt;
-					auto freq = std::stof(prompt);
-					freq = (freq > 0) ? freq : 0;
-					freq = (freq < 40) ? freq : 40;
-					params.filtLFOFreq = freq;
-				}
-				if (prompt == "filt-lfo-on") {
-					params.bEnableFiltLFO = true;
-				}
-				if (prompt == "filt-lfo-off") {
-					params.bEnableFiltLFO = false;
-				}
-				if (prompt == "pitch-lfo-on") {
-					params.bEnablePitchLFO = true;
-				}
-				if (prompt == "pitch-lfo-off") {
-					params.bEnablePitchLFO = false;
-				}
-
-				if (prompt == "osc") {
-					std::cout << ">> enter sine, saw, tri, square" << std::endl;
-					std::cin >> prompt;
-					OscillatorType osc = OscillatorType::SINE;
-					if (prompt == "sine") {
-						osc = OscillatorType::SINE;
-					}
-					if (prompt == "saw") {
-						osc = OscillatorType::SAW;
-					}
-					if (prompt == "tri") {
-						osc = OscillatorType::TRIANGLE;
-					}
-					if (prompt == "square") {
-						osc = OscillatorType::SQUARE;
-					}
-					params.osc = osc;
-				}
-				if (prompt == "osc2-enable") {
-					params.bEnableOsc2 = true;
-				}
-
-				if (prompt == "osc2-disable") {
-					params.bEnableOsc2 = false;
-				}
-				if (prompt == "osc2") {
-					std::cout << ">> enter sine, saw, tri, square" << std::endl;
-					std::cin >> prompt;
-					OscillatorType osc = OscillatorType::SINE;
-					if (prompt == "sine") {
-						osc = OscillatorType::SINE;
-					}
-					if (prompt == "saw") {
-						osc = OscillatorType::SAW;
-					}
-					if (prompt == "tri") {
-						osc = OscillatorType::TRIANGLE;
-					}
-					if (prompt == "square") {
-						osc = OscillatorType::SQUARE;
-					}
-					params.osc2 = osc;
-				}
-				if (prompt == "osc2-coarse") {
-					std::cin >> prompt;
-					auto coarse = std::stof(prompt);
-					coarse = (coarse < -24.) ? -24 : coarse;
-					coarse = (coarse > 24.) ? 24 : coarse;
-					params.osc2coarse = coarse;
-				}
-				if (prompt == "osc2-fine") {
-					std::cin >> prompt;
-					auto fine = std::stof(prompt);
-					fine = (fine < -1.) ? -1. : fine;
-					fine = (fine > 1.) ? 1. : fine;
-					params.osc2fine = fine;
-				}
-				if (prompt == "env") {
-					std::cout << ">> enter adsr envelope parameters (attack ms, decay ms, sustain dB (< 0), release ms) (e.g. 250 10 -10 500) " << std::endl;
-					std::vector<std::string> param;
-					size_t paramCount = 0;
-					std::string envP;
-					while (paramCount < 4 && std::cin >> envP) {
-						param.push_back(envP);
-						paramCount++;
-					}
-					size_t attMs = 0;
-					size_t decMs = 0;
-					int susdB = 0;
-					size_t relMs = 0;
-
-					std::sscanf(param[0].c_str(), "%zu", &attMs);
-					std::sscanf(param[1].c_str(), "%zu", &decMs);
-					std::sscanf(param[2].c_str(), "%d", &susdB);
-					std::sscanf(param[3].c_str(), "%zu", &relMs);
-
-					attMs = (attMs > 5000) ? 500 : attMs;
-					decMs = (decMs > 5000) ? 500 : decMs;
-					susdB = (susdB > 0) ? 0 : susdB;
-					relMs = (relMs > 5000) ? 500 : relMs;
-
-					EnvelopeParams env(attMs, decMs, susdB, relMs);
-					params.envParams = env;
-				}
-				if (prompt == "play") {
-					auto n = 0;
-					while (n < 5) {
-						midiOut(midiout);
-						n++;
-					};
-				}
-				stream.update(params);
-			}
-			stream.stop();
+			prompt.open();
 		}
 
 		stream.close();
@@ -396,4 +67,3 @@ int main(void)
 	audio.join();
 	return 0;
 }
-

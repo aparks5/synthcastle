@@ -11,6 +11,21 @@ MixerStream::MixerStream()
 	: stream(0)
 	, m_gfx(graphicsThread)
 {
+	VoiceParams params2;
+	params2.osc = OscillatorType::SQUARE;
+	params2.filtFreq = 800;
+	params2.filtQ = 1.3;
+
+	m_synth2.update(params2);
+
+
+	VoiceParams params;
+	params.envParams = { 500, 0, 0, 750 };
+	params.bEnableFiltLFO = true;
+	params.filtLFOFreq = 0.5;
+	params.filtFreq = 4000;
+
+	m_synth.update(params);
 }
 
 bool MixerStream::open(PaDeviceIndex index)
@@ -98,14 +113,24 @@ bool MixerStream::stop()
 	return (err == paNoError);
 }
 
-void MixerStream::noteOn(int noteVal)
+void MixerStream::noteOn(int noteVal, int track)
 {
-	m_synth.noteOn(noteVal);
+	if (track == 1) {
+		m_synth.noteOn(noteVal);
+	}
+	else if (track == 2) {
+		m_synth2.noteOn(noteVal);
+	}
 }
 
-void MixerStream::noteOff(int noteVal)
+void MixerStream::noteOff(int noteVal, int track)
 {
-	m_synth.noteOff(noteVal);
+	if (track == 1) {
+		m_synth.noteOff(noteVal);
+	}
+	else if (track == 2) {
+		m_synth2.noteOff(noteVal);
+	}
 }
 
 void MixerStream::update(VoiceParams params)
@@ -125,12 +150,13 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 	(void)inputBuffer;
 
 	m_synth.blockRateUpdate();
+	m_synth2.blockRateUpdate();
 
 	for (size_t sampIdx = 0; sampIdx < framesPerBuffer; sampIdx++)
 	{
 		auto output = 0.f;
 
-  		output = m_synth();
+  		output = 0.5f * (m_synth() + m_synth2());
 
 		// write output
 		*out++ = output;
