@@ -76,7 +76,7 @@ float Voice::apply()
 	Gain gain;
 
 	// OUTPUTGAIN
-	gain.setGaindB(-10);
+	gain.setGaindB(-5);
 	output = gain.apply(output);
 
 	return output;

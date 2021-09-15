@@ -72,15 +72,12 @@ float Synth::operator()()
 	auto output = 0.f;
 
 	for (auto voice : m_voices) {
-		output += voice->apply() * (1 / (m_voices.capacity() * 0.707));
+		output += voice->apply() * (1 / sqrt(m_voices.capacity() * 2));
 	}
 
-	output = (1 / (2 * 0.707)) * (output + chorus(output));
-	//output += (1/(3*.707))*(delay(output) + delay2(output) + delay3(output));
+	output = (1 / (0.707)) * (output + chorus(output));
+	//output += (1/sqrt(2*m_numActiveFx))*(delay(output) + delay2(output) + delay3(output));
 
-	Gain mainGain;
-	mainGain.setGaindB(5);
-	mainGain.apply(output);
 
 	return output;
 
