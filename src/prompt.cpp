@@ -1,4 +1,5 @@
 #include "prompt.h"
+#include "util.h"
 #include "windows.h"
 
 Prompt::Prompt(MixerStream& s)
@@ -11,6 +12,7 @@ void Prompt::open()
 	VoiceParams params;
 	std::queue<NoteEvent> notes;
 	NoteGenerator gen;
+	bool bParamChanged = false;
 
 	while (true) {
 		std::cout << ">>> commands: stop, osc, freq, filter-freq, filter-q, filt-lfo-freq, pitch/filt-lfo-on/off, " << std::endl;
@@ -28,45 +30,49 @@ void Prompt::open()
 			std::cout << ">> enter frequency in Hz" << std::endl;
 			std::cin >> prompt;
 			auto freq = std::stof(prompt);
-			freq = (freq > 0) ? freq : 0;
-			freq = (freq < 10000) ? freq : 10000;
+			freq = clamp(freq, 0.f, 10000.f);
 			params.freq = freq;
+			bParamChanged = true;
 		}
 		if (prompt == "filt-freq") {
 			std::cout << ">> enter filter cutoff frequency in Hz" << std::endl;
 			std::cin >> prompt;
 			auto freq = std::stof(prompt);
-			freq = (freq > 0) ? freq : 0;
-			freq = (freq < 10000) ? freq : 10000;
+			freq = clamp(freq, 0.f, 10000.f);
 			params.filtFreq = freq;
+			bParamChanged = true;
 		}
 		if (prompt == "filt-q") {
 			std::cout << ">> enter filter resonance (0 - 10)" << std::endl;
 			std::cin >> prompt;
 			auto q = std::stof(prompt);
-			q = (q > 0) ? q : 0;
-			q = (q < 10000) ? q : 10000;
+			q = clamp(q, 0.f, 10.f);
 			params.filtQ = q;
+			bParamChanged = true;
 		}
 		if (prompt == "filt-lfo-freq") {
 			std::cout << ">> enter filter LFO frequency (0 - 40)" << std::endl;
 			std::cin >> prompt;
 			auto freq = std::stof(prompt);
-			freq = (freq > 0) ? freq : 0;
-			freq = (freq < 40) ? freq : 40;
+			freq = clamp(freq, 0.f, 40.f);
 			params.filtLFOFreq = freq;
+			bParamChanged = true;
 		}
 		if (prompt == "filt-lfo-on") {
 			params.bEnableFiltLFO = true;
+			bParamChanged = true;
 		}
 		if (prompt == "filt-lfo-off") {
 			params.bEnableFiltLFO = false;
+			bParamChanged = true;
 		}
 		if (prompt == "pitch-lfo-on") {
 			params.bEnablePitchLFO = true;
+			bParamChanged = true;
 		}
 		if (prompt == "pitch-lfo-off") {
 			params.bEnablePitchLFO = false;
+			bParamChanged = true;
 		}
 
 		if (prompt == "osc") {
@@ -86,13 +92,16 @@ void Prompt::open()
 				osc = OscillatorType::SQUARE;
 			}
 			params.osc = osc;
+			bParamChanged = true;
 		}
 		if (prompt == "osc2-enable") {
 			params.bEnableOsc2 = true;
+			bParamChanged = true;
 		}
 
 		if (prompt == "osc2-disable") {
 			params.bEnableOsc2 = false;
+			bParamChanged = true;
 		}
 		if (prompt == "osc2") {
 			std::cout << ">> enter sine, saw, tri, square" << std::endl;
@@ -111,20 +120,20 @@ void Prompt::open()
 				osc = OscillatorType::SQUARE;
 			}
 			params.osc2 = osc;
+			bParamChanged = true;
 		}
 		if (prompt == "osc2-coarse") {
 			std::cin >> prompt;
 			auto coarse = std::stof(prompt);
-			coarse = (coarse < -24.) ? -24 : coarse;
-			coarse = (coarse > 24.) ? 24 : coarse;
+			coarse = clamp(coarse, -24.f, 24.f);
 			params.osc2coarse = coarse;
 		}
 		if (prompt == "osc2-fine") {
 			std::cin >> prompt;
 			auto fine = std::stof(prompt);
-			fine = (fine < -1.) ? -1. : fine;
-			fine = (fine > 1.) ? 1. : fine;
+			fine = clamp(fine, -1.f, 1.f);
 			params.osc2fine = fine;
+			bParamChanged = true;
 		}
 		if (prompt == "env") {
 			std::cout << ">> enter adsr envelope parameters (attack ms, decay ms, sustain dB (< 0), release ms) (e.g. 250 10 -10 500) " << std::endl;
@@ -152,48 +161,65 @@ void Prompt::open()
 
 			EnvelopeParams env(attMs, decMs, susdB, relMs);
 			params.envParams = env;
+			bParamChanged = true;
 		}
 		if (prompt == "play") {
-			auto n = 0;
-			while (n < 8) {
-				n++;
-				notes.push(gen.makeNote(60, true, 0., 1));
-				notes.push(gen.makeNote(63, true, 0., 1));
-				notes.push(gen.makeNote(67, true, 0., 1));
-
-				notes.push(gen.makeNote(44, true, 100., 2));
-				notes.push(gen.makeNote(44, false, 100., 2));
-				notes.push(gen.makeNote(44, true, 100., 2));
-				notes.push(gen.makeNote(44, false, 100., 2));
-
-				notes.push(gen.makeNote(60, false, 200., 1));
-				notes.push(gen.makeNote(63, false, 200., 1));
-				notes.push(gen.makeNote(67, false, 200., 1));
+			std::string pattern;
+			std::cin >> pattern;
+			NoteGenerator gen;
+			auto notes = gen.makeSequence(pattern);
+			playPattern(notes);
+		}
+		if (prompt == "loop") {
+			std::string pattern;
+			std::vector<std::string> param;
+			auto paramCount = 0;
+			while (paramCount < 2 && std::cin >> pattern) {
+				param.push_back(pattern);
+				paramCount++;
 			}
-
-			while (!notes.empty()) {
-				NoteEvent ev = static_cast<NoteEvent>(notes.front());
-				notes.pop();
-				double stamp = 0;
-				auto nBytes = 0;
-				auto message = &ev.message;
-				nBytes = message->size();
-				if (nBytes == 3) {
-					int byte0 = (int)message->at(0);
-					auto noteVal = (int)message->at(1);
-					float velocity = (int)message->at(2);
-					if (byte0 == 144) {
-						if (velocity != 0) {
-							stream.noteOn(noteVal, ev.track);
-						}
-					}
-					else if (byte0 == 128) {
-						stream.noteOff(noteVal, ev.track);
-					}
-				}
-				Sleep(ev.timeVal);
+			NoteGenerator gen;
+			int loopCount = std::stod(param[1]);
+			while (loopCount > 0) {
+				auto notes = gen.makeSequence(param[0]);
+				playPattern(notes);
+				loopCount--;
 			}
 		}
-		stream.update(params);
+
+
+		if (bParamChanged) {
+			stream.update(params);
+		}
 	}
+}
+
+void Prompt::playPattern(std::queue<NoteEvent> notes)
+{
+
+	int now = 0.f;
+
+	while (!notes.empty()) {
+		NoteEvent ev = static_cast<NoteEvent>(notes.front());
+		notes.pop();
+		double stamp = 0;
+		auto nBytes = 0;
+		auto message = &ev.message;
+		nBytes = message->size();
+		if (nBytes == 3) {
+			int byte0 = (int)message->at(0);
+			auto noteVal = (int)message->at(1);
+			float velocity = (int)message->at(2);
+			if (byte0 == 144) {
+				if (velocity != 0) {
+					stream.noteOn(noteVal, ev.track);
+				}
+			}
+			else if (byte0 == 128) {
+				stream.noteOff(noteVal, ev.track);
+			}
+		}
+		Sleep(ev.timeVal - now);
+	}
+
 }

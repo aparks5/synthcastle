@@ -14,6 +14,8 @@ public:
 	void open();
 private:
 	MixerStream& stream;
+	std::queue<NoteEvent> makePattern(std::string pattern);
+	void playPattern(std::queue<NoteEvent> notes);
 
 };
 

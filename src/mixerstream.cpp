@@ -6,6 +6,7 @@
 #include "graphics.h"
 #include <iostream>
 #include <thread>
+#include "util.h"
 
 MixerStream::MixerStream()
 	: stream(0)
@@ -156,7 +157,9 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 	{
 		auto output = 0.f;
 
-  		output = 0.5f * (m_synth() + m_synth2());
+  		output = (m_synth() + m_synth2());
+
+		output = clip(output);
 
 		// write output
 		*out++ = output;
