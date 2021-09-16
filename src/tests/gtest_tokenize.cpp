@@ -1,7 +1,11 @@
+#include <gtest/gtest.h>
+
 #include <sstream>
 #include <vector>
 #include <string>
 #include <iostream>
+
+#define GTEST_COUT std::cerr << "[          ] [ INFO ]"
 
 std::vector<std::string> tokenize(std::string input, char delimiter)
 {
@@ -12,8 +16,9 @@ std::vector<std::string> tokenize(std::string input, char delimiter)
     return tokens;
 }
 
+TEST(TokenTest, grouping)
+{
 
-int main() {
     // inputs
     // need multiple tokenizers
     // dashes connect notes so they form a chord
@@ -27,18 +32,19 @@ int main() {
     auto events = tokenize(str, ',');
     // now use `events`
     for (auto event : events) {
-        std::cout << "event" << std::endl;
-        std::cout << event << std::endl;
+        GTEST_COUT << "event" << std::endl;
+        GTEST_COUT << event << std::endl;
         // split notes into duration and note
         auto durationSplit = tokenize(event, ':');
         auto notes = tokenize(durationSplit[0], '-');
-        std::cout << "notes:" << std::endl;
+        GTEST_COUT << "notes:" << std::endl;
         for (auto note : notes) {
-            std::cout << note << std::endl;
+            GTEST_COUT << note << std::endl;
         }
         auto duration = durationSplit[1];
-        std::cout << "duration:" << duration << std::endl;
-        std::cout << "*** end event ***" << std::endl;
+
+        GTEST_COUT << "duration:" << duration << std::endl;
     }
 
+    EXPECT_TRUE(1 == 1);
 }

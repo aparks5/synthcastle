@@ -2,6 +2,10 @@
 #define UTIL_H_
 
 #include "math.h"
+#include <vector>
+#include <string>
+#include <iostream>
+#include <sstream>
 
 static float semitoneToRatio(float semitone)
 {
@@ -49,5 +53,16 @@ static float clip(float input)
         input = -1;
     return (1.5 * input - 0.5 * input * input * input); // Simple f(x) = 1.5x - 0.5x^3 waveshaper
 }
+
+
+static std::vector<std::string> tokenize(std::string input, char delimiter)
+{
+    std::vector<std::string> tokens;
+    std::istringstream stream(input);
+    for (std::string each; std::getline(stream, each, delimiter); tokens.push_back(each));
+
+    return tokens;
+}
+
 
 #endif // UTIL_H_
