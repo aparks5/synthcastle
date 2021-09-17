@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "AudioFile.h"
+#include "thirdparty/AudioFile.h"
 
 
 class Sampler
