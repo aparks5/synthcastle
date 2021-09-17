@@ -6,6 +6,8 @@
 #include <vector>
 #include <thread>
 #include "synth.h"
+#include "sampler.h"
+
 
 class MixerStream
 {
@@ -44,6 +46,10 @@ private:
     std::thread m_gfx;
     Synth m_synth;
     Synth m_synth2;
+    Sampler m_kick;
+    Sampler m_hat;
+    Sampler m_clap;
+    Sampler m_snare;
 };
 
 

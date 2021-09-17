@@ -5,6 +5,7 @@
 
 Delay::Delay(float sampleRate, float maxDelaySeconds)
 	: m_fs(sampleRate)
+	, m_feedback(0.f)
 	, m_delayMs(0)
 	, m_delaySamps(0)
 	, m_maxDelaySamps(maxDelaySeconds*sampleRate)
@@ -17,9 +18,10 @@ Delay::Delay(float sampleRate, float maxDelaySeconds)
 	m_bufSize = m_circBuff.capacity() - 1;
 }
 
-void Delay::update(float delayMs)
+void Delay::update(float delayMs, float feedbackRatio)
 {
 	m_delayMs = delayMs;
+	m_feedback = feedbackRatio;
 
 }
 
@@ -31,7 +33,6 @@ void Delay::reset()
 float Delay::operator()(float val)
 {
 
-	m_circBuff[m_writeIdx] = val;
 
 	// find delay index and separte fractional delay for interpolation
 	float fractionalDelay = (m_delayMs / 1000.f * m_fs) - (int)(m_delayMs / 1000.f * m_fs);
@@ -66,6 +67,8 @@ float Delay::operator()(float val)
 	auto yn1 = m_circBuff[prevReadIdx];
 
 	// update write idx
+
+	m_circBuff[m_writeIdx] = val + (m_feedback * yn);
 	m_writeIdx++;
 	if (m_writeIdx > m_bufSize) {
 		m_writeIdx = 0;

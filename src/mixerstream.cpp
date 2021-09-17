@@ -11,6 +11,10 @@
 MixerStream::MixerStream()
 	: stream(0)
 	, m_gfx(graphicsThread)
+	, m_kick("C:\\drum_samples\\bd01.wav")
+	, m_hat("C:\\drum_samples\\hh01.wav")
+	, m_clap("C:\\drum_samples\\cp01.wav")
+	, m_snare("C:\\drum_samples\\sd01.wav")
 {
 	VoiceParams params;
 	params.envParams = { 1, 250, 0, 1 };
@@ -123,6 +127,25 @@ void MixerStream::noteOn(int noteVal, int track)
 	else if (track == 2) {
 		m_synth2.noteOn(noteVal);
 	}
+	else if (track == 3) {
+		(void)noteVal;
+		m_kick.noteOn();
+	}
+	else if (track == 4) {
+		(void)noteVal;
+		m_hat.noteOn();
+	}
+	else if (track == 5) {
+		(void)noteVal;
+		m_clap.noteOn();
+	}
+	else if (track == 6) {
+		(void)noteVal;
+		m_snare.noteOn();
+	}
+
+
+
 }
 
 void MixerStream::noteOff(int noteVal, int track)
@@ -158,7 +181,7 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 	{
 		auto output = 0.f;
 
-  		output = (m_synth() + m_synth2());
+		output = (1 / sqrt(2 * 6)) * (m_synth() + m_synth2() + m_kick() + m_hat() + m_snare() + m_clap());
 
 		output = clip(output);
 
