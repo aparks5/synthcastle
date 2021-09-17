@@ -49,11 +49,10 @@ std::queue<NoteEvent> NoteGenerator::makeSequence(std::string input)
 		}
 		auto numNotes = notes.size();
 		for (auto note : notes) {
-			numNotes--;
-			auto dur = 0.f;
-			if (numNotes == 0) {
+			if (numNotes == notes.size()) {
 				timestamp += stof(duration);
 			}
+			numNotes--;
 			auto ev = makeNote(stod(note), true, timestamp, trackNum);
 			noteEvents.push(ev);
 		}
