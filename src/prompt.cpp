@@ -10,13 +10,22 @@ void Prompt::open()
 {
 	std::string prompt;
 	VoiceParams params;
+	params.envParams = { 1,250,0,0 };
+	stream.update(params);
 	std::queue<NoteEvent> notes;
 	NoteGenerator gen;
 	bool bParamChanged = false;
+	std::cout << ">>> type 'help' to list commands" << std::endl;
 
 	while (true) {
-		std::cout << ">>> commands: stop, osc, freq, filter-freq, filter-q, filt-lfo-freq, pitch/filt-lfo-on/off, " << std::endl;
+		std::cout << ">>> ";
 		std::cin >> prompt;
+		if (prompt == "help") {
+			std::cout << ">>> commands: stop, osc, freq, filt-freq, filt-q, filt-lfo-freq, pitch/filt-lfo-on/off, " << std::endl;
+			std::cout << ">>> osc2-enable, osc2-coarse, osc2-fine, env [attackMs decayMs susdB]" << std::endl;
+			std::cout << ">>> play [note], loop [note-note2-note3:duration,note4:duration2... loopNumTimes]" << std::endl;
+		}
+
 		if (prompt == "stop") {
 			stream.stop();
 		}
@@ -167,25 +176,30 @@ void Prompt::open()
 			std::string pattern;
 			std::cin >> pattern;
 			NoteGenerator gen;
-			auto notes = gen.makeSequence(pattern);
-			playPattern(notes);
+			auto temp = gen.makeSequence(pattern);
+			while (!temp.empty()) {
+				notes.push(temp.front());
+				temp.pop();
+			}
+
 		}
 		if (prompt == "loop") {
-			std::string pattern;
-			std::vector<std::string> param;
-			auto paramCount = 0;
-			while (paramCount < 2 && std::cin >> pattern) {
-				param.push_back(pattern);
-				paramCount++;
-			}
-			NoteGenerator gen;
-			int loopCount = std::stod(param[1]);
+			std::cin >> prompt;
+			int loopCount = std::stod(prompt);
+
 			while (loopCount > 0) {
-				auto notes = gen.makeSequence(param[0]);
 				playPattern(notes);
 				loopCount--;
 			}
 		}
+
+		if (prompt == "pattern") {
+			playPattern(notes);
+		}
+		if (prompt == "clear") {
+			notes = {};
+		}
+
 
 
 		if (bParamChanged) {
@@ -194,14 +208,46 @@ void Prompt::open()
 	}
 }
 
+static std::queue<NoteEvent> sortTimeVal(std::queue<NoteEvent> notes)
+{
+	// sort then play
+	std::vector<NoteEvent> noteVec;
+	while (!notes.empty()) {
+		noteVec.push_back(notes.front());
+		notes.pop();
+	}
+
+	std::sort(
+		noteVec.begin(),
+		noteVec.end(),
+		[](const NoteEvent& lhs, const NoteEvent& rhs)
+		{ return lhs.timeVal < rhs.timeVal; }
+	);
+
+	notes = {};
+
+	for (int i = 0; i < noteVec.size(); i++) {
+		notes.push(noteVec[i]);
+	}
+
+	return notes;
+
+}
+
+
 void Prompt::playPattern(std::queue<NoteEvent> notes)
 {
 
 	int now = 0.f;
 
-	while (!notes.empty()) {
-		NoteEvent ev = static_cast<NoteEvent>(notes.front());
-		notes.pop();
+	auto temp = sortTimeVal(notes);
+
+	while (!temp.empty()) {
+
+		NoteEvent ev = static_cast<NoteEvent>(temp.front());
+		Sleep(ev.timeVal - now);
+		now += ev.timeVal - now;
+		temp.pop();
 		double stamp = 0;
 		auto nBytes = 0;
 		auto message = &ev.message;
@@ -219,7 +265,11 @@ void Prompt::playPattern(std::queue<NoteEvent> notes)
 				stream.noteOff(noteVal, ev.track);
 			}
 		}
-		Sleep(ev.timeVal - now);
+
+		if (ev.timeVal - now < 0) {
+			now = ev.timeVal;
+		}
+
 	}
 
 }

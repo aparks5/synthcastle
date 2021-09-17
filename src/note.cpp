@@ -15,12 +15,29 @@ std::queue<NoteEvent> NoteGenerator::makeSequence(std::string input)
 	std::queue<NoteEvent> noteEvents;
 	
 	char noteGroup = '-';
+	char trackSpecifier = '=';
 	char eventGroup = ',';
 	char durationSpecifier = ':';
 
 	// get events first
-	auto events = tokenize(input, ',');
+	auto trackSplit = tokenize(input, '=');
+	auto trackNum = 1;
+
+	auto eventIdx = 0;
+
+	if (trackSplit.size() > 1) {
+		trackNum = std::stod(trackSplit[0]);
+		eventIdx = 1;
+	}
+	else {
+		eventIdx = 0;
+	}
+
+	auto events = tokenize(trackSplit[eventIdx], ',');
+
 	// now use `events`
+	auto timestamp = 0.;
+	
 	for (auto event : events) {
 		// split notes into duration and note
 		auto durationSplit = tokenize(event, ':');
@@ -35,9 +52,9 @@ std::queue<NoteEvent> NoteGenerator::makeSequence(std::string input)
 			numNotes--;
 			auto dur = 0.f;
 			if (numNotes == 0) {
-				dur = stof(duration);
+				timestamp += stof(duration);
 			}
-			auto ev = makeNote(stod(note), true, dur, 1);
+			auto ev = makeNote(stod(note), true, timestamp, trackNum);
 			noteEvents.push(ev);
 		}
 	}

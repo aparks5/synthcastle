@@ -17,7 +17,7 @@ Voice::Voice()
 	, m_env1out(0.f)
 
 {
-	EnvelopeParams env(3, 0, 0, 3);
+	EnvelopeParams env(3, 250, 0, 0);
 	m_env.setParams(env);
 	m_moogFilter.freq(1000.f);
 	m_filtFreq = 1000.f;

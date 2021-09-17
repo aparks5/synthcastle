@@ -12,21 +12,22 @@ MixerStream::MixerStream()
 	: stream(0)
 	, m_gfx(graphicsThread)
 {
+	VoiceParams params;
+	params.envParams = { 1, 250, 0, 1 };
+	params.bEnableFiltLFO = true;
+	params.filtLFOFreq = 0.5;
+	params.filtFreq = 4000;
+
+	m_synth.update(params);
+
 	VoiceParams params2;
+	params2.envParams = { 1, 250, 0, 1 };
 	params2.osc = OscillatorType::SQUARE;
 	params2.filtFreq = 800;
 	params2.filtQ = 1.3;
 
 	m_synth2.update(params2);
 
-
-	VoiceParams params;
-	params.envParams = { 500, 0, 0, 750 };
-	params.bEnableFiltLFO = true;
-	params.filtLFOFreq = 0.5;
-	params.filtFreq = 4000;
-
-	m_synth.update(params);
 }
 
 bool MixerStream::open(PaDeviceIndex index)
