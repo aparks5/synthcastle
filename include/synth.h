@@ -7,7 +7,7 @@
 #include "voice.h"
 #include "chorus.h"
 #include "delay.h"
-#include "verblib.h"
+#include "thirdparty/verblib.h"
 
 class Synth
 {
