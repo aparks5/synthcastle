@@ -14,6 +14,8 @@ Synth::Synth()
 		m_voices.push_back(v);
 	}
 
+	delay.update(333, 0.5f);
+
 }
 
 void Synth::noteOn(int midiNote)
@@ -75,8 +77,8 @@ float Synth::operator()()
 		output += voice->apply() * (1 / sqrt(m_voices.capacity() * 2));
 	}
 
-	output = (1 / (0.707)) * (output + chorus(output));
-	//output += (1/sqrt(2*m_numActiveFx))*(delay(output) + delay2(output) + delay3(output));
+ //	output = (1 / (0.707)) * (output + chorus(output));
+	output += (1/sqrt(2))*(delay(output) + delay2(output) + delay3(output));
 
 
 	return output;

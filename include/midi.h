@@ -21,6 +21,8 @@ private:
 		MIDIUserData() : stream(nullptr) {};
 	};
 
+
+	std::shared_ptr<RtMidiIn> midiin;
 	static void midiCallback(double deltatime, std::vector<unsigned char>* message, void* userData);
     MIDIUserData midiUserData;
 	bool chooseMidiPort(RtMidiOut* rtmidi);

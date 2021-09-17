@@ -2,9 +2,11 @@
 #include <functional>
 
 MIDI::MIDI(MixerStream& stream)
+	: midiin(std::make_shared<RtMidiIn>())
 {
-	RtMidiIn* midiin = 0;
-	midiin = new RtMidiIn();
+
+	midiin->openPort(0);
+	/*
 	chooseMidiInPort(midiin);
 
 	RtMidiOut* midiout = 0;
@@ -18,6 +20,7 @@ MIDI::MIDI(MixerStream& stream)
 		error.printMessage();
 		exit(EXIT_FAILURE);
 	}
+	*/
 
 	midiUserData.stream = &stream;
 	std::queue<NoteEvent> notes;

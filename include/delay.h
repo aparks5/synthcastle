@@ -7,12 +7,13 @@ class Delay
 {
 public:
 	Delay(float sampleRate, float maxDelaySeconds);
-	void update(float delayMs);
+	void update(float delayMs, float feedbackRatio);
 	void reset();
 	float operator()(float val);
 
 private:
 	float m_fs;
+	float m_feedback;
 	float m_delayMs;
 	size_t m_delaySamps;
 	float m_maxDelaySamps;

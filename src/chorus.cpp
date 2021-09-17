@@ -6,7 +6,7 @@ Chorus::Chorus(float sampleRate)
 	, m_depth(.8f)
 {
 	lfo.freq(0.2f);
-	delay.update(10);
+	delay.update(10, 0.2);
 }
 
 void Chorus::reset()
@@ -17,7 +17,7 @@ void Chorus::reset()
 void Chorus::update()
 {
 	float mod = m_depth * lfo();
-	delay.update((mod * 10.) + 15.);
+	delay.update((mod * 10.) + 15., 0);
 }
 
 
