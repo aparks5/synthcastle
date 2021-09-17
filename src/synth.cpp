@@ -7,6 +7,7 @@ Synth::Synth()
 	, chorus(SAMPLE_RATE)
 	, lastActiveVoice(0)
 {
+	verblib_initialize(&verb, SAMPLE_RATE, 1);
 	auto nVoices = 8;
 
 	for (auto i = 0; i < nVoices; i++) {
@@ -79,6 +80,9 @@ float Synth::operator()()
 
  //	output = (1 / (0.707)) * (output + chorus(output));
 	output += (1/sqrt(2))*(delay(output) + delay2(output) + delay3(output));
+	float temp = 0.f;
+	verblib_process(&verb, &output, &temp, 1);
+	output += 0.707 * (output + temp);
 
 
 	return output;

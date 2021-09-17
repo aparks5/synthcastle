@@ -8,7 +8,8 @@ project ("synthcastle")
 file(GLOB source
 	"${PROJECT_SOURCE_DIR}/include/*.h"
 	"${PROJECT_SOURCE_DIR}/include/moog/*.h"
-	"${PROJECT_SOURCE_DIR}/src/*.cpp")
+	"${PROJECT_SOURCE_DIR}/src/*.cpp"
+	"${PROJECT_SOURCE_DIR}/src/*.c")
 
 include_directories(
     ${PROJECT_SOURCE_DIR}/include 

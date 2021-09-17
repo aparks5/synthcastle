@@ -7,6 +7,7 @@
 #include "voice.h"
 #include "chorus.h"
 #include "delay.h"
+#include "verblib.h"
 
 class Synth
 {
@@ -27,6 +28,8 @@ private:
     Delay delay3;
     Chorus chorus;
     size_t lastActiveVoice;
+    verblib verb;
+
 
 };
 
