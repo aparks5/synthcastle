@@ -242,9 +242,11 @@ void Prompt::playPattern(std::queue<NoteEvent> notes)
 
 	auto temp = sortTimeVal(notes);
 
+	NoteEvent ev = static_cast<NoteEvent>(temp.front());
+
 	while (!temp.empty()) {
 
-		NoteEvent ev = static_cast<NoteEvent>(temp.front());
+		ev = static_cast<NoteEvent>(temp.front());
 		Sleep(ev.timeVal - now);
 		now += ev.timeVal - now;
 		temp.pop();
@@ -257,7 +259,13 @@ void Prompt::playPattern(std::queue<NoteEvent> notes)
 			auto noteVal = (int)message->at(1);
 			float velocity = (int)message->at(2);
 			if (byte0 == 144) {
-				if (velocity != 0) {
+				if (noteVal == 0)
+				{
+					if (ev.timeVal - now > 0) {
+						Sleep(ev.timeVal - now);
+					}
+				}
+				else if (velocity != 0) {
 					stream.noteOn(noteVal, ev.track);
 				}
 			}
