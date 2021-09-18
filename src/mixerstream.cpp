@@ -8,8 +8,10 @@
 #include <thread>
 #include "util.h"
 
-MixerStream::MixerStream()
+
+MixerStream::MixerStream(CallbackData* userData)
 	: stream(0)
+	, m_callbackData(userData)
 	, m_gfx(graphicsThread)
 	, m_kick("C:\\drum_samples\\bd01.wav")
 	, m_hat("C:\\drum_samples\\hh01.wav")
@@ -59,7 +61,7 @@ bool MixerStream::open(PaDeviceIndex index)
 		NULL, /* no input */
 		&outputParameters,
 		SAMPLE_RATE,
-		paFramesPerBufferUnspecified,
+		FRAMES_PER_BUFFER,
 		paClipOff,      /* we won't output out of range samples so don't bother clipping them */
 		&MixerStream::paCallback,
 		this            /* Using 'this' for userData so we can cast to MixerStream* in paCallback method */
@@ -119,6 +121,7 @@ bool MixerStream::stop()
 	return (err == paNoError);
 }
 
+
 void MixerStream::noteOn(int noteVal, int track)
 {
 	if (track == 1) {
@@ -144,8 +147,6 @@ void MixerStream::noteOn(int noteVal, int track)
 		m_snare.noteOn();
 	}
 
-
-
 }
 
 void MixerStream::noteOff(int noteVal, int track)
@@ -166,8 +167,11 @@ void MixerStream::update(VoiceParams params)
 int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 	unsigned long framesPerBuffer,
 	const PaStreamCallbackTimeInfo* timeInfo,
-	PaStreamCallbackFlags statusFlags)
+	PaStreamCallbackFlags statusFlags,
+	void* userData)
 {
+	CallbackData* data = m_callbackData;
+	
 	auto* out = (float*)outputBuffer;
 
 	(void)timeInfo; /* Prevent unused variable warnings. */
@@ -176,6 +180,9 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 
 	m_synth.blockRateUpdate();
 	m_synth2.blockRateUpdate();
+
+
+	std::array<float, FRAMES_PER_BUFFER> writeBuff = { 0.f };
 
 	for (size_t sampIdx = 0; sampIdx < framesPerBuffer; sampIdx++)
 	{
@@ -188,12 +195,45 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 		// write output
 		*out++ = output;
 		*out++ = output;
+
+		writeBuff[sampIdx] = output;
 		g_buffer[sampIdx] = static_cast<float>(output*1.0);
 	}
 
 	g_ready = true;
 
+	while (m_callbackData->commandsToAudioCallback->size_approx()) {
+		Commands cmd = *(m_callbackData->commandsToAudioCallback->peek());
+		m_callbackData->commandsToAudioCallback->pop();
+		switch (cmd) {
+		case Commands::START_RECORDING:
+			m_callbackData->server->openWrite();
+			break;
+		case Commands::STOP_RECORDING:
+			m_callbackData->server->closeWrite();
+			break;
+		}
+
+		m_callbackData->commandsFromAudioCallback->enqueue(cmd); // return command to main thread for deletion
+	}
+
+	if (m_bRecording) {
+		m_callbackData->server->write(writeBuff);
+	}
+
 	return paContinue;
+}
+
+void MixerStream::record(bool bStart)
+{
+	if (bStart) {
+		m_callbackData->commandsToAudioCallback->enqueue(Commands::START_RECORDING);
+		m_bRecording = true;
+	}
+	else {
+		m_callbackData->commandsToAudioCallback->enqueue(Commands::STOP_RECORDING);
+		m_bRecording = false;
+	}
 }
 
 int MixerStream::paCallback(const void* inputBuffer, void* outputBuffer,
@@ -207,7 +247,8 @@ int MixerStream::paCallback(const void* inputBuffer, void* outputBuffer,
 	return ((MixerStream*)userData)->paCallbackMethod(inputBuffer, outputBuffer,
 		framesPerBuffer,
 		timeInfo,
-		statusFlags);
+		statusFlags,
+		userData);
 }
 
 void MixerStream::paStreamFinishedMethod()

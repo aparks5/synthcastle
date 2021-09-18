@@ -83,6 +83,13 @@ void Prompt::open()
 			params.bEnablePitchLFO = false;
 			bParamChanged = true;
 		}
+		if (prompt == "record-start") {
+			stream.record(true);
+		}
+		if (prompt == "record-stop") {
+			stream.record(false);
+		}
+
 
 		if (prompt == "osc") {
 			std::cout << ">> enter sine, saw, tri, square" << std::endl;

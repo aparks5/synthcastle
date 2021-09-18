@@ -19,6 +19,7 @@
 #include "midi.h"
 #include "prompt.h"
 #include "util.h"
+#include <memory>
 
 
 
@@ -31,7 +32,15 @@ void audioThread()
 	std::cout << "PortAudio: sample rate " << SAMPLE_RATE << ", buffer size " << FRAMES_PER_BUFFER << std::endl;
 
 	PortAudioHandler paInit;
-	MixerStream stream;
+	CallbackData userData;
+	std::shared_ptr<moodycamel::ReaderWriterQueue<Commands>> sendCommands = std::make_shared<moodycamel::ReaderWriterQueue<Commands>>(5);
+	std::shared_ptr<moodycamel::ReaderWriterQueue<Commands>> receiveCommands = std::make_shared<moodycamel::ReaderWriterQueue<Commands>>(5);
+	std::shared_ptr<IOServer> server = std::make_shared<IOServer>();
+	userData.commandsFromAudioCallback = receiveCommands;
+	userData.commandsToAudioCallback = sendCommands;
+	userData.server = server;
+
+	MixerStream stream(&userData);
 	MIDI midi(stream);
 	Prompt prompt(stream);
 
