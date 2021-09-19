@@ -34,6 +34,13 @@ MixerStream::MixerStream(CallbackData* userData)
 
 	m_synth2.update(params2);
 
+	SchroederAllpass ap1(1051.f, 0.7);
+	m_allpassFilters.push_back(ap1);
+	SchroederAllpass ap2(337.f, 0.7);
+	m_allpassFilters.push_back(ap2);
+	SchroederAllpass ap3(113.f, 0.7);
+	m_allpassFilters.push_back(ap3);
+
 }
 
 bool MixerStream::open(PaDeviceIndex index)
@@ -188,7 +195,12 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 	{
 		auto output = 0.f;
 
-		output = (1 / sqrt(2 * 6)) * (m_synth() + m_synth2() + m_kick() + m_hat() + m_snare() + m_clap());
+		//output = (1 / sqrt(2 * 6)) * (m_synth() + m_synth2() + m_kick() + m_hat() + m_snare() + m_clap());
+		output = m_synth();
+
+		output = m_allpassFilters[0](output);
+		output = m_allpassFilters[1](output);
+		output = m_allpassFilters[2](output);
 
 		output = clip(output);
 
