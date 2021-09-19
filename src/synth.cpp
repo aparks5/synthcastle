@@ -78,11 +78,11 @@ float Synth::operator()()
 		output += voice->apply() * (1 / sqrt(m_voices.capacity() * 2));
 	}
 
- //	output = (1 / (0.707)) * (output + chorus(output));
-	output += (1/sqrt(2))*(delay(output) + delay2(output) + delay3(output));
-	float temp = 0.f;
-	verblib_process(&verb, &output, &temp, 1);
-	output += 0.707 * (output + temp);
+//	output = (1 / (0.707)) * (output + chorus(output));
+	//output += (1/sqrt(2))*(delay(output) + delay2(output) + delay3(output));
+	//float temp = 0.f;
+	//verblib_process(&verb, &output, &temp, 1);
+	//output += 0.707 * (output + temp);
 
 
 	return output;
