@@ -10,6 +10,8 @@ public:
 	void update(float delayMs, float feedbackRatio);
 	void reset();
 	float operator()(float val);
+	void enableLowpass() { m_bLowpass = true; }
+	void disableLowpass() { m_bLowpass = false; }
 
 private:
 	float m_fs;
@@ -21,6 +23,9 @@ private:
 	size_t m_writeIdx;
 	size_t m_readIdx;
 	size_t m_bufSize;
+	// enable for lowpass feedback comb filter (used in freeverb/schroederverb)
+	bool m_bLowpass;
+	float m_lowpassDelayElement;
 
 };
 

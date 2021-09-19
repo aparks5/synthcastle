@@ -11,6 +11,8 @@ Delay::Delay(float sampleRate, float maxDelaySeconds)
 	, m_maxDelaySamps(maxDelaySeconds*sampleRate)
 	, m_writeIdx(0)
 	, m_readIdx(0)
+	, m_bLowpass(false)
+	, m_lowpassDelayElement(0.f)
 {
 	// allocate circular buffer
 	m_circBuff.resize(static_cast<size_t>(m_maxDelaySamps));
@@ -67,8 +69,14 @@ float Delay::operator()(float val)
 	auto yn1 = m_circBuff[prevReadIdx];
 
 	// update write idx
+	if (m_bLowpass) {
+		m_lowpassDelayElement = (yn * (1.f - 0.2f)) + (0.2f * m_lowpassDelayElement);
+		m_circBuff[m_writeIdx] = val + (m_feedback * m_lowpassDelayElement);
+	}
+	else {
+		m_circBuff[m_writeIdx] = val + (m_feedback * yn);
+	}
 
-	m_circBuff[m_writeIdx] = val + (m_feedback * yn);
 	m_writeIdx++;
 	if (m_writeIdx > m_bufSize) {
 		m_writeIdx = 0;

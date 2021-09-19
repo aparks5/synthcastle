@@ -8,6 +8,7 @@
 #include "synth.h"
 #include "sampler.h"
 #include "schroederallpass.h"
+#include "comb.h"
 
 #include "commands.h"
 
@@ -58,6 +59,7 @@ private:
     Sampler m_clap;
     Sampler m_snare;
     std::vector<SchroederAllpass> m_allpassFilters;
+    std::vector<Comb> m_combFilters;
 
 };
 
