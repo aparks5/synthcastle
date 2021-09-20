@@ -58,6 +58,7 @@ private:
     Sampler m_clap;
     Sampler m_snare;
     FeedbackDelayNetwork m_fdn;
+
 };
 
 
