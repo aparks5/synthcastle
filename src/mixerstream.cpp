@@ -18,6 +18,7 @@ MixerStream::MixerStream(CallbackData* userData)
 	, m_hat("C:\\drum_samples\\hh01.wav")
 	, m_clap("C:\\drum_samples\\cp01.wav")
 	, m_snare("C:\\drum_samples\\sd01.wav")
+	, m_fdn(4)
 {
 
 	VoiceParams params;
@@ -188,6 +189,7 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 	{
 		auto output = 0.f;
 		output = (1 / sqrt(2 * 6)) * (m_synth() + m_synth2() + m_kick() + m_hat() + m_snare() + m_clap());
+		output = m_fdn(output);
 		output = clip(output);
 
 		// write output

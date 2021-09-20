@@ -32,7 +32,7 @@ void Delay::reset()
 
 void Delay::write(float val)
 {
-	m_circBuff[m_writeIdx] = val * (m_feedbackRatio * m_feedbackOut);
+	m_circBuff[m_writeIdx] = val + (m_feedbackRatio * m_feedbackOut);
 
 	m_writeIdx++;
 	if (m_writeIdx > m_bufSize) {
