@@ -34,14 +34,12 @@ target_include_directories(${PROJECT_NAME} PRIVATE "${GLFW_DIR}/include")
 target_include_directories(${PROJECT_NAME} PRIVATE "${GLFW_DIR}/deps")
 target_link_libraries(${PROJECT_NAME} "glfw" "${GLFW_LIBRARIES}")
 
-
 #### glad (OpenGL)
 set(GLAD_DIR "C:/GL/glad")
 add_library("glad" "${GLAD_DIR}/src/glad.c")
 target_include_directories("glad" PRIVATE "${GLAD_DIR}/include")
 target_link_libraries(${PROJECT_NAME} "glad" "${CMAKE_DL_LIBS}")
 target_include_directories(${PROJECT_NAME} PRIVATE "${GLAD_DIR}/include")
-
 
 #### google test
 include(FetchContent)
@@ -58,7 +56,6 @@ enable_testing()
 
 file(GLOB tests 
 	"${PROJECT_SOURCE_DIR}/src/tests/*.cpp")
-
 
 add_executable(gtest_test ${tests})
 

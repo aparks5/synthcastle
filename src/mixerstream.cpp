@@ -19,6 +19,7 @@ MixerStream::MixerStream(CallbackData* userData)
 	, m_clap("C:\\drum_samples\\cp01.wav")
 	, m_snare("C:\\drum_samples\\sd01.wav")
 {
+
 	VoiceParams params;
 	params.envParams = { 1, 250, 0, 1 };
 	params.bEnableFiltLFO = true;
@@ -34,35 +35,6 @@ MixerStream::MixerStream(CallbackData* userData)
 	params2.filtQ = 1.3;
 
 	m_synth2.update(params2);
-
-	SchroederAllpass ap1(5.1f, 0.5);
-	m_allpassFilters.push_back(ap1);
-	SchroederAllpass ap2(12.6f, 0.5);
-	m_allpassFilters.push_back(ap2);
-	SchroederAllpass ap3(10.f, 0.5);
-	m_allpassFilters.push_back(ap3);
-	SchroederAllpass ap4(7.7f, 0.5);
-	m_allpassFilters.push_back(ap4);
-
-	float fb = 0.84;
-	Comb c1(35.3, fb);
-	Comb c2(36.6, fb);
-	Comb c3(33.8, fb);
-	Comb c4(33.2, fb);
-	Comb c5(28.9, fb);
-	Comb c6(30.7, fb);
-	Comb c7(26.9, fb);
-	Comb c8(25.3, fb);
-
-	m_combFilters.push_back(c1);
-	m_combFilters.push_back(c2);
-	m_combFilters.push_back(c3);
-	m_combFilters.push_back(c4);
-	m_combFilters.push_back(c5);
-	m_combFilters.push_back(c6);
-	m_combFilters.push_back(c7);
-	m_combFilters.push_back(c8);
-
 }
 
 bool MixerStream::open(PaDeviceIndex index)
@@ -210,31 +182,12 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 	m_synth.blockRateUpdate();
 	m_synth2.blockRateUpdate();
 
-
 	std::array<float, FRAMES_PER_BUFFER> writeBuff = { 0.f };
 
 	for (size_t sampIdx = 0; sampIdx < framesPerBuffer; sampIdx++)
 	{
 		auto output = 0.f;
-
-		//output = (1 / sqrt(2 * 6)) * (m_synth() + m_synth2() + m_kick() + m_hat() + m_snare() + m_clap());
-		output = m_synth();
-
-		float dry = output;
-		float earlyReflections = 0.f;
-		// comb filters in parallel
-		for (size_t idx = 0; idx < 8; idx++) {
-			earlyReflections += (1/sqrt(2*8)) * m_combFilters[idx](dry);
-		}
-		output = earlyReflections;
-		// allpass filters in series
-		output = m_allpassFilters[0](output);
-		output = m_allpassFilters[1](output);
-		output = m_allpassFilters[2](output);
-		output = m_allpassFilters[3](output);
-
-		output = (0.8 * dry) + (0.2 * output);
-
+		output = (1 / sqrt(2 * 6)) * (m_synth() + m_synth2() + m_kick() + m_hat() + m_snare() + m_clap());
 		output = clip(output);
 
 		// write output

@@ -58,9 +58,6 @@ private:
     Sampler m_hat;
     Sampler m_clap;
     Sampler m_snare;
-    std::vector<SchroederAllpass> m_allpassFilters;
-    std::vector<Comb> m_combFilters;
-
 };
 
 

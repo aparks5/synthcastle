@@ -7,7 +7,6 @@ Synth::Synth()
 	, chorus(SAMPLE_RATE)
 	, lastActiveVoice(0)
 {
-	verblib_initialize(&verb, SAMPLE_RATE, 1);
 	auto nVoices = 8;
 
 	for (auto i = 0; i < nVoices; i++) {
