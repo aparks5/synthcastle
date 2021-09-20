@@ -7,8 +7,7 @@
 #include <thread>
 #include "synth.h"
 #include "sampler.h"
-#include "schroederallpass.h"
-#include "comb.h"
+#include "fdn.h"
 
 #include "commands.h"
 
@@ -58,6 +57,7 @@ private:
     Sampler m_hat;
     Sampler m_clap;
     Sampler m_snare;
+    FeedbackDelayNetwork m_fdn;
 };
 
 
