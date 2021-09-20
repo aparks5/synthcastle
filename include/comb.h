@@ -11,7 +11,10 @@ public:
 
 private:
 	Delay m_delay;
-	float m_feedback;
+	float m_feedbackRatio;
+	float m_damping;
+	float m_damping2; // is just (1 - m_damping)
+	float m_lowpassDelayElement;
 };
 
 #endif // COMB_H_

@@ -2,18 +2,19 @@
 #include "constants.h"
 
 
-SchroederAllpass::SchroederAllpass(float delayTimeMs, float feedbackCoef)
+SchroederAllpass::SchroederAllpass(float delayTimeMs, float feedbackRatio)
 	: m_delay(SAMPLE_RATE, 2.0f)
 	, m_delayTimeMs(delayTimeMs)
-	, m_feedbackCoef(feedbackCoef)
+	, m_feedbackRatio(feedbackRatio)
 {
-	m_delay.update(m_delayTimeMs, feedbackCoef);
+	m_delay.update(m_delayTimeMs, feedbackRatio);
 }
 
 float SchroederAllpass::operator()(float in)
 {
-	float out = 0.f;
-	out = m_delay(in);
-	out -= (in * m_feedbackCoef);
+	float out = m_delay();
+	m_delay.write(in);
+	// feed-forward path
+	out -= (in * m_feedbackRatio);
 	return out;
 }

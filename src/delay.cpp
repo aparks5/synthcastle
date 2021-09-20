@@ -5,14 +5,13 @@
 
 Delay::Delay(float sampleRate, float maxDelaySeconds)
 	: m_fs(sampleRate)
-	, m_feedback(0.f)
 	, m_delayMs(0)
 	, m_delaySamps(0)
 	, m_maxDelaySamps(maxDelaySeconds*sampleRate)
 	, m_writeIdx(0)
 	, m_readIdx(0)
-	, m_bLowpass(false)
-	, m_lowpassDelayElement(0.f)
+	, m_feedbackRatio(0.f)
+	, m_feedbackOut(0.f)
 {
 	// allocate circular buffer
 	m_circBuff.resize(static_cast<size_t>(m_maxDelaySamps));
@@ -23,8 +22,7 @@ Delay::Delay(float sampleRate, float maxDelaySeconds)
 void Delay::update(float delayMs, float feedbackRatio)
 {
 	m_delayMs = delayMs;
-	m_feedback = feedbackRatio;
-
+	m_feedbackRatio = feedbackRatio;
 }
 
 void Delay::reset()
@@ -32,11 +30,20 @@ void Delay::reset()
 	std::fill(m_circBuff.begin(), m_circBuff.end(), 0.f);
 }
 
-float Delay::operator()(float val)
+void Delay::write(float val)
+{
+	m_circBuff[m_writeIdx] = val * (m_feedbackRatio * m_feedbackOut);
+
+	m_writeIdx++;
+	if (m_writeIdx > m_bufSize) {
+		m_writeIdx = 0;
+	}
+}
+
+float Delay::operator()()
 {
 
-
-	// find delay index and separte fractional delay for interpolation
+	// find delay index and separate fractional delay for interpolation
 	float fractionalDelay = (m_delayMs / 1000.f * m_fs) - (int)(m_delayMs / 1000.f * m_fs);
 	int integerDelay = (int)(m_delayMs / 1000.f * m_fs);
 
@@ -48,13 +55,13 @@ float Delay::operator()(float val)
 	}
 
 	if (static_cast<size_t>(m_delayMs / 1000.f * m_fs) == 0) {
-		return val;
+		return m_circBuff[m_writeIdx];
 	}
 
 	// for 0 delay, interpolate the input with the prev output
 	auto yn = 0.f;
 	if ((m_writeIdx == m_readIdx) && integerDelay < 1.) {
-		yn = val;
+		yn = m_circBuff[m_writeIdx];
 	}
 	else {
 		yn = m_circBuff[m_readIdx];
@@ -68,19 +75,8 @@ float Delay::operator()(float val)
 
 	auto yn1 = m_circBuff[prevReadIdx];
 
-	// update write idx
-	if (m_bLowpass) {
-		m_lowpassDelayElement = (yn * (1.f - 0.2f)) + (0.2f * m_lowpassDelayElement);
-		m_circBuff[m_writeIdx] = val + (m_feedback * m_lowpassDelayElement);
-	}
-	else {
-		m_circBuff[m_writeIdx] = val + (m_feedback * yn);
-	}
-
-	m_writeIdx++;
-	if (m_writeIdx > m_bufSize) {
-		m_writeIdx = 0;
-	}
 	
-	return linearInterpolate(yn, yn1, fractionalDelay);
+	float out = linearInterpolate(yn, yn1, fractionalDelay);
+	m_feedbackOut = out;
+	return out;
 }

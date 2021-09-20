@@ -1,12 +1,13 @@
 #include "chorus.h"
 
-Chorus::Chorus(float sampleRate)
+Chorus::Chorus(float sampleRate, float rate, float depth, float feedbackRatio)
 	: delay(sampleRate, 1.f)
 	, lfo(sampleRate)
-	, m_depth(.8f)
+	, m_depth(depth)
+	, m_feedbackRatio(feedbackRatio)
 {
-	lfo.freq(0.2f);
-	delay.update(10, 0.2);
+	lfo.freq(rate);
+	delay.update(10, m_feedbackRatio);
 }
 
 void Chorus::reset()
@@ -17,13 +18,15 @@ void Chorus::reset()
 void Chorus::update()
 {
 	float mod = m_depth * lfo();
-	delay.update((mod * 10.) + 15., 0);
+	delay.update((mod * 10.) + 15., m_feedbackRatio);
 }
 
 
 float Chorus::operator()(float in)
 {
 	update();
-	return delay(in);
+	float out = delay();
+	delay.write(in);
+	return out;
 }
 

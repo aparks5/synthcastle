@@ -7,14 +7,13 @@
 class SchroederAllpass
 {
 public:
-	SchroederAllpass(float delayTimeMs, float feedbackCoef);
+	SchroederAllpass(float delayTimeMs, float feedbackRatio);
 	float operator()(float in);
-
 
 private:
 	Delay m_delay;
 	float m_delayTimeMs;
-	float m_feedbackCoef;
+	float m_feedbackRatio;
 	
 };
 #endif // SCHROEDER_ALLPASS_H_

@@ -8,7 +8,7 @@ class Chorus
 {
 public:
 
-	Chorus(float sampleRate);
+	Chorus(float sampleRate, float rate, float depth, float feedbackRatio);
 	void rate(float freq) { lfo.freq(freq); }
 	void depth(float gain) { m_depth = gain; }
 	void reset();
@@ -19,6 +19,7 @@ private:
 	Delay delay;
 	Sine lfo;
 	float m_depth;
+	float m_feedbackRatio;
 };
 
 #endif 
