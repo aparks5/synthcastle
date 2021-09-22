@@ -1,8 +1,8 @@
-#include "schroederallpass.h"
+#include "allpass.h"
 #include "constants.h"
 
 
-SchroederAllpass::SchroederAllpass(float delayTimeMs, float feedbackRatio)
+Allpass::Allpass(float delayTimeMs, float feedbackRatio)
 	: m_delay(SAMPLE_RATE, 2.0f)
 	, m_delayTimeMs(delayTimeMs)
 	, m_feedbackRatio(feedbackRatio)
@@ -10,7 +10,17 @@ SchroederAllpass::SchroederAllpass(float delayTimeMs, float feedbackRatio)
 	m_delay.update(m_delayTimeMs, feedbackRatio);
 }
 
-float SchroederAllpass::operator()(float in)
+void Allpass::reset()
+{
+	m_delay.reset();
+}
+
+void Allpass::update(float delayTimeMs, float feedbackRatio)
+{
+	m_delay.update(m_delayTimeMs, feedbackRatio);
+}
+
+float Allpass::operator()(float in)
 {
 	float out = m_delay();
 	m_delay.write(in);
