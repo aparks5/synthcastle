@@ -2,13 +2,13 @@
 
 Freeverb::Freeverb()
 {
-	SchroederAllpass ap1(5.1f, 0.5);
+	Allpass ap1(5.1f, 0.5);
 	m_allpassFilters.push_back(ap1);
-	SchroederAllpass ap2(12.6f, 0.5);
+	Allpass ap2(12.6f, 0.5);
 	m_allpassFilters.push_back(ap2);
-	SchroederAllpass ap3(10.f, 0.5);
+	Allpass ap3(10.f, 0.5);
 	m_allpassFilters.push_back(ap3);
-	SchroederAllpass ap4(7.7f, 0.5);
+	Allpass ap4(7.7f, 0.5);
 	m_allpassFilters.push_back(ap4);
 
 	float fb = 0.84;

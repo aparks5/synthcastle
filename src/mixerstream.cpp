@@ -149,6 +149,8 @@ void MixerStream::noteOn(int noteVal, int track)
 		m_snare.noteOn();
 	}
 
+	m_fdn.reset();
+
 }
 
 void MixerStream::noteOff(int noteVal, int track)
@@ -190,7 +192,7 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 		auto output = 0.f;
 		output = (1 / sqrt(2 * 6)) * (m_synth() + m_synth2() + m_kick() + m_hat() + m_snare() + m_clap());
 		
-		output = m_fdn(output);
+		//output = 0.707 * (0.8*output + 0.2*m_fdn(output));
 		output = clip(output);
 
 		// write output

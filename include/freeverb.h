@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "comb.h"
-#include "schroederallpass.h"
+#include "allpass.h"
 
 class Freeverb
 {
@@ -13,7 +13,7 @@ public:
 	float operator()(float in);
 
 private:
-    std::vector<SchroederAllpass> m_allpassFilters;
+    std::vector<Allpass> m_allpassFilters;
     std::vector<Comb> m_combFilters;
 
 };

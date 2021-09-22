@@ -2,13 +2,15 @@
 #define SCHROEDER_ALLPASS_H_
 
 #include "delay.h"
-#include "schroederallpass.h"
+#include "allpass.h"
 
-class SchroederAllpass
+class Allpass
 {
 public:
-	SchroederAllpass(float delayTimeMs, float feedbackRatio);
+	Allpass(float delayTimeMs, float feedbackRatio);
 	float operator()(float in);
+	void reset();
+	void update(float delayTimeMs, float feedbackRatio);
 
 private:
 	Delay m_delay;
