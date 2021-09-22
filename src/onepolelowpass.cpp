@@ -7,7 +7,7 @@ OnePoleLowpass::OnePoleLowpass()
 {
 }
 
-void OnePoleLowpass : reset()
+void OnePoleLowpass::reset()
 {
 	m_delayElement = 0.f;
 }

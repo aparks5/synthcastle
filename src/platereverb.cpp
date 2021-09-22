@@ -2,14 +2,19 @@
 
 PlateReverb::PlateReverb()
 {
-	std::unique_ptr<Allpass> ap142 = std::make_unique<Allpass>();
-	std::unique_ptr<Allpass> ap107 = std::make_unique<Allpass>();
-	std::unique_ptr<Allpass> ap379 = std::make_unique<Allpass>();
-	std::unique_ptr<Allpass> ap277 = std::make_unique<Allpass>();
-	m_inputDiffusor[InputAllpasses::AP142] = ap142;
-	m_inputDiffusor[InputAllpasses::AP107] = ap107;
-	m_inputDiffusor[InputAllpasses::AP379] = ap379;
-	m_inputDiffusor[InputAllpasses::AP277] = ap277;
+	float fb = 0.5f;
+
+	m_inputDiffusor[static_cast<size_t>(InputAllpasses::AP142)] =
+		std::make_unique<Allpass>(kInputDiffusionMs[static_cast<size_t>(InputAllpasses::AP142)], fb);
+
+	m_inputDiffusor[static_cast<size_t>(InputAllpasses::AP107)] =
+		std::make_unique<Allpass>(kInputDiffusionMs[static_cast<size_t>(InputAllpasses::AP107)], fb);
+
+	m_inputDiffusor[static_cast<size_t>(InputAllpasses::AP379)] =
+		std::make_unique<Allpass>(kInputDiffusionMs[static_cast<size_t>(InputAllpasses::AP379)], fb);
+
+	m_inputDiffusor[static_cast<size_t>(InputAllpasses::AP277)] =
+		std::make_unique<Allpass>(kInputDiffusionMs[static_cast<size_t>(InputAllpasses::AP277)], fb);
 }
 
 
@@ -23,7 +28,10 @@ std::pair<float, float> PlateReverb::operator()(float in)
 {
 	float out = 0.f;
 	out = in * m_params.bandwidth;
-	out = m_inputDiffusor[AP142];
+	out = (*m_inputDiffusor[static_cast<size_t>(InputAllpasses::AP142)])(out);
+	out = (*m_inputDiffusor[static_cast<size_t>(InputAllpasses::AP107)])(out);
+	out = (*m_inputDiffusor[static_cast<size_t>(InputAllpasses::AP379)])(out);
+	out = (*m_inputDiffusor[static_cast<size_t>(InputAllpasses::AP277)])(out);
 
 
 	float yl = 0.f;
@@ -48,4 +56,5 @@ std::pair<float, float> PlateReverb::operator()(float in)
 	yr = accum - 0.6 * node59_63[121];
 	*/
 
+	return { yl, yr };
 }

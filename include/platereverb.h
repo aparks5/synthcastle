@@ -63,11 +63,10 @@ public:
 
 private:
 	PlateParams m_params;
-	const std::array<float, 4> kInputDiffusionMs = { 4.7713,3.5953,12.2734,9.30748 };
+	std::array<float, 4> kInputDiffusionMs = { 4.7713,3.5953,12.2734,9.30748 };
 	std::array<std::unique_ptr<Allpass>, 4> m_inputDiffusor;
 
 	const size_t kMaxDelayModExcursionSamps = 16;
-	const std::array<float, 4> kInputDiffusionMs = { 4.7713,3.5953,12.2734,9.30748 };
 	const std::array<float, 2> kModulationDiffusionMs = { 15.238, 20.589 };
 	std::array<std::unique_ptr<Allpass>, 2> m_modulatedDiffusor;
 	std::array<std::unique_ptr<Allpass>, 2> m_decayDiffusor;

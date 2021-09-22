@@ -6,6 +6,7 @@ class OnePoleLowpass
 public:
 	OnePoleLowpass();
 	float operator()(float in);
+	void reset();
 
 private:
 	float m_damp1;
