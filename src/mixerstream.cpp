@@ -264,4 +264,3 @@ void MixerStream::paStreamFinished(void* userData)
 	return ((MixerStream*)userData)->paStreamFinishedMethod();
 }
 
-
