@@ -20,7 +20,6 @@ private:
 	float m_scaleFactor = 0.5f; // 1 / sqrt(order)
 	float m_lowpassDelayElements[4];
 
-
 };
 
 #endif // FDN_H_
