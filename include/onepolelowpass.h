@@ -7,6 +7,7 @@ public:
 	OnePoleLowpass();
 	float operator()(float in);
 	void reset();
+	void update(float damping);
 
 private:
 	float m_damp1;

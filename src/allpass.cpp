@@ -15,9 +15,14 @@ void Allpass::reset()
 	m_delay.reset();
 }
 
-void Allpass::update(float delayTimeMs, float feedbackRatio)
+float Allpass::tap(float ms)
 {
-	m_delay.update(m_delayTimeMs, feedbackRatio);
+	return m_delay.tap(ms);
+}
+
+void Allpass::update(float delayTimeMs)
+{
+	m_delay.update(delayTimeMs, m_feedbackRatio);
 }
 
 float Allpass::operator()(float in)

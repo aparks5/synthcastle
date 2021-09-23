@@ -8,6 +8,7 @@
 #include "synth.h"
 #include "sampler.h"
 #include "fdn.h"
+#include "platereverb.h"
 
 #include "commands.h"
 
@@ -58,6 +59,7 @@ private:
     Sampler m_clap;
     Sampler m_snare;
     FeedbackDelayNetwork m_fdn;
+    PlateReverb m_plate;
 
 };
 

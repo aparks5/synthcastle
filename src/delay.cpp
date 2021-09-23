@@ -19,6 +19,20 @@ Delay::Delay(float sampleRate, float maxDelaySeconds)
 	m_bufSize = m_circBuff.capacity() - 1;
 }
 
+float Delay::tap(float ms)
+{
+
+	int integerDelay = (int)(ms / 1000.f * m_fs);
+
+	if (static_cast<int>(m_writeIdx) - integerDelay < 0) {
+		return m_circBuff[m_bufSize + 1 + (m_writeIdx - integerDelay)];
+	}
+	else {
+		return m_circBuff[m_writeIdx - static_cast<int>(integerDelay)];
+	}
+
+}
+
 void Delay::update(float delayMs, float feedbackRatio)
 {
 	m_delayMs = delayMs;
