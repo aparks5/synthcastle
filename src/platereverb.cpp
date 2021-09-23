@@ -9,11 +9,6 @@ PlateReverb::PlateReverb()
 	, m_decayDiffusion2FeedbackSample(0.f)
 {
 	float fb = -1.f * m_params.inputDiffusion1;
-=======
-
-PlateReverb::PlateReverb()
-{
-	float fb = 0.5f;
 
 	m_inputDiffusor[static_cast<size_t>(InputAllpasses::AP142)] =
 		std::make_unique<Allpass>(kInputDiffusionMs[static_cast<size_t>(InputAllpasses::AP142)], fb);

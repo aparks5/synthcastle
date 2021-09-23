@@ -87,15 +87,6 @@ private:
 	Sine m_diffusionLFO1;
 	Sine m_diffusionLFO2;
 
-	const size_t kMaxDelayModExcursionSamps = 16;
-	const std::array<float, 2> kModulationDiffusionMs = { 15.238, 20.589 };
-	std::array<std::unique_ptr<Allpass>, 2> m_modulatedDiffusor;
-	std::array<std::unique_ptr<Allpass>, 2> m_decayDiffusor;
-	std::array<std::unique_ptr<Delay>, 4> m_delay;
-
-	const std::array<float, 4> kDelayTimesSamples = { 100.975, 84.3537, 95.6235, 71.7234 };
-	std::array<std::unique_ptr<OnePoleLowpass>, 3> m_lowpass;
-
 	float m_decayDiffusion1FeedbackSample;
 	float m_decayDiffusion2FeedbackSample;
 
