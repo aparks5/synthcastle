@@ -9,6 +9,11 @@ PlateReverb::PlateReverb()
 	, m_decayDiffusion2FeedbackSample(0.f)
 {
 	float fb = -1.f * m_params.inputDiffusion1;
+=======
+
+PlateReverb::PlateReverb()
+{
+	float fb = 0.5f;
 
 	m_inputDiffusor[static_cast<size_t>(InputAllpasses::AP142)] =
 		std::make_unique<Allpass>(kInputDiffusionMs[static_cast<size_t>(InputAllpasses::AP142)], fb);
@@ -115,6 +120,7 @@ float PlateReverb::operator()(float in)
 	float yl = 0.f;
 	float yr = 0.f;
 	float accum = 0.f;
+
 	// left wet out
 	accum += 0.6 * m_modulatedDiffusor[0]->tap(8.938);
 	accum += 0.6 * m_modulatedDiffusor[0]->tap(100);
@@ -133,5 +139,4 @@ float PlateReverb::operator()(float in)
 	//accum -= 0.6 * node55_59[335];
 	//yr = accum - 0.6 * node59_63[121];
 	return yl;
-
 }

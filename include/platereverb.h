@@ -6,6 +6,7 @@
 #include "onepolelowpass.h"
 #include "sine.h"
 
+
 #include <array>
 #include <memory>
 
@@ -58,14 +59,16 @@ class PlateReverb
 {
 public:
 	PlateReverb();
-    float operator()(float in);
+
+  float operator()(float in);
 	void update(PlateParams params) { m_params = params; }
-    void reset();
+  void reset();
 
 private:
 	PlateParams m_params;
 	std::array<float, 4> kInputDiffusionMs = { 4.7713,3.5953,12.2734,9.30748 };
 	std::array<std::unique_ptr<Allpass>, 4> m_inputDiffusor;
+
 
 	float m_inputDiffusorBranch;
 
@@ -83,6 +86,15 @@ private:
 
 	Sine m_diffusionLFO1;
 	Sine m_diffusionLFO2;
+
+	const size_t kMaxDelayModExcursionSamps = 16;
+	const std::array<float, 2> kModulationDiffusionMs = { 15.238, 20.589 };
+	std::array<std::unique_ptr<Allpass>, 2> m_modulatedDiffusor;
+	std::array<std::unique_ptr<Allpass>, 2> m_decayDiffusor;
+	std::array<std::unique_ptr<Delay>, 4> m_delay;
+
+	const std::array<float, 4> kDelayTimesSamples = { 100.975, 84.3537, 95.6235, 71.7234 };
+	std::array<std::unique_ptr<OnePoleLowpass>, 3> m_lowpass;
 
 	float m_decayDiffusion1FeedbackSample;
 	float m_decayDiffusion2FeedbackSample;
