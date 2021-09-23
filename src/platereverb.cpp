@@ -42,11 +42,11 @@ PlateReverb::PlateReverb()
 	m_delays[3]->update(kDelayTimesMs[3], 0.f);
 
 	m_lowpasses[0] = std::make_unique<OnePoleLowpass>();
-	m_lowpasses[0]->update(m_params.hfDamping);
+	m_lowpasses[0]->update(-1.f*m_params.bandwidth);
 	m_lowpasses[1] = std::make_unique<OnePoleLowpass>();
-	m_lowpasses[1]->update(m_params.hfDamping);
+	m_lowpasses[1]->update(-1.f*m_params.hfDamping);
 	m_lowpasses[2] = std::make_unique<OnePoleLowpass>();
-	m_lowpasses[2]->update(m_params.hfDamping);
+	m_lowpasses[2]->update(-1.f*m_params.hfDamping);
 
 	m_decayDiffusor[0] = std::make_unique<Allpass>(kDecayDiffusionTimesMs[0], m_params.decayDiffusion2);
 	m_decayDiffusor[1] = std::make_unique<Allpass>(kDecayDiffusionTimesMs[1], m_params.decayDiffusion2);
@@ -63,6 +63,7 @@ float PlateReverb::operator()(float in)
 {
 	float out = 0.f;
 	out = in * m_params.bandwidth;
+	out = (*m_lowpasses[0])(out);
 	out = (*m_inputDiffusor[static_cast<size_t>(InputAllpasses::AP142)])(out);
 	out = (*m_inputDiffusor[static_cast<size_t>(InputAllpasses::AP107)])(out);
 	out = (*m_inputDiffusor[static_cast<size_t>(InputAllpasses::AP379)])(out);
@@ -79,7 +80,6 @@ float PlateReverb::operator()(float in)
 	(*m_delays[0]).write(out);
 	out = tmpRead;
 
-	out = (*m_lowpasses[0])(out);
 
 	out *= m_params.decay;
 

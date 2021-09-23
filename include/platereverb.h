@@ -23,13 +23,13 @@ struct PlateParams
 	float bandwidth;
 	float hfDamping;
 	PlateParams()
-		: decay(0.5)
-		, decayDiffusion1(0.7)
-		, decayDiffusion2(0.5)
+		: decay(0.6)
+		, decayDiffusion1(0.8)
+		, decayDiffusion2(0.6)
 		, inputDiffusion1(0.75)
 		, inputDiffusion2(0.625)
 		, bandwidth(0.9995)
-		, hfDamping(0.0005)
+		, hfDamping(0.01)
 	{}
 };
 
