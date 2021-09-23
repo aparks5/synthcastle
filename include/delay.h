@@ -11,6 +11,7 @@ public:
 	void reset();
 	void write(float val);
 	float operator()();
+	float tap(float ms);
 
 private:
 	float m_fs;

@@ -10,7 +10,8 @@ public:
 	Allpass(float delayTimeMs, float feedbackRatio);
 	float operator()(float in);
 	void reset();
-	void update(float delayTimeMs, float feedbackRatio);
+	void update(float delayTimeMs);
+	float tap(float ms);
 
 private:
 	Delay m_delay;

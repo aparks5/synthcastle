@@ -7,6 +7,12 @@ OnePoleLowpass::OnePoleLowpass()
 {
 }
 
+void OnePoleLowpass::update(float damping)
+{
+	m_damp1 = damping;
+	m_damp2 = 1.f - damping;
+}
+
 void OnePoleLowpass::reset()
 {
 	m_delayElement = 0.f;
