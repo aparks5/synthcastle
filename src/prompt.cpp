@@ -10,11 +10,13 @@ void Prompt::open()
 {
 	std::string prompt;
 	VoiceParams params;
+	FxParams fxparams;
 	params.envParams = { 1,250,0,0 };
 	stream.update(params);
 	std::queue<NoteEvent> notes;
 	NoteGenerator gen;
 	bool bParamChanged = false;
+	bool bFxParamChanged = false;
 	std::cout << ">>> type 'help' to list commands" << std::endl;
 
 	while (true) {
@@ -83,6 +85,31 @@ void Prompt::open()
 			params.bEnablePitchLFO = false;
 			bParamChanged = true;
 		}
+		if (prompt == "chorus-on") {
+			fxparams.bEnableChorus = true;
+			bFxParamChanged = true;
+		}
+		if (prompt == "chorus-off") {
+			fxparams.bEnableChorus = false;
+			bFxParamChanged = true;
+		}
+		if (prompt == "delay-on") {
+			fxparams.bEnableDelay1 = true;
+			bFxParamChanged = true;
+		}
+		if (prompt == "delay-off") {
+			fxparams.bEnableDelay1 = false;
+			bFxParamChanged = true;
+		}
+		if (prompt == "reverb-on") {
+			fxparams.bEnableReverb = true;
+			bFxParamChanged = true;
+		}
+		if (prompt == "reverb-off") {
+			fxparams.bEnableReverb = false;
+			bFxParamChanged = true;
+		}
+
 		if (prompt == "record-start") {
 			stream.record(true);
 		}
@@ -193,10 +220,14 @@ void Prompt::open()
 		if (prompt == "loop") {
 			std::cin >> prompt;
 			int loopCount = std::stod(prompt);
-
-			while (loopCount > 0) {
-				playPattern(notes);
-				loopCount--;
+			if (notes.size() == 0) {
+				std::cout << "nothing to loop, use play to declare a sequence..." << std::endl;
+			}
+			else {
+				while (loopCount > 0) {
+					playPattern(notes);
+					loopCount--;
+				}
 			}
 		}
 
@@ -207,10 +238,12 @@ void Prompt::open()
 			notes = {};
 		}
 
-
-
 		if (bParamChanged) {
 			stream.update(params);
+		}
+
+		if (bFxParamChanged) {
+			stream.update(fxparams);
 		}
 	}
 }
