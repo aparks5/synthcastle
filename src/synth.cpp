@@ -62,6 +62,11 @@ void Synth::update(VoiceParams params)
 	}
 }
 
+void Synth::update(FxParams fxParams)
+{
+	m_fxParams = fxParams;
+}
+
 void Synth::blockRateUpdate()
 {
 	for (auto voice : m_voices) {
@@ -77,10 +82,26 @@ float Synth::operator()()
 		output += voice->apply() * (1 / sqrt(m_voices.capacity() * 2));
 	}
 
-    //output = (1 / (0.707)) * (output + chorus(output));
-	//output += (1/sqrt(2))*(delay(output) + delay2(output) + delay3(output));
-	//float temp = 0.f;
-	//output += 0.707 * (output + temp);
+	int fxCount = 0;
+
+	if (m_fxParams.bEnableChorus) {
+		output += chorus(output);
+	}
+	if (m_fxParams.bEnableDelay1) {
+		float temp = output;
+		output += delay();
+		delay.write(temp);
+	}
+	if (m_fxParams.bEnableDelay2) {
+		output += delay2();
+		delay2.write(output);
+	}
+	if (m_fxParams.bEnableReverb) {
+		output += reverb(output);
+	}
+
+
+	output *= 1. / sqrt(2 * (fxCount + 1));
 
 
 	return output;

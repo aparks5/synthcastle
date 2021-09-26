@@ -168,6 +168,11 @@ void MixerStream::update(VoiceParams params)
 	m_synth.update(params);
 }
 
+void MixerStream::update(FxParams fxparams)
+{
+	m_synth.update(fxparams);
+}
+
 int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 	unsigned long framesPerBuffer,
 	const PaStreamCallbackTimeInfo* timeInfo,
@@ -192,7 +197,6 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 		auto output = 0.f;
 		output = (1 / sqrt(2 * 6)) * (m_synth() + m_synth2() + m_kick() + m_hat() + m_snare() + m_clap());
 		
-		output = 0.707 * (0.8*output + 0.2*m_plate(output));
 		output = clip(output);
 
 		// write output

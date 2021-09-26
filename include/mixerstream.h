@@ -21,6 +21,7 @@ public:
     bool start();
     bool stop();
     void update(VoiceParams params);
+    void update(FxParams fxparams);
     void noteOn(int noteVal, int track);
     void noteOff(int noteVal, int track);
     void record(bool bStart);
