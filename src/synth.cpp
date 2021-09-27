@@ -48,11 +48,9 @@ void Synth::noteOn(int midiNote)
 
 void Synth::noteOff(int midiNote)
 {
-	// which voice should we turn off?
 	for (auto voice : m_voices) {
 		voice->noteOff(midiNote);
 	}
-
 }
 
 void Synth::update(VoiceParams params)
@@ -86,18 +84,22 @@ float Synth::operator()()
 
 	if (m_fxParams.bEnableChorus) {
 		output += chorus(output);
+		fxCount++;
 	}
 	if (m_fxParams.bEnableDelay1) {
 		float temp = output;
 		output += delay();
 		delay.write(temp);
+		fxCount++;
 	}
 	if (m_fxParams.bEnableDelay2) {
 		output += delay2();
 		delay2.write(output);
+		fxCount++;
 	}
 	if (m_fxParams.bEnableReverb) {
-		output += reverb(output);
+		output = 0.8*output + 0.1*reverb(output);
+		fxCount++;
 	}
 
 

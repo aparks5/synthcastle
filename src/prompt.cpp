@@ -24,6 +24,7 @@ void Prompt::open()
 		std::cin >> prompt;
 		if (prompt == "help") {
 			std::cout << ">>> commands: stop, osc, freq, filt-freq, filt-q, filt-lfo-freq, pitch/filt-lfo-on/off, " << std::endl;
+			std::cout << ">>> pitch-lfo-freq, pitch-lfo-depth, reverb-on/off, chorus-on/off, delay-on/off" << std::endl;
 			std::cout << ">>> osc2-enable, osc2-coarse, osc2-fine, env [attackMs decayMs susdB]" << std::endl;
 			std::cout << ">>> play [note], loop [note-note2-note3:duration,note4:duration2... loopNumTimes]" << std::endl;
 		}
@@ -69,6 +70,23 @@ void Prompt::open()
 			params.filtLFOFreq = freq;
 			bParamChanged = true;
 		}
+		if (prompt == "pitch-lfo-freq") {
+			std::cout << ">> enter pitch LFO frequency (0 - 40)" << std::endl;
+			std::cin >> prompt;
+			auto freq = std::stof(prompt);
+			freq = clamp(freq, 0.f, 40.f);
+			params.pitchLFOFreq = freq;
+			bParamChanged = true;
+		}
+		if (prompt == "pitch-lfo-depth") {
+			std::cout << ">> enter pitch LFO depth (0. - 1.)" << std::endl;
+			std::cin >> prompt;
+			auto depth = std::stof(prompt);
+			depth = clamp(depth, 0.f, 1.f);
+			params.pitchLFOdepth = depth;
+			bParamChanged = true;
+		}
+
 		if (prompt == "filt-lfo-on") {
 			params.bEnableFiltLFO = true;
 			bParamChanged = true;
