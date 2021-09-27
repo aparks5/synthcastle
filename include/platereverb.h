@@ -6,7 +6,6 @@
 #include "onepolelowpass.h"
 #include "sine.h"
 
-
 #include <array>
 #include <memory>
 

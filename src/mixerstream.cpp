@@ -195,7 +195,7 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 	for (size_t sampIdx = 0; sampIdx < framesPerBuffer; sampIdx++)
 	{
 		auto output = 0.f;
-		output = (1 / sqrt(2 * 6)) * (m_synth() + m_synth2() + m_kick() + m_hat() + m_snare() + m_clap());
+		output = (1 / sqrt(2 * 6)) * (m_synth() + m_synth2() + (0.5*m_kick()) + (0.5*m_hat()) + (0.5*m_snare()) + (0.5*m_clap()));
 		
 		output = clip(output);
 

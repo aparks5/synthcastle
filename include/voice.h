@@ -34,6 +34,7 @@ struct VoiceParams
     EnvelopeParams envParams;
     float filtLFOFreq;
     float pitchLFOFreq;
+    float pitchLFOdepth;
     bool bEnableFiltLFO;
     bool bEnablePitchLFO;
     bool bEnableFiltEG;
@@ -52,6 +53,7 @@ struct VoiceParams
         , envParams({1,0,0,1})
         , filtLFOFreq(1.)
         , pitchLFOFreq(1.)
+        , pitchLFOdepth(1.)
         , bEnableFiltLFO(false)
         , bEnablePitchLFO(false)
         , bEnableFiltEG(false)
@@ -85,6 +87,7 @@ private:
     Square m_square;
     Sine m_sine;
     Triangle m_lfo;
+    Sine m_pitchLfo;
 
     OscillatorType m_osc2;
     Gain m_osc2gain;

@@ -8,6 +8,7 @@ Voice::Voice()
 	, m_square(SAMPLE_RATE)
 	, m_sine(SAMPLE_RATE)
 	, m_lfo(SAMPLE_RATE)
+	, m_pitchLfo(SAMPLE_RATE)
 	, m_saw2(SAMPLE_RATE)
 	, m_tri2(SAMPLE_RATE)
 	, m_square2(SAMPLE_RATE)
@@ -33,14 +34,16 @@ void Voice::update(VoiceParams params)
 	m_moogFilter.q(m_params.filtQ);
 	m_moogFilter.freq(m_params.filtFreq);
 	m_lfo.freq(m_params.filtLFOFreq);
+	m_pitchLfo.freq(m_params.pitchLFOFreq);
 
 }
 
 
 void Voice::modUpdate()
 {
-	auto lfoSamp = m_lfo();
 	if (m_params.bEnableFiltLFO) {
+
+		auto lfoSamp = m_lfo();
 		float filtLfo = (1 + lfoSamp * 0.5f);
 		m_moogFilter.freq(m_params.filtFreq * filtLfo);
 
@@ -51,8 +54,9 @@ void Voice::modUpdate()
 
 	if (m_params.bEnablePitchLFO)
 	{
-		modFreq(m_params.freq + (lfoSamp * m_params.freq));
-		modFreqOsc2(m_params.freq + (lfoSamp * m_params.freq));
+		auto pitchLfoSamp = m_pitchLfo();
+		modFreq(m_params.freq + (pitchLfoSamp * m_params.freq * m_params.pitchLFOdepth));
+		modFreqOsc2(m_params.freq + (pitchLfoSamp * m_params.freq * m_params.pitchLFOdepth));
 	}
 }
 
@@ -65,6 +69,7 @@ float Voice::apply()
 	// OSCILLATOR
 	oscillate(output);
 	m_lfo();
+	m_pitchLfo();
 
 	// FILTER
 	m_moogFilter.apply(&output, 1);
