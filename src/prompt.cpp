@@ -127,15 +127,28 @@ void Prompt::open()
 			fxparams.bEnableReverb = false;
 			bFxParamChanged = true;
 		}
-
 		if (prompt == "record-start") {
 			stream.record(true);
 		}
 		if (prompt == "record-stop") {
 			stream.record(false);
 		}
-
-
+		if (prompt == "bitcrusher-on") {
+			fxparams.bEnableBitcrusher = true;
+			bFxParamChanged = true;
+		}
+		if (prompt == "bitcrusher-off") {
+			fxparams.bEnableBitcrusher = false;
+			bFxParamChanged = true;
+		}
+		if (prompt == "bitcrusher-bits") {
+			std::cout << ">> enter bit depth (1-32)" << std::endl;
+			std::cin >> prompt;
+			auto depth = std::stoi(prompt);
+			depth = clamp(depth, 0, 32);
+			fxparams.bitCrusherNBits = depth;
+			bFxParamChanged = true;
+		}
 		if (prompt == "osc") {
 			std::cout << ">> enter sine, saw, tri, square" << std::endl;
 			std::cin >> prompt;
