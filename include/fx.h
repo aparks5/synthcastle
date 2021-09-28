@@ -15,6 +15,8 @@ struct FxParams
     float delay2time;
     float delay2level;
     float delay2feedback;
+    bool bEnableBitcrusher;
+    float bitCrusherNBits;
     FxParams() 
         : bEnableReverb(false)
         , bEnableChorus(false)
@@ -28,6 +30,8 @@ struct FxParams
         , delay2time(250.f)
         , delay2level(0.5f)
         , delay2feedback(0.0)
+        , bEnableBitcrusher(false)
+        , bitCrusherNBits(32)
     {}
 };
 

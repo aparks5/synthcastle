@@ -82,6 +82,11 @@ float Synth::operator()()
 
 	int fxCount = 0;
 
+	if (m_fxParams.bEnableBitcrusher) {
+		output += bitcrush(output, m_fxParams.bitCrusherNBits);
+		fxCount++;
+	}
+
 	if (m_fxParams.bEnableChorus) {
 		output += chorus(output);
 		fxCount++;

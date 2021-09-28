@@ -6,6 +6,7 @@
 
 #include "voice.h"
 #include "fx.h"
+#include "bitcrusher.h"
 #include "chorus.h"
 #include "delay.h"
 #include "platereverb.h"
@@ -30,6 +31,7 @@ private:
     Delay delay;
     Delay delay2;
     Delay delay3;
+    Bitcrusher bitcrush;
     PlateReverb reverb;
     size_t lastActiveVoice;
 
