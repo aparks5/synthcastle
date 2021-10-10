@@ -60,7 +60,7 @@ public:
 	PlateReverb();
 
   float operator()(float in);
-	void update(PlateParams params) { m_params = params; }
+  void update(PlateParams params) { m_params = params; }
   void reset();
 
 private:
