@@ -12,16 +12,6 @@
 
 #include "commands.h"
 
-struct MixParams
-{
-    float m_gain1;
-    float m_gain2;
-    float m_gain3;
-    float m_gain4;
-    float m_gain5;
-    float m_gain6;
-};
-
 class MixerStream
 {
 public:
@@ -71,7 +61,6 @@ private:
     Sampler m_clap;
     Sampler m_snare;
     FeedbackDelayNetwork m_fdn;
-    static const size_t kMaxTracks = 16;
     std::array<Gain,16> m_trackGains;
     PlateReverb m_plate;
 

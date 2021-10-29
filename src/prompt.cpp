@@ -6,11 +6,11 @@ Prompt::Prompt(MixerStream& s)
 	: stream(s)
 {
 }
+
 void Prompt::open()
 {
 	std::string prompt;
 	VoiceParams params;
-	MixParams mixparams;
 	FxParams fxparams;
 	params.envParams = { 1,250,0,0 };
 	stream.update(params);
