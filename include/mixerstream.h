@@ -22,6 +22,7 @@ public:
     bool stop();
     void update(VoiceParams params);
     void update(FxParams fxparams);
+    void updateTrackGainDB(size_t trackNum, float gainDB);
     void noteOn(int noteVal, int track);
     void noteOff(int noteVal, int track);
     void record(bool bStart);
@@ -60,6 +61,7 @@ private:
     Sampler m_clap;
     Sampler m_snare;
     FeedbackDelayNetwork m_fdn;
+    std::array<Gain,16> m_trackGains;
     PlateReverb m_plate;
 
 };
