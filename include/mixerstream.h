@@ -12,6 +12,16 @@
 
 #include "commands.h"
 
+struct MixParams
+{
+    float m_gain1;
+    float m_gain2;
+    float m_gain3;
+    float m_gain4;
+    float m_gain5;
+    float m_gain6;
+};
+
 class MixerStream
 {
 public:
@@ -22,6 +32,7 @@ public:
     bool stop();
     void update(VoiceParams params);
     void update(FxParams fxparams);
+    void updateTrackGainDB(size_t trackNum, float gainDB);
     void noteOn(int noteVal, int track);
     void noteOff(int noteVal, int track);
     void record(bool bStart);
@@ -60,6 +71,8 @@ private:
     Sampler m_clap;
     Sampler m_snare;
     FeedbackDelayNetwork m_fdn;
+    static const size_t kMaxTracks = 16;
+    std::array<Gain,16> m_trackGains;
     PlateReverb m_plate;
 
 };

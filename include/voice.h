@@ -24,6 +24,7 @@ struct VoiceParams
     size_t midiNote;
     OscillatorType osc;
     OscillatorType osc2;
+    float bpm;
     bool bEnableOsc2;
     float osc2coarse;
     float osc2fine;
@@ -43,6 +44,7 @@ struct VoiceParams
         : bIsActive(false)
         , osc(OscillatorType::SAW)
         , osc2(OscillatorType::SAW)
+        , bpm(60.f)
         , bEnableOsc2(false)
         , osc2coarse(0.f)
         , osc2fine(0.f)

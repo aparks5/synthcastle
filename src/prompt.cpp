@@ -10,6 +10,7 @@ void Prompt::open()
 {
 	std::string prompt;
 	VoiceParams params;
+	MixParams mixparams;
 	FxParams fxparams;
 	params.envParams = { 1,250,0,0 };
 	stream.update(params);
@@ -35,6 +36,15 @@ void Prompt::open()
 		if (prompt == "start") {
 			stream.start();
 		}
+		if (prompt == "bpm") {
+			std::cout << ">> enter bpm (20-200 beats per minute)" << std::endl;
+			std::cout << prompt;
+			auto bpm = std::stof(prompt);
+			bpm = clamp(bpm, 20.f, 200.f);
+			params.bpm = bpm;
+			bParamChanged = true;
+		}
+
 		if (prompt == "exit") {
 			break;
 		}
@@ -267,6 +277,30 @@ void Prompt::open()
 		}
 		if (prompt == "clear") {
 			notes = {};
+		}
+		if (prompt == "mix") {
+			std::cout << ">> mix <tracknum> <dB (-60...0)>" << std::endl;
+			std::vector<std::string> param;
+			size_t paramCount = 0;
+			std::string gainParams;
+			while (paramCount < 2 && std::cin >> gainParams) {
+				param.push_back(gainParams);
+				paramCount++;
+			}
+			int trackNum = 0;
+			float fGainDB = 0.f;
+
+			std::sscanf(param[0].c_str(), "%zu", &trackNum);
+			std::sscanf(param[1].c_str(), "%f", &fGainDB);
+
+			trackNum = clamp(trackNum, 0, 16);
+			fGainDB = clamp(fGainDB, -60.f, 0.f);
+
+			stream.updateTrackGainDB(trackNum, fGainDB);
+
+			bParamChanged = true;
+
+
 		}
 
 		if (bParamChanged) {
