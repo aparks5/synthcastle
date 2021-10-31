@@ -44,7 +44,12 @@ GLboolean g_ready = true;
 
 
 void drawWindowedTimeDomain(float* buffer) {
-    // Initialize initial x
+	glMatrixMode(GL_PROJECTION);
+	// load the identity matrix
+	glLoadIdentity();
+	glOrtho(0, 256.0f, -1.0f, 1.0f, -1.0f, 1.0f);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
 
     glPushMatrix();
     {
@@ -65,13 +70,12 @@ void drawWindowedTimeDomain(float* buffer) {
 }
 
 void drawVUMeter(float* buffer) {
-    // Initialize initial x
+	glMatrixMode(GL_PROJECTION);
+	// load the identity matrix
 	glLoadIdentity();
-			glOrtho(0, 256.0f, -100.f, 0.0f, -2.0f, 2.0f);
-			glMatrixMode(GL_MODELVIEW);
-			glLoadIdentity();
-
-
+	glOrtho(0, 256.0f, -100.f, 0.0f, -2.0f, 2.0f);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
 
     float rms = 0.f;
 
@@ -79,7 +83,7 @@ void drawVUMeter(float* buffer) {
 	{
 		glBegin(GL_LINE_STRIP);
 
-		// meter display
+  		// calculate rms dB 
 		float accum = 0.f;
 		for (int i = 0; i < 256; i++) {
 			accum += buffer[i] * buffer[i];
@@ -117,13 +121,21 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 
 }
 
+static void initWindow(int width, int height)
+{
+    glMatrixMode(GL_PROJECTION);
+    // load the identity matrix
+    glLoadIdentity();
+    glViewport(0, 0, width, height);
+    // load the identity matrix
+    glOrtho(0, 256.0f, -1.0f, 1.0f, -1.0f, 1.0f);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+}
+
 static int graphicsThread(void)
 {
     GLFWwindow* window;
-
-    // wait for data
-    
-
     glfwSetErrorCallback(error_callback);
 
     if (!glfwInit())
@@ -137,7 +149,6 @@ static int graphicsThread(void)
     }
 
     glfwSetKeyCallback(window, key_callback);
-
     glfwMakeContextCurrent(window);
     gladLoadGL(glfwGetProcAddress);
     glfwSwapInterval(1);
@@ -145,64 +156,41 @@ static int graphicsThread(void)
     auto program = glCreateProgram();
     glLinkProgram(program);
 
-	int width, height;
-
 
     glEnable(GL_POINT_SMOOTH);
     glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
 
+    int width = 0;
+    int height = 0;
 	glfwGetFramebufferSize(window, &width, &height);
-
 	auto ratio = width / (float)height;
 
 	glUseProgram(program);
 
-    // save the new window size
-    // map the view port to the client area
-    // set the matrix mode to project
-
-
     while (!glfwWindowShouldClose(window))
     {
-
         while (!g_ready) {
             usleep(3000);
         }
 
-        g_ready = false;
-		glMatrixMode(GL_PROJECTION);
-		// load the identity matrix
-		glLoadIdentity();
-        glViewport(0, 0, width, height);
-		// load the identity matrix
-        glOrtho(0, 256.0f, -1.0f, 1.0f, -1.0f, 1.0f);
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
+        initWindow(width, height);
 
-        // local variables
+        g_ready = false;
+
         float buffer[256];
         memcpy(buffer, g_buffer, g_buffer_size * sizeof(float));
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        if (g_mode == DISPLAY_MODE_OSCILLOSCOPE) {
-			glMatrixMode(GL_PROJECTION);
-			// load the identity matrix
-			glLoadIdentity();
-			glOrtho(0, 256.0f, -1.0f, 1.0f, -1.0f, 1.0f);
-			glMatrixMode(GL_MODELVIEW);
-			glLoadIdentity();
 
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // choose display mode
+        if (g_mode == DISPLAY_MODE_OSCILLOSCOPE) {
             drawWindowedTimeDomain(buffer);
         }
         if (g_mode == DISPLAY_MODE_METER) {
-			glMatrixMode(GL_PROJECTION);
-			// load the identity matrix
-			glLoadIdentity();
-			glOrtho(0, 256.0f, -100.f, 0.0f, -2.0f, 2.0f);
-			glMatrixMode(GL_MODELVIEW);
-			glLoadIdentity();
 
             drawVUMeter(buffer);
         }
+
         glFlush();
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -213,5 +201,6 @@ static int graphicsThread(void)
     glfwTerminate();
     exit(EXIT_SUCCESS);
 }
+
 
 #endif // GRAPHICS_H_
