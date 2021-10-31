@@ -13,6 +13,13 @@
 
 #include "windows.h"
 
+enum DisplayMode {
+    DISPLAY_MODE_OSCILLOSCOPE,
+    DISPLAY_MODE_METER
+};
+
+DisplayMode g_mode = DISPLAY_MODE_OSCILLOSCOPE;
+
 void usleep(__int64 usec)
 {
     HANDLE timer;
@@ -59,21 +66,29 @@ void drawWindowedTimeDomain(float* buffer) {
 
 void drawVUMeter(float* buffer) {
     // Initialize initial x
+	glLoadIdentity();
+			glOrtho(0, 256.0f, -100.f, 0.0f, -2.0f, 2.0f);
+			glMatrixMode(GL_MODELVIEW);
+			glLoadIdentity();
+
+
 
     float rms = 0.f;
 
     glPushMatrix();
-	glBegin(GL_LINE_STRIP);
+	{
+		glBegin(GL_LINE_STRIP);
 
-	// meter display
-	float accum = 0.f;
-	for (int i = 0; i < 256; i++) {
-		accum += buffer[i] * buffer[i];
+		// meter display
+		float accum = 0.f;
+		for (int i = 0; i < 256; i++) {
+			accum += buffer[i] * buffer[i];
+		}
+
+		rms = 20 * log10(sqrt(accum / 256));
+
+		glEnd();
 	}
-
-	rms = 20 * log10(sqrt(accum / 256));
-
-	glEnd();
 
 	// color scale
     float colorScale = rms / -100.f;
@@ -89,8 +104,17 @@ static void error_callback(int error, const char* description)
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, GLFW_TRUE);
+    }
+    if (key == GLFW_KEY_1 && action == GLFW_PRESS) {
+        g_mode = DISPLAY_MODE_OSCILLOSCOPE;
+    }
+    if (key == GLFW_KEY_2 && action == GLFW_PRESS) {
+        g_mode = DISPLAY_MODE_METER;
+
+    }
+
 }
 
 static int graphicsThread(void)
@@ -159,7 +183,26 @@ static int graphicsThread(void)
         float buffer[256];
         memcpy(buffer, g_buffer, g_buffer_size * sizeof(float));
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		drawWindowedTimeDomain(buffer);
+        if (g_mode == DISPLAY_MODE_OSCILLOSCOPE) {
+			glMatrixMode(GL_PROJECTION);
+			// load the identity matrix
+			glLoadIdentity();
+			glOrtho(0, 256.0f, -1.0f, 1.0f, -1.0f, 1.0f);
+			glMatrixMode(GL_MODELVIEW);
+			glLoadIdentity();
+
+            drawWindowedTimeDomain(buffer);
+        }
+        if (g_mode == DISPLAY_MODE_METER) {
+			glMatrixMode(GL_PROJECTION);
+			// load the identity matrix
+			glLoadIdentity();
+			glOrtho(0, 256.0f, -100.f, 0.0f, -2.0f, 2.0f);
+			glMatrixMode(GL_MODELVIEW);
+			glLoadIdentity();
+
+            drawVUMeter(buffer);
+        }
         glFlush();
         glfwSwapBuffers(window);
         glfwPollEvents();
