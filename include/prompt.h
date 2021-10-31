@@ -15,7 +15,7 @@ public:
 private:
 	MixerStream& stream;
 	std::queue<NoteEvent> makePattern(std::string pattern);
-	void playPattern(std::queue<NoteEvent> notes);
+	void playPattern(std::queue<NoteEvent> notes, size_t bpm);
 
 };
 

@@ -52,6 +52,7 @@ std::queue<NoteEvent> NoteGenerator::makeSequence(std::string input)
 			if (numNotes == notes.size()) {
 				timestamp += stof(duration);
 			}
+			timestamp = clamp(timestamp, 0., 8.);
 			numNotes--;
 			auto ev = makeNote(stod(note), true, timestamp, trackNum);
 			noteEvents.push(ev);
