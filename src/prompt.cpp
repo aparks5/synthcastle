@@ -38,7 +38,7 @@ void Prompt::open()
 		}
 		if (prompt == "bpm") {
 			std::cout << ">> enter bpm (20-200 beats per minute)" << std::endl;
-			std::cout << prompt;
+			std::cin >> prompt;
 			auto bpm = std::stof(prompt);
 			bpm = clamp(bpm, 20.f, 200.f);
 			params.bpm = bpm;
@@ -266,7 +266,7 @@ void Prompt::open()
 			}
 			else {
 				while (loopCount > 0) {
-					playPattern(notes);
+					playPattern(notes, params.bpm);
 					loopCount--;
 				}
 			}
@@ -274,7 +274,7 @@ void Prompt::open()
 
 		if (prompt == "pattern") {
 			if (notes.size() > 0) {
-				playPattern(notes);
+				playPattern(notes, params.bpm);
 			}
 			else {
 				std::cout << "no notes to play!" << std::endl;
@@ -345,10 +345,10 @@ static std::queue<NoteEvent> sortTimeVal(std::queue<NoteEvent> notes)
 }
 
 
-void Prompt::playPattern(std::queue<NoteEvent> notes)
+void Prompt::playPattern(std::queue<NoteEvent> notes, size_t bpm)
 {
 
-	int now = 0.f;
+	float now = 0.f;
 
 	auto temp = sortTimeVal(notes);
 
@@ -357,8 +357,16 @@ void Prompt::playPattern(std::queue<NoteEvent> notes)
 	while (!temp.empty()) {
 
 		ev = static_cast<NoteEvent>(temp.front());
-		Sleep(ev.timeVal - now);
-		now += ev.timeVal - now;
+		// we are in 4/4
+		float tv = ev.timeVal * 4 * 60.f * 1000.f / bpm;
+
+		if (tv != now) {
+			Sleep(tv - now);
+		}
+
+		now += tv - now;
+
+
 		temp.pop();
 		double stamp = 0;
 		auto nBytes = 0;
@@ -371,8 +379,8 @@ void Prompt::playPattern(std::queue<NoteEvent> notes)
 			if (byte0 == 144) {
 				if (noteVal == 0)
 				{
-					if (ev.timeVal - now > 0) {
-						Sleep(ev.timeVal - now);
+					if (tv - now > 0) {
+						Sleep(tv - now);
 					}
 				}
 				else if (velocity != 0) {
@@ -384,10 +392,20 @@ void Prompt::playPattern(std::queue<NoteEvent> notes)
 			}
 		}
 
-		if (ev.timeVal - now < 0) {
-			now = ev.timeVal;
+
+		if (tv - now < 0) {
+			now = tv;
 		}
 
 	}
+
+	// if "now" is before the end of a measure, sleep until the measure if over
+
+	// find nearest multiple of "now" to the duration of one measure of 4/4 at the bpm:
+	float m = 4.f * 60.f * 1000.f / bpm;
+    // https://math.stackexchange.com/questions/291468/how-to-find-the-nearest-multiple-of-16-to-my-given-number-n
+	float nearest = (m == 0) ? now : ceil(now / m) * m;
+	float endOfMeasure = nearest - now;
+	Sleep(endOfMeasure);
 
 }
