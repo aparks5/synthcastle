@@ -56,6 +56,32 @@ void drawWindowedTimeDomain(float* buffer) {
     }
     glPopMatrix();
 }
+
+void drawVUMeter(float* buffer) {
+    // Initialize initial x
+
+    float rms = 0.f;
+
+    glPushMatrix();
+	glBegin(GL_LINE_STRIP);
+
+	// meter display
+	float accum = 0.f;
+	for (int i = 0; i < 256; i++) {
+		accum += buffer[i] * buffer[i];
+	}
+
+	rms = 20 * log10(sqrt(accum / 256));
+
+	glEnd();
+
+	// color scale
+    float colorScale = rms / -100.f;
+    glColor3f(colorScale, 0.7, 1.f);
+	glRectf(85.f, -100.f, 170.f, rms);
+    glPopMatrix();
+}
+
 static void error_callback(int error, const char* description)
 {
     fprintf(stderr, "Error: %s\n", description);
@@ -125,7 +151,7 @@ static int graphicsThread(void)
 		glLoadIdentity();
         glViewport(0, 0, width, height);
 		// load the identity matrix
-        glOrtho(0, 256.0f, -2.0f, 2.0f, -2.0f, 2.0f);
+        glOrtho(0, 256.0f, -1.0f, 1.0f, -1.0f, 1.0f);
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
 

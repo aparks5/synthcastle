@@ -273,7 +273,12 @@ void Prompt::open()
 		}
 
 		if (prompt == "pattern") {
-			playPattern(notes);
+			if (notes.size() > 0) {
+				playPattern(notes);
+			}
+			else {
+				std::cout << "no notes to play!" << std::endl;
+			}
 		}
 		if (prompt == "clear") {
 			notes = {};
