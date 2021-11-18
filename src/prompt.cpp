@@ -26,8 +26,9 @@ void Prompt::open()
 		if (prompt == "help") {
 			std::cout << ">>> commands: stop, osc, freq, filt-freq, filt-q, filt-lfo-freq, pitch/filt-lfo-on/off, " << std::endl;
 			std::cout << ">>> pitch-lfo-freq, pitch-lfo-depth, reverb-on/off, chorus-on/off, delay-on/off" << std::endl;
+			std::cout << ">>> delay-time, delay-feedback, delay-mix" << std::endl;
 			std::cout << ">>> osc2-enable, osc2-coarse, osc2-fine, env [attackMs decayMs susdB]" << std::endl;
-			std::cout << ">>> play [note], loop [note-note2-note3:duration,note4:duration2... loopNumTimes]" << std::endl;
+			std::cout << ">>> play [note] [note-note2-note3:duration,note4:duration2...], loop loopNumTimes" << std::endl;
 		}
 
 		if (prompt == "stop") {
@@ -129,6 +130,31 @@ void Prompt::open()
 			fxparams.bEnableDelay1 = false;
 			bFxParamChanged = true;
 		}
+		if (prompt == "delay-time") {
+			std::cout << ">> enter delay time in milliseconds (0. - 1000.)" << std::endl;
+			std::cin >> prompt;
+			auto delayTimeMs = std::stof(prompt);
+			delayTimeMs = clamp(delayTimeMs, 0.f, 1000.f);
+			fxparams.delay1time = delayTimeMs;
+			bParamChanged = true;
+		}
+		if (prompt == "delay-feedback") {
+			std::cout << ">> enter delay feedback as a ratio (0. - 1.)" << std::endl;
+			std::cin >> prompt;
+			auto delayFeedbackRatio = std::stof(prompt);
+			delayFeedbackRatio = clamp(delayFeedbackRatio, 0.f, 1.f);
+			fxparams.delay1feedback = delayFeedbackRatio;
+			bParamChanged = true;
+		}
+		if (prompt == "delay-mix") {
+			std::cout << ">> enter delay wet/dry mix as a ratio (0. - 1.)" << std::endl;
+			std::cin >> prompt;
+			auto delayMix = std::stof(prompt);
+			delayMix = clamp(delayMix, 0.f, 1.f);
+			fxparams.delay1level = delayMix;
+			bParamChanged = true;
+		}
+
 		if (prompt == "reverb-on") {
 			fxparams.bEnableReverb = true;
 			bFxParamChanged = true;
@@ -304,7 +330,6 @@ void Prompt::open()
 			stream.updateTrackGainDB(trackNum, fGainDB);
 
 			bParamChanged = true;
-
 
 		}
 
