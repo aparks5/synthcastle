@@ -21,6 +21,7 @@ public:
 	NoteEvent makeNote(int noteVal, bool bNoteOn, float timeVal, int track);
 	std::queue<NoteEvent> loopSequence(std::string input, size_t nTimes);
 	std::queue<NoteEvent> makeSequence(std::string input);
+	std::queue<NoteEvent> randomPattern(size_t trackNum, size_t numSteps, size_t lowNote, size_t highNote);
 
 };
 

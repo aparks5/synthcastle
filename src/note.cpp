@@ -62,6 +62,29 @@ std::queue<NoteEvent> NoteGenerator::makeSequence(std::string input)
 	return noteEvents;
 }
 
+std::queue<NoteEvent> NoteGenerator::randomPattern(size_t trackNum, size_t numSteps, size_t lowNote, size_t highNote) 
+{
+	std::queue<NoteEvent> noteEvents;
+	
+	// now use `events`
+	auto timestamp = 0.;
+	float minDur = 0.125;
+	float maxDur = 0.5;
+
+	for (size_t idx = 0; idx < numSteps; idx++) {
+		// split notes into duration and note
+		float randDur16ths = rand() % (4 - 1 + 1);
+		timestamp += (randDur16ths*minDur);
+		int randNote = rand() % (highNote - lowNote + 1) + lowNote;
+		auto ev = makeNote(randNote, true, timestamp, trackNum);
+		noteEvents.push(ev);
+	}
+
+	return noteEvents;
+}
+
+
+
 NoteEvent NoteGenerator::makeNote(int noteVal, bool bNoteOn, float timeVal, int track)
 {
 	NoteEvent note;
