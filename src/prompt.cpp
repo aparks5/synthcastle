@@ -284,6 +284,21 @@ void Prompt::open()
 			}
 
 		}
+		if (prompt == "randompattern") {
+
+			std::cout << "usage: randompattern <looptimes>. generated random pattern N times. play with 'pattern' command" << std::endl;
+			NoteGenerator gen;
+			std::cin >> prompt;
+			int loopCount = std::stod(prompt);
+			while (loopCount > 0) {
+				auto temp = gen.randomPattern(1, 8, 33, 72);
+				playPattern(temp, params.bpm);
+				loopCount--;
+			}
+			std::cout << "generated random pattern, play with 'pattern' command" << std::endl;
+
+		}
+
 		if (prompt == "loop") {
 			std::cin >> prompt;
 			int loopCount = std::stod(prompt);
