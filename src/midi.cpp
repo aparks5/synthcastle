@@ -5,22 +5,7 @@ MIDI::MIDI(MixerStream& stream)
 	: midiin(std::make_shared<RtMidiIn>())
 {
 
-	midiin->openPort(0);
-	/*
 	chooseMidiInPort(midiin);
-
-	RtMidiOut* midiout = 0;
-
-	// RtMidiOut constructor
-	try {
-		midiout = new RtMidiOut();
-		chooseMidiPort(midiout);
-	}
-	catch (RtMidiError& error) {
-		error.printMessage();
-		exit(EXIT_FAILURE);
-	}
-	*/
 
 	midiUserData.stream = &stream;
 	std::queue<NoteEvent> notes;
@@ -55,7 +40,7 @@ void MIDI::midiCallback(double deltatime, std::vector<unsigned char>* message, v
 	}
 }
 
-bool MIDI::chooseMidiPort(RtMidiOut* rtmidi)
+bool MIDI::chooseMidiPort(std::shared_ptr<RtMidiOut>rtmidi)
 {
 	std::cout << "\nWould you like to open a virtual output port? [y/N] ";
 
@@ -96,7 +81,7 @@ bool MIDI::chooseMidiPort(RtMidiOut* rtmidi)
 
 
 
-bool MIDI::chooseMidiInPort(RtMidiIn* rtmidi)
+bool MIDI::chooseMidiInPort(std::shared_ptr<RtMidiIn>rtmidi)
 {
 	std::cout << "\nWould you like to open a virtual output port? [y/N] ";
 

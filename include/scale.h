@@ -27,6 +27,7 @@ enum class Key
 	C,
 	CSHARP,
 	D,
+	EFLAT,
 	E,
 	F,
 	FSHARP,
