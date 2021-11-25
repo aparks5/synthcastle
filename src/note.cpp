@@ -1,5 +1,6 @@
 #include "note.h"
 #include "util.h"
+#include "scale.h"
 
 std::queue<NoteEvent> NoteGenerator::loopSequence(std::string input, size_t nTimes)
 {
@@ -65,6 +66,8 @@ std::queue<NoteEvent> NoteGenerator::makeSequence(std::string input)
 std::queue<NoteEvent> NoteGenerator::randomPattern(size_t trackNum, size_t numSteps, size_t lowNote, size_t highNote) 
 {
 	std::queue<NoteEvent> noteEvents;
+	// TODO: add ability to specify scale
+	Scale scale(Key::C, ScalePattern::MINOR, ScaleMode::IONIAN);
 	
 	// now use `events`
 	auto timestamp = 0.;
@@ -75,8 +78,8 @@ std::queue<NoteEvent> NoteGenerator::randomPattern(size_t trackNum, size_t numSt
 		// split notes into duration and note
 		float randDur16ths = rand() % (4 - 1 + 1);
 		timestamp += (randDur16ths*minDur);
-		int randNote = rand() % (highNote - lowNote + 1) + lowNote;
-		auto ev = makeNote(randNote, true, timestamp, trackNum);
+		size_t randScaleIdx = rand() % (scale.length() + 1);
+		auto ev = makeNote(scale(randScaleIdx), true, timestamp, trackNum);
 		noteEvents.push(ev);
 	}
 
