@@ -2,7 +2,7 @@
 
 EnvelopeDetector::EnvelopeDetector(float sampleRate)
 	: Module(sampleRate)
-	: m_params()
+	, m_params()
 {
 
 }
