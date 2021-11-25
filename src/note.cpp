@@ -66,7 +66,8 @@ std::queue<NoteEvent> NoteGenerator::makeSequence(std::string input)
 std::queue<NoteEvent> NoteGenerator::randomPattern(size_t trackNum, size_t numSteps, size_t lowNote, size_t highNote) 
 {
 	std::queue<NoteEvent> noteEvents;
-	Scale scale(Key::C, ScalePattern::BLUES, ScaleMode::IONIAN);
+	// TODO: add ability to specify scale
+	Scale scale(Key::C, ScalePattern::MINOR, ScaleMode::IONIAN);
 	
 	// now use `events`
 	auto timestamp = 0.;
