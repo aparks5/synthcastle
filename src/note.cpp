@@ -85,6 +85,32 @@ std::queue<NoteEvent> NoteGenerator::randomPattern(size_t trackNum, size_t numSt
 	return noteEvents;
 }
 
+std::queue<NoteEvent> NoteGenerator::scalePattern(Key key, ScalePattern pattern, ScaleMode mode)
+{
+	(void)key;
+	(void)pattern;
+	(void)mode;
+	std::queue<NoteEvent> noteEvents;
+	Scale scale(key, pattern, mode);
+	
+	// now use `events`
+	auto timestamp = 0.;
+	float minDur = 0.0625; // 1/16 note
+	float maxDur = 0.25; // 1/4 note
+	size_t trackNum = 1;
+
+	for (size_t idx = 0; idx <= scale.length(); idx++) {
+		// split notes into duration and note
+		timestamp += minDur;
+		size_t randScaleIdx = rand() % (scale.length() + 1);
+		auto ev = makeNote(scale(idx), true, timestamp, trackNum);
+		noteEvents.push(ev);
+	}
+
+	return noteEvents;
+}
+
+
 
 
 NoteEvent NoteGenerator::makeNote(int noteVal, bool bNoteOn, float timeVal, int track)

@@ -1,6 +1,7 @@
 #ifndef SCALE_H_
 #define SCALE_H_
 
+#include <string>
 #include <vector>
 
 enum class ScalePattern
@@ -46,6 +47,9 @@ public:
 	void modulate(ScaleMode mode);
 	size_t operator()(size_t idx) { return m_scale[idx]; }
 	size_t length() { return m_scale.size() - 1; }
+	static Key strToKey(std::string str);
+	static ScalePattern strToScalePattern(std::string str);
+	static ScaleMode strToScaleMode(std::string str);
 
 private:
 	void generate(Key key, ScalePattern pattern);

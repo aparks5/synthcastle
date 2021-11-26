@@ -14,6 +14,95 @@ Scale::Scale(Key key, ScalePattern pattern, ScaleMode mode)
 }
 
 
+
+ Key Scale::strToKey(std::string str)
+{
+	Key key = Key::C;
+	if (str == "C") {
+		key = Key::C;
+	}
+	else if (str == "C#" || str == "Db") {
+		key = Key::CSHARP;
+	}
+	else if (str == "D") {
+		key = Key::D;
+	}
+	else if (str == "Eb" || str == "D#") {
+		key = Key::EFLAT;
+	}
+	else if (str == "F") {
+		key = Key::F;
+	}
+	else if (str == "F#" || str == "Gb") {
+		key = Key::FSHARP;
+	}
+	else if (str == "G") {
+		key == Key::G;
+	}
+	else if (str == "G#" || str == "Ab") {
+		key == Key::AFLAT;
+	}
+	else if (str == "A") {
+		key == Key::A;
+	}
+	else if (str == "A#" || str == "Bb") {
+		key == Key::BFLAT;
+	}
+	else if (str == "B") {
+		key == Key::B;
+	}
+
+	return key;
+
+}
+
+ ScalePattern Scale::strToScalePattern(std::string str)
+ {
+	 ScalePattern pat = ScalePattern::MAJOR;
+	 if (str == "maj") {
+		 pat = ScalePattern::MAJOR;
+	 }
+	 else if (str == "min") {
+		 pat = ScalePattern::MINOR;
+	 }
+	 else if (str == "blues") {
+		 pat = ScalePattern::BLUES;
+	 }
+
+	 return pat;
+
+ }
+
+ ScaleMode Scale::strToScaleMode(std::string str)
+ {
+	 ScaleMode mode = ScaleMode::IONIAN;
+
+	 if (str == "ionian" || str == "i") {
+		 mode = ScaleMode::IONIAN;
+	 }
+	 else if (str == "dorian" || str == "ii") {
+		 mode = ScaleMode::DORIAN;
+	 }
+	 else if (str == "phrygian" || str == "iii") {
+		 mode = ScaleMode::PHRYGIAN;
+	 }
+	 else if (str == "lydian" || str == "iv") {
+		 mode = ScaleMode::LYDIAN;
+	 }
+	 else if (str == "mixolydian" || str == "v") {
+		 mode = ScaleMode::MIXOLYDIAN;
+	 }
+	 else if (str == "aeolian" || str == "vi") {
+		 mode = ScaleMode::AEOLIAN;
+	 }
+	 else if (str == "locrian" || str == "vii") {
+		 mode = ScaleMode::LOCRIAN;
+	 }
+
+	 return mode;
+ }
+
+
 void Scale::generate(Key key, ScalePattern pattern)
 {
 	size_t startingNote = (12 * m_lowestOctave) + static_cast<size_t>(key);
@@ -88,7 +177,8 @@ void Scale::modulate(ScaleMode mode)
 	size_t offset = static_cast<size_t>(mode);
 	size_t oct = 12;
 
-	for (size_t idx = 0; idx < offset; idx++) {
+	// we don't need to rearrange the first note since we already include the octave in the scale
+	for (size_t idx = 1; idx <= offset; idx++) {
 		m_scale.push_back(m_scale[idx] + oct);
 	}
 

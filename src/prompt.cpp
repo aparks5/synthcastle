@@ -298,6 +298,19 @@ void Prompt::open()
 			std::cout << "generated random pattern, play with 'pattern' command" << std::endl;
 
 		}
+		if (prompt == "scale") {
+			std::cout << "usage: scale <key pattern mode>. e.g. scale C# maj lydian" << std::endl;
+			NoteGenerator gen;
+			std::string keyStr, patStr, modeStr;
+			std::cin >> keyStr >> patStr >> modeStr;
+			// populate key, pattern, mode
+			Key key = Scale::strToKey(keyStr);
+			ScalePattern pattern = Scale::strToScalePattern(patStr);
+			ScaleMode mode = Scale::strToScaleMode(modeStr);
+			auto temp = gen.scalePattern(key, pattern, mode);
+			playPattern(temp, params.bpm);
+			std::cout << "now playing scale" << std::endl;
+		}
 
 		if (prompt == "loop") {
 			std::cin >> prompt;

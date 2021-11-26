@@ -4,6 +4,7 @@
 #include <vector>
 #include <queue>
 #include <string>
+#include "scale.h"
 
 struct NoteEvent
 {
@@ -22,6 +23,7 @@ public:
 	std::queue<NoteEvent> loopSequence(std::string input, size_t nTimes);
 	std::queue<NoteEvent> makeSequence(std::string input);
 	std::queue<NoteEvent> randomPattern(size_t trackNum, size_t numSteps, size_t lowNote, size_t highNote);
+	std::queue<NoteEvent> scalePattern(Key key, ScalePattern pattern, ScaleMode mode);
 
 };
 
