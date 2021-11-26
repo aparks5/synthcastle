@@ -9,13 +9,18 @@
 #include <stdio.h>
 #include "constants.h"
 
+
+#include <complex>
+#include <fftw3.h>
+
 #define BUFFER_SIZE (FRAMES_PER_BUFFER)
 
 #include "windows.h"
 
 enum DisplayMode {
     DISPLAY_MODE_OSCILLOSCOPE,
-    DISPLAY_MODE_METER
+    DISPLAY_MODE_METER,
+    DISPLAY_MODE_FFT
 };
 
 DisplayMode g_mode = DISPLAY_MODE_OSCILLOSCOPE;
@@ -69,6 +74,78 @@ void drawWindowedTimeDomain(float* buffer) {
     glPopMatrix();
 }
 
+
+// changes time sequecies (real value ) to power spectral values.
+// modified from:
+// https://gist.github.com/sigidagi/576988
+void  fftw(float* x)
+{
+
+    // buffer x's values will be modified in place 
+    fftw_complex* in, * out;
+    fftw_plan p;
+
+    int N = 256; // N samples 
+    int nchans = 1; // nchans channels
+
+    in = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * N);
+    out = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * N);
+    p = fftw_plan_dft_1d(N, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
+
+    int i;
+    std::complex<double> temp;
+
+    for (int j = 0; j < nchans; ++j)
+    {
+        for (i = 0; i < N; ++i)
+        {
+            in[i][0] = x[i];
+            in[i][1] = 0.0;
+        }
+
+        fftw_execute(p); /* repeat as needed */
+
+        for (i = 0; i < N; ++i)
+        {
+            temp = std::complex<double>(out[i][0], out[i][1]);
+            float db = 20*log10(std::abs(std::pow(temp, 2)));
+            x[i] = db;
+        }
+    }
+
+    fftw_destroy_plan(p);
+    fftw_free(in); fftw_free(out);
+}
+
+void drawFFT(float* buffer)
+{
+	glMatrixMode(GL_PROJECTION);
+	// load the identity matrix
+	glLoadIdentity();
+	glOrtho(0, 256.0f, -100.f, 0.0f, -2.0f, 2.0f);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+
+    {
+        // Blue Color
+        glColor3f(0, 1.0, 1.0);
+
+
+        // perform fft in place
+        fftw(buffer);
+        for (int i = 0; i < 64; i++) {
+			glPushMatrix();
+            glBegin(GL_LINE_STRIP);
+            glColor3f(0.5, 0.7, 1.f);
+            glVertex3f(i*4, buffer[i], 0);
+        }
+		glEnd();
+		glPopMatrix();
+    }
+
+}
+
 void drawVUMeter(float* buffer) {
 	glMatrixMode(GL_PROJECTION);
 	// load the identity matrix
@@ -118,6 +195,11 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
         g_mode = DISPLAY_MODE_METER;
 
     }
+    if (key == GLFW_KEY_3 && action == GLFW_PRESS) {
+        g_mode = DISPLAY_MODE_FFT;
+
+    }
+
 
 }
 
@@ -187,8 +269,10 @@ static int graphicsThread(void)
             drawWindowedTimeDomain(buffer);
         }
         if (g_mode == DISPLAY_MODE_METER) {
-
             drawVUMeter(buffer);
+        }
+        if (g_mode == DISPLAY_MODE_FFT) {
+            drawFFT(buffer);
         }
 
         glFlush();

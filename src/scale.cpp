@@ -13,8 +13,6 @@ Scale::Scale(Key key, ScalePattern pattern, ScaleMode mode)
 	modulate(mode);
 }
 
-
-
  Key Scale::strToKey(std::string str)
 {
 	Key key = Key::C;

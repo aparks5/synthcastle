@@ -19,6 +19,11 @@ include_directories(
 
 add_executable (${PROJECT_NAME} ${source})
 
+#### libfftw
+add_subdirectory("C:/fftw3" "C:/fftw3/out" EXCLUDE_FROM_ALL)
+target_include_directories(${PROJECT_NAME} PRIVATE "C:/fftw3/api")
+target_link_libraries(${PROJECT_NAME} fftw3)
+
 #### PortAudio
 add_subdirectory("C:/portaudio" "C:/portaudio/out" EXCLUDE_FROM_ALL)
 target_link_libraries(${PROJECT_NAME} portaudio_static)
