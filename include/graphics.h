@@ -129,16 +129,30 @@ void drawFFT(float* buffer)
 
     {
         // Blue Color
-        glColor3f(0, 1.0, 1.0);
-
-
         // perform fft in place
         fftw(buffer);
+        float colorstep = 2.f / 64.f;
+        float r = colorstep;
+        float g = colorstep;
+        float b = 1.f;
+        float x = 0.f; // xpos
         for (int i = 0; i < 64; i++) {
 			glPushMatrix();
-            glBegin(GL_LINE_STRIP);
-            glColor3f(0.5, 0.7, 1.f);
-            glVertex3f(i*4, buffer[i], 0);
+            glBegin(GL_QUADS);
+			glPolygonMode(GL_FRONT, GL_FILL);
+            if (r <= 1.f) {
+                r += colorstep;
+            }
+            if (r >= 1.f && g <= 1.f) {
+                g += colorstep;
+            }
+            
+            glColor3f(r, g, b);
+            glVertex2f(x, -100.f);
+            glVertex2f(x + 4, -100.f);
+            glVertex2f(x, buffer[i]);
+            glVertex2f(x + 4, buffer[i]);
+            x += 5;
         }
 		glEnd();
 		glPopMatrix();
