@@ -25,8 +25,8 @@ private:
 	std::shared_ptr<RtMidiIn> midiin;
 	static void midiCallback(double deltatime, std::vector<unsigned char>* message, void* userData);
     MIDIUserData midiUserData;
-	bool chooseMidiPort(RtMidiOut* rtmidi);
-	bool chooseMidiInPort(RtMidiIn* rtmidi);
+	bool chooseMidiPort(std::shared_ptr<RtMidiOut>rtmidi);
+	bool chooseMidiInPort(std::shared_ptr<RtMidiIn>rtmidi);
 };
 
 
