@@ -63,6 +63,7 @@ void Synth::update(VoiceParams params)
 void Synth::update(FxParams fxParams)
 {
 	m_fxParams = fxParams;
+	delay.update(m_fxParams.delay1time, m_fxParams.delay1feedback);
 }
 
 void Synth::blockRateUpdate()
