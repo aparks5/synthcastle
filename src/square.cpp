@@ -16,7 +16,7 @@ Square::Square(float fs)
 void Square::freq(float frequency)
 {
 	m_freq = frequency;
-	auto samplesPerCycle = SAMPLE_RATE / m_freq;
+	auto samplesPerCycle = m_sampleRate / m_freq;
 	m_step = 2.0f / samplesPerCycle;
 }
 

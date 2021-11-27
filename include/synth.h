@@ -11,10 +11,10 @@
 #include "delay.h"
 #include "platereverb.h"
 
-class Synth
+class Synth : public Module
 {
 public:
-	Synth();
+	Synth(size_t fs);
     void noteOn(int midiNote);
     void noteOff(int midiNote);
     void update(VoiceParams params);

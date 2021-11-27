@@ -1,8 +1,9 @@
 #include "platereverb.h"
 #include "constants.h"
 
-PlateReverb::PlateReverb()
-	: m_inputDiffusorBranch(0.f)
+PlateReverb::PlateReverb(size_t fs)
+	: Module(fs)
+	, m_inputDiffusorBranch(0.f)
 	, m_diffusionLFO1(SAMPLE_RATE)
 	, m_diffusionLFO2(SAMPLE_RATE)
 	, m_decayDiffusion1FeedbackSample(0.f)
@@ -10,46 +11,46 @@ PlateReverb::PlateReverb()
 {
 	float fb = -1.f * m_params.inputDiffusion1;
 
-	m_inputDiffusor[static_cast<size_t>(InputAllpasses::AP142)] =
-		std::make_unique<Allpass>(kInputDiffusionMs[static_cast<size_t>(InputAllpasses::AP142)], fb);
+	m_inputDiffusor.push_back(
+		std::make_unique<Allpass>(fs, kInputDiffusionMs[static_cast<size_t>(InputAllpasses::AP142)], fb));
 
-	m_inputDiffusor[static_cast<size_t>(InputAllpasses::AP107)] =
-		std::make_unique<Allpass>(kInputDiffusionMs[static_cast<size_t>(InputAllpasses::AP107)], fb);
+	m_inputDiffusor.push_back(
+		std::make_unique<Allpass>(fs, kInputDiffusionMs[static_cast<size_t>(InputAllpasses::AP107)], fb));
 
 	fb = -1.f * m_params.inputDiffusion2;
 
-	m_inputDiffusor[static_cast<size_t>(InputAllpasses::AP379)] =
-		std::make_unique<Allpass>(kInputDiffusionMs[static_cast<size_t>(InputAllpasses::AP379)], fb);
+	m_inputDiffusor.push_back(
+		std::make_unique<Allpass>(fs, kInputDiffusionMs[static_cast<size_t>(InputAllpasses::AP379)], fb));
 
-	m_inputDiffusor[static_cast<size_t>(InputAllpasses::AP277)] =
-		std::make_unique<Allpass>(kInputDiffusionMs[static_cast<size_t>(InputAllpasses::AP277)], fb);
+	m_inputDiffusor.push_back(
+		std::make_unique<Allpass>(fs, kInputDiffusionMs[static_cast<size_t>(InputAllpasses::AP277)], fb));
 
 
 	auto modfb = m_params.decayDiffusion1;
 	m_diffusionLFO1.freq(0.1f);
 	m_diffusionLFO2.freq(0.1f);
 
-	m_modulatedDiffusor[0] = std::make_unique<Allpass>(kModulationDiffusionMs[0], modfb);
-	m_modulatedDiffusor[1] = std::make_unique<Allpass>(kModulationDiffusionMs[1], modfb);
+	m_modulatedDiffusor.push_back(std::make_unique<Allpass>(fs, kModulationDiffusionMs[0], modfb));
+	m_modulatedDiffusor.push_back(std::make_unique<Allpass>(fs, kModulationDiffusionMs[1], modfb));
 
-	m_delays[0] = std::make_unique<Delay>(SAMPLE_RATE, 1.f);
+	m_delays[0] = std::make_unique<Delay>(fs, 1.f);
 	m_delays[0]->update(kDelayTimesMs[0], 0.f);
-	m_delays[1] = std::make_unique<Delay>(SAMPLE_RATE, 1.f);
+	m_delays[1] = std::make_unique<Delay>(fs, 1.f);
 	m_delays[1]->update(kDelayTimesMs[1], 0.f);
-	m_delays[2] = std::make_unique<Delay>(SAMPLE_RATE, 1.f);
+	m_delays[2] = std::make_unique<Delay>(fs, 1.f);
 	m_delays[2]->update(kDelayTimesMs[2], 0.f);
-	m_delays[3] = std::make_unique<Delay>(SAMPLE_RATE, 1.f);
+	m_delays[3] = std::make_unique<Delay>(fs, 1.f);
 	m_delays[3]->update(kDelayTimesMs[3], 0.f);
 
-	m_lowpasses[0] = std::make_unique<OnePoleLowpass>();
+	m_lowpasses.push_back(std::make_unique<OnePoleLowpass>(fs));
 	m_lowpasses[0]->update(-1.f*m_params.bandwidth);
-	m_lowpasses[1] = std::make_unique<OnePoleLowpass>();
+	m_lowpasses.push_back(std::make_unique<OnePoleLowpass>(fs));
 	m_lowpasses[1]->update(-1.f*m_params.hfDamping);
-	m_lowpasses[2] = std::make_unique<OnePoleLowpass>();
+	m_lowpasses.push_back(std::make_unique<OnePoleLowpass>(fs));
 	m_lowpasses[2]->update(-1.f*m_params.hfDamping);
 
-	m_decayDiffusor[0] = std::make_unique<Allpass>(kDecayDiffusionTimesMs[0], m_params.decayDiffusion2);
-	m_decayDiffusor[1] = std::make_unique<Allpass>(kDecayDiffusionTimesMs[1], m_params.decayDiffusion2);
+	m_decayDiffusor.push_back(std::make_unique<Allpass>(fs, kDecayDiffusionTimesMs[0], m_params.decayDiffusion2));
+	m_decayDiffusor.push_back(std::make_unique<Allpass>(fs, kDecayDiffusionTimesMs[1], m_params.decayDiffusion2));
 	std::array<std::unique_ptr<Allpass>, 2> m_decayDiffusor;
 
 }

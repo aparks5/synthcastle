@@ -4,7 +4,7 @@
 #include <vector>
 
 Delay::Delay(float sampleRate, float maxDelaySeconds)
-	: m_fs(sampleRate)
+	: Module(sampleRate)
 	, m_delayMs(0)
 	, m_delaySamps(0)
 	, m_maxDelaySamps(maxDelaySeconds*sampleRate)
@@ -22,7 +22,7 @@ Delay::Delay(float sampleRate, float maxDelaySeconds)
 float Delay::tap(float ms)
 {
 
-	int integerDelay = (int)(ms / 1000.f * m_fs);
+	int integerDelay = (int)(ms / 1000.f * m_sampleRate);
 
 	if (static_cast<int>(m_writeIdx) - integerDelay < 0) {
 		return m_circBuff[m_bufSize + 1 + (m_writeIdx - integerDelay)];
@@ -58,8 +58,8 @@ float Delay::operator()()
 {
 
 	// find delay index and separate fractional delay for interpolation
-	float fractionalDelay = (m_delayMs / 1000.f * m_fs) - (int)(m_delayMs / 1000.f * m_fs);
-	int integerDelay = (int)(m_delayMs / 1000.f * m_fs);
+	float fractionalDelay = (m_delayMs / 1000.f * m_sampleRate) - (int)(m_delayMs / 1000.f * m_sampleRate);
+	int integerDelay = (int)(m_delayMs / 1000.f * m_sampleRate);
 
 	if (static_cast<int>(m_writeIdx) - integerDelay < 0) {
 		m_readIdx = m_bufSize + 1 + (m_writeIdx - integerDelay);
@@ -68,7 +68,7 @@ float Delay::operator()()
 		m_readIdx = m_writeIdx - static_cast<int>(integerDelay);
 	}
 
-	if (static_cast<size_t>(m_delayMs / 1000.f * m_fs) == 0) {
+	if (static_cast<size_t>(m_delayMs / 1000.f * m_sampleRate) == 0) {
 		return m_circBuff[m_writeIdx];
 	}
 

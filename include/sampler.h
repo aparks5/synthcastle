@@ -4,14 +4,15 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "module.h"
 
 #include "thirdparty/AudioFile.h"
 
 
-class Sampler
+class Sampler : public Module
 {
 public:
-	Sampler(std::string path);
+	Sampler(size_t sampleRate, std::string path);
 	float operator()();
     void noteOn();
 

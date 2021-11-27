@@ -3,10 +3,10 @@
 
 #include "delay.h"
 
-class Comb
+class Comb : public Module
 {
 public:
-	Comb(float delayMs, float feedbackRatio);
+	Comb(size_t fs, float delayMs, float feedbackRatio);
 	float operator()(float in);
 
 private:

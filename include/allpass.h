@@ -3,11 +3,12 @@
 
 #include "delay.h"
 #include "allpass.h"
+#include "module.h"
 
-class Allpass
+class Allpass : public Module
 {
 public:
-	Allpass(float delayTimeMs, float feedbackRatio);
+	Allpass(size_t fs, float delayTimeMs, float feedbackRatio);
 	float operator()(float in);
 	void reset();
 	void update(float delayTimeMs);

@@ -1,16 +1,19 @@
 #include "synth.h"
 
-Synth::Synth()
-	: delay(SAMPLE_RATE, 1.f)
-	, delay2(SAMPLE_RATE, 1.f)
-	, delay3(SAMPLE_RATE, 1.f)
-	, chorus(SAMPLE_RATE, 0.2, 0.8, 0.0)
+Synth::Synth(size_t fs)
+	: Module(fs)
+	, delay(fs, 1.f)
+	, delay2(fs, 1.f)
+	, delay3(fs, 1.f)
+	, bitcrush(fs)
+	, reverb(fs)
+	, chorus(fs, 0.2, 0.8, 0.0)
 	, lastActiveVoice(0)
 {
 	auto nVoices = 8;
 
 	for (auto i = 0; i < nVoices; i++) {
-		std::shared_ptr<Voice> v = std::make_shared<Voice>();
+		std::shared_ptr<Voice> v = std::make_shared<Voice>(fs);
 		m_voices.push_back(v);
 	}
 

@@ -1,10 +1,12 @@
 #ifndef ONEPOLELP_H_
 #define ONEPOLELP_H_
 
-class OnePoleLowpass
+#include "module.h"
+
+class OnePoleLowpass : public Module
 {
 public:
-	OnePoleLowpass();
+	OnePoleLowpass(size_t fs);
 	float operator()(float in);
 	void reset();
 	void update(float damping);

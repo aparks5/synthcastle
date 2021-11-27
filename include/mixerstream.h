@@ -15,7 +15,7 @@
 class MixerStream
 {
 public:
-    MixerStream(CallbackData* userData);
+    MixerStream(size_t fs, CallbackData* userData);
     bool open(PaDeviceIndex index);
     bool close();
     bool start();
@@ -61,7 +61,7 @@ private:
     Sampler m_clap;
     Sampler m_snare;
     FeedbackDelayNetwork m_fdn;
-    std::array<Gain,16> m_trackGains;
+    std::vector<Gain> m_trackGains;
     PlateReverb m_plate;
 
 };

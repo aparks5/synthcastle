@@ -1,25 +1,26 @@
 #include "freeverb.h"
 
-Freeverb::Freeverb()
+Freeverb::Freeverb(size_t fs)
+	: Module(fs)
 {
-	Allpass ap1(5.1f, 0.5);
+	Allpass ap1(fs, 5.1f, 0.5);
 	m_allpassFilters.push_back(ap1);
-	Allpass ap2(12.6f, 0.5);
+	Allpass ap2(fs, 12.6f, 0.5);
 	m_allpassFilters.push_back(ap2);
-	Allpass ap3(10.f, 0.5);
+	Allpass ap3(fs, 10.f, 0.5);
 	m_allpassFilters.push_back(ap3);
-	Allpass ap4(7.7f, 0.5);
+	Allpass ap4(fs, 7.7f, 0.5);
 	m_allpassFilters.push_back(ap4);
 
 	float fb = 0.84;
-	Comb c1(35.3, fb);
-	Comb c2(36.6, fb);
-	Comb c3(33.8, fb);
-	Comb c4(33.2, fb);
-	Comb c5(28.9, fb);
-	Comb c6(30.7, fb);
-	Comb c7(26.9, fb);
-	Comb c8(25.3, fb);
+	Comb c1(fs, 35.3, fb);
+	Comb c2(fs, 36.6, fb);
+	Comb c3(fs, 33.8, fb);
+	Comb c4(fs, 33.2, fb);
+	Comb c5(fs, 28.9, fb);
+	Comb c6(fs, 30.7, fb);
+	Comb c7(fs, 26.9, fb);
+	Comb c8(fs, 25.3, fb);
 
 	m_combFilters.push_back(c1);
 	m_combFilters.push_back(c2);

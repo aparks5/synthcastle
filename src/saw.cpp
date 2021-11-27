@@ -9,7 +9,7 @@ Saw::Saw(float fs)
 void Saw::freq(float frequency)
 {
 	m_freq = frequency;
-	auto samplesPerCycle = m_fs * 1.0f / m_freq;
+	auto samplesPerCycle = m_sampleRate * 1.0f / m_freq;
 	m_step = 2.0f / samplesPerCycle;
 }
 

@@ -2,8 +2,9 @@
 #include "constants.h"
 
 
-Allpass::Allpass(float delayTimeMs, float feedbackRatio)
-	: m_delay(SAMPLE_RATE, 2.0f)
+Allpass::Allpass(size_t fs, float delayTimeMs, float feedbackRatio)
+	: Module(fs)
+	, m_delay(fs, 2.0f)
 	, m_delayTimeMs(delayTimeMs)
 	, m_feedbackRatio(feedbackRatio)
 {

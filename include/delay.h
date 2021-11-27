@@ -1,9 +1,10 @@
 #ifndef DELAY_H_
 #define DELAY_H_
 
+#include "module.h"
 #include <vector>
 
-class Delay
+class Delay : public Module
 {
 public:
 	Delay(float sampleRate, float maxDelaySeconds);

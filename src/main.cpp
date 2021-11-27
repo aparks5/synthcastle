@@ -40,7 +40,7 @@ void audioThread()
 	userData.commandsToAudioCallback = sendCommands;
 	userData.server = server;
 
-	MixerStream stream(&userData);
+	MixerStream stream(SAMPLE_RATE, &userData);
 	MIDI midi(stream);
 	Prompt prompt(stream);
 

@@ -9,6 +9,7 @@
 #include "square.h"
 #include "sine.h"
 #include "triangle.h"
+#include "module.h"
 
 enum class OscillatorType
 {
@@ -63,10 +64,10 @@ struct VoiceParams
     {}
 };
 
-class Voice
+class Voice : public Module
 {
 public:
-	Voice();
+	Voice(size_t fs);
 	float apply();
     void update(VoiceParams params);
     void modUpdate();

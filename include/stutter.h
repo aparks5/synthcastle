@@ -3,7 +3,7 @@
 
 #include "delay.h"
 
-class Stutter
+class Stutter : public Module
 {
 public:
 	Stutter(float sampleRate, size_t bpm);

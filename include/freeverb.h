@@ -3,13 +3,14 @@
 
 #include <vector>
 
+#include "module.h"
 #include "comb.h"
 #include "allpass.h"
 
-class Freeverb
+class Freeverb : public Module
 {
 public:
-	Freeverb();
+	Freeverb(size_t fs);
 	float operator()(float in);
 
 private:
