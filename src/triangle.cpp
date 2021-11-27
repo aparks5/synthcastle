@@ -16,7 +16,7 @@ Triangle::Triangle(float fs)
 void Triangle::freq(float frequency)
 {
 	m_freq = frequency;
-	auto samplesPerCycle = 1. * m_fs / m_freq;
+	auto samplesPerCycle = 1. * m_sampleRate / m_freq;
 	m_step = 4.0f / samplesPerCycle;
 }
 

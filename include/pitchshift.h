@@ -1,7 +1,7 @@
 #ifndef PITCHSHIFT_H_
 #define PITCHSHIFT_H_
 
-class PitchShift
+class PitchShift : public Module
 {
 public:
 	PitchShift(float sampleRate);

@@ -1,7 +1,8 @@
 #include "chorus.h"
 
 Chorus::Chorus(float sampleRate, float rate, float depth, float feedbackRatio)
-	: delay(sampleRate, 1.f)
+	: Module(sampleRate)
+	, delay(sampleRate, 1.f)
 	, lfo(sampleRate)
 	, m_depth(depth)
 	, m_feedbackRatio(feedbackRatio)

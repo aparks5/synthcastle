@@ -21,7 +21,7 @@ Sine::Sine(float fs)
 void Sine::freq(float frequency)
 {
 	m_freq = frequency;
-	m_step = (TABLE_SIZE * m_freq) / SAMPLE_RATE * 1.0f;
+	m_step = (TABLE_SIZE * m_freq) / m_sampleRate * 1.0f;
 }
 
 float Sine::operator()()

@@ -1,10 +1,12 @@
 #ifndef GAIN_H_
 #define GAIN_H_
 
-class Gain
+#include "module.h"
+
+class Gain : public Module
 {
 public:
-	Gain();
+	Gain(size_t sampleRate);
 	float apply(float samp);
 
 	void setGaindB(float gaindB);

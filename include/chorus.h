@@ -4,7 +4,7 @@
 #include "delay.h"
 #include "sine.h"
 
-class Chorus
+class Chorus : public Module
 {
 public:
 

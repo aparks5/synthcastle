@@ -6,6 +6,7 @@
 #include "onepolelowpass.h"
 #include "sine.h"
 
+#include "module.h"
 #include <array>
 #include <memory>
 
@@ -54,10 +55,10 @@ enum class InputAllpasses
 	AP277
 };
 
-class PlateReverb
+class PlateReverb : public Module
 {
 public:
-	PlateReverb();
+	PlateReverb(size_t fs);
 
   float operator()(float in);
   void update(PlateParams params) { m_params = params; }
@@ -66,22 +67,22 @@ public:
 private:
 	PlateParams m_params;
 	std::array<float, 4> kInputDiffusionMs = { 4.7713,3.5953,12.2734,9.30748 };
-	std::array<std::unique_ptr<Allpass>, 4> m_inputDiffusor;
+	std::vector<std::unique_ptr<Allpass>> m_inputDiffusor;
 
 
 	float m_inputDiffusorBranch;
 
 	const size_t kMaxDelayModExcursionSamps = 24;
 	const std::array<float, 2> kModulationDiffusionMs = { 15.238, 20.589 };
-	std::array<std::unique_ptr<Allpass>, 2> m_modulatedDiffusor;
+	std::vector<std::unique_ptr<Allpass>> m_modulatedDiffusor;
 
 	std::array<std::unique_ptr<Delay>, 4> m_delays;
 	const std::array<float, 4> kDelayTimesMs = { 100.975, 84.3537, 95.6235, 71.7234 };
 
-	std::array<std::unique_ptr<Allpass>, 2> m_decayDiffusor;
+	std::vector<std::unique_ptr<Allpass>> m_decayDiffusor;
 	std::array<float, 2> kDecayDiffusionTimesMs = { 60.4818, 106.28 };
 
-	std::array<std::unique_ptr<OnePoleLowpass>, 3> m_lowpasses;
+	std::vector<std::unique_ptr<OnePoleLowpass>> m_lowpasses;
 
 	Sine m_diffusionLFO1;
 	Sine m_diffusionLFO2;

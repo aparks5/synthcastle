@@ -1,7 +1,8 @@
 #include "onepolelowpass.h"
 
-OnePoleLowpass::OnePoleLowpass()
-	: m_damp1(0.2)
+OnePoleLowpass::OnePoleLowpass(size_t fs)
+	: Module(fs)
+	, m_damp1(0.2)
 	, m_damp2(1-m_damp1)
 	, m_delayElement(0.f)
 {

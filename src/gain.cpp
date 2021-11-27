@@ -1,8 +1,9 @@
 #include "gain.h"
 #include "math.h"
 
-Gain::Gain()
-	: m_fgain(1)
+Gain::Gain(size_t sampleRate)
+	: Module(sampleRate)
+	, m_fgain(1)
 {
 }
 

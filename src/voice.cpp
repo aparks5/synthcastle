@@ -1,22 +1,24 @@
 #include "voice.h"
 #include "util.h"
 
-
-Voice::Voice()
-	: m_saw(SAMPLE_RATE)
-	, m_tri(SAMPLE_RATE)
-	, m_square(SAMPLE_RATE)
-	, m_sine(SAMPLE_RATE)
-	, m_lfo(SAMPLE_RATE)
-	, m_pitchLfo(SAMPLE_RATE)
-	, m_saw2(SAMPLE_RATE)
-	, m_tri2(SAMPLE_RATE)
-	, m_square2(SAMPLE_RATE)
-	, m_sine2(SAMPLE_RATE)
-	, m_moogFilter(SAMPLE_RATE)
+Voice::Voice(size_t fs)
+	: Module(fs)
+	, m_osc(OscillatorType::SAW)
+	, m_saw(fs)
+	, m_tri(fs)
+	, m_square(fs)
+	, m_sine(fs)
+	, m_lfo(fs)
+	, m_pitchLfo(fs)
+	, m_osc2gain(fs)
+	, m_saw2(fs)
+	, m_tri2(fs)
+	, m_square2(fs)
+	, m_sine2(fs)
+	, m_gain(fs)
+	, m_moogFilter(fs)
 	, m_bParamChanged(false)
 	, m_env1out(0.f)
-
 {
 	EnvelopeParams env(3, 250, 0, 0);
 	m_env.setParams(env);
@@ -78,7 +80,7 @@ float Voice::apply()
 	m_env1out = m_env.apply(1);
 	m_gain.setGainf(m_env1out);
 	output = m_gain.apply(output);
-	Gain gain;
+	Gain gain(SAMPLE_RATE);
 
 	// OUTPUTGAIN
 	gain.setGaindB(-5);

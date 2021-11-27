@@ -4,9 +4,11 @@
 #include <ios>
 #include <vector>
 #include <cfloat>
+#include "module.h"
 
-Sampler::Sampler(std::string path)
-	: m_pos(0)
+Sampler::Sampler(size_t sampleRate, std::string path)
+	: Module(sampleRate)
+	, m_pos(0)
 	, m_increment(1.f)
 {
 	audioFile.load(path);

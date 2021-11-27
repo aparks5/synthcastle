@@ -9,17 +9,24 @@
 #include "util.h"
 
 
-MixerStream::MixerStream(CallbackData* userData)
+MixerStream::MixerStream(size_t fs, CallbackData* userData)
 	: stream(0)
 	, m_callbackData(userData)
 	, m_bRecording(false)
 	, m_gfx(graphicsThread)
-	, m_kick("C:\\drum_samples\\bd01.wav")
-	, m_hat("C:\\drum_samples\\hh01.wav")
-	, m_clap("C:\\drum_samples\\cp01.wav")
-	, m_snare("C:\\drum_samples\\sd01.wav")
+	, m_synth(fs)
+	, m_synth2(fs)
+	, m_kick(fs, "C:\\drum_samples\\bd01.wav")
+	, m_hat(fs, "C:\\drum_samples\\hh01.wav")
+	, m_clap(fs, "C:\\drum_samples\\cp01.wav")
+	, m_snare(fs, "C:\\drum_samples\\sd01.wav")
 	, m_fdn(4)
+	, m_plate(fs)
 {
+
+	for (size_t idx = 0; idx < 16; idx++) {
+		m_trackGains.push_back(Gain(fs));
+	}
 
 	VoiceParams params;
 	params.envParams = { 1, 250, 0, 1 };
