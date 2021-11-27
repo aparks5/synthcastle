@@ -43,6 +43,7 @@ void usleep(__int64 usec)
 // GL global variables
 GLint g_buffer_size = BUFFER_SIZE;
 float g_buffer[BUFFER_SIZE];
+float g_fftbuff[BUFFER_SIZE];
 float g_window[BUFFER_SIZE];
 
 GLboolean g_ready = true;
@@ -78,7 +79,7 @@ void drawWindowedTimeDomain(float* buffer) {
 // changes time sequecies (real value ) to power spectral values.
 // modified from:
 // https://gist.github.com/sigidagi/576988
-void  fftw(float* x)
+void fftw(float* x)
 {
 
     // buffer x's values will be modified in place 
@@ -110,6 +111,7 @@ void  fftw(float* x)
             temp = std::complex<double>(out[i][0], out[i][1]);
             float db = 20*log10(std::abs(std::pow(temp, 2)));
             x[i] = db;
+            g_fftbuff[i] = db;
         }
     }
 
@@ -130,28 +132,33 @@ void drawFFT(float* buffer)
     {
         // Blue Color
         // perform fft in place
-        fftw(buffer);
-        float colorstep = 2.f / 64.f;
-        float r = colorstep;
-        float g = colorstep;
-        float b = 1.f;
+		fftw(buffer);
+        float greenstep = 1 / 32.f;
+        float redstepup = 1 / (5 * 32.f);
+        float redstepdown  = 1 / (32.f);
+		float r = 250 / 255.f;
+        float g = 0;
+        float b = 0;
+
         float x = 0.f; // xpos
         for (int i = 0; i < 64; i++) {
 			glPushMatrix();
             glBegin(GL_QUADS);
 			glPolygonMode(GL_FRONT, GL_FILL);
-            if (r <= 1.f) {
-                r += colorstep;
+            if (i <= 32) {
+                r += redstepup;
+                g += greenstep;
             }
-            if (r >= 1.f && g <= 1.f) {
-                g += colorstep;
+            if (i >= 32) {
+                r -= redstepdown;
+                g = 1.f;
             }
             
             glColor3f(r, g, b);
             glVertex2f(x, -100.f);
             glVertex2f(x + 4, -100.f);
-            glVertex2f(x, buffer[i]);
-            glVertex2f(x + 4, buffer[i]);
+            glVertex2f(x, g_fftbuff[i]);
+            glVertex2f(x + 4, g_fftbuff[i]);
             x += 5;
         }
 		glEnd();
@@ -161,6 +168,7 @@ void drawFFT(float* buffer)
 }
 
 void drawVUMeter(float* buffer) {
+
 	glMatrixMode(GL_PROJECTION);
 	// load the identity matrix
 	glLoadIdentity();
@@ -275,8 +283,8 @@ static int graphicsThread(void)
 
         float buffer[256];
         memcpy(buffer, g_buffer, g_buffer_size * sizeof(float));
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // choose display mode
         if (g_mode == DISPLAY_MODE_OSCILLOSCOPE) {
@@ -286,7 +294,7 @@ static int graphicsThread(void)
             drawVUMeter(buffer);
         }
         if (g_mode == DISPLAY_MODE_FFT) {
-            drawFFT(buffer);
+			drawFFT(buffer);
         }
 
         glFlush();
