@@ -13,7 +13,8 @@ class Sampler : public Module
 {
 public:
 	Sampler(size_t sampleRate, std::string path);
-	float operator()();
+	float operator()() override;
+	float operator()(float in) override { return 0.f; }
     void noteOn();
 
 private:

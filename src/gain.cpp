@@ -27,7 +27,7 @@ float Gain::dBtoFloat(int db) const
 	return pow(10, db / 20.f);
 }
 
-float Gain::apply(float samp)
+float Gain::operator()(float in)
 {
-	return samp * m_fgain;
+	return in * m_fgain;
 }

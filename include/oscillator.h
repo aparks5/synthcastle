@@ -10,7 +10,8 @@ public:
 	Oscillator(size_t sampleRate) : Module(sampleRate) { };
 	Oscillator(T fs, T freq, T step, T out) : Module(fs), m_freq(freq), m_step(step), m_out(out) {}
 	virtual void freq(T frequency) = 0;
-	virtual T operator()() = 0;
+	float operator()() override { return 0.f; }
+	float operator()(float in) override { return 0.f; }
 
 protected:
 	T m_freq;

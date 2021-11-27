@@ -7,7 +7,8 @@ class Gain : public Module
 {
 public:
 	Gain(size_t sampleRate);
-	float apply(float samp);
+	float operator()(float in) override;
+	float operator()() override { return 0.f; }
 
 	void setGaindB(float gaindB);
 	void setGainf(float gainf);

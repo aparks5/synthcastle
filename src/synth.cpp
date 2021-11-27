@@ -76,18 +76,19 @@ void Synth::blockRateUpdate()
 	}
 }
 
-float Synth::operator()()
+float Synth::operator()() 
 {
 	auto output = 0.f;
 
 	for (auto voice : m_voices) {
-		output += voice->apply() * (1 / sqrt(m_voices.capacity() * 2));
+		output += (*voice)() * (1 / sqrt(m_voices.capacity() * 2));
 	}
 
 	int fxCount = 0;
 
 	if (m_fxParams.bEnableBitcrusher) {
-		output += bitcrush(output, m_fxParams.bitCrusherNBits);
+		bitcrush.bits(4);
+		output += bitcrush(output);
 		fxCount++;
 	}
 

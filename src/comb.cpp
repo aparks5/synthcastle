@@ -18,6 +18,7 @@ float Comb::operator()(float in)
 	float out = m_delay();
 	m_lowpassDelayElement = (out * m_damping2) + (m_damping * m_lowpassDelayElement);
 	m_delay.write(in + (m_feedbackRatio * m_lowpassDelayElement));
+	m_output = out;
 
 	return out;
 }

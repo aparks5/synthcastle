@@ -60,7 +60,10 @@ class PlateReverb : public Module
 public:
 	PlateReverb(size_t fs);
 
-  float operator()(float in);
+	float operator()(float in) override;
+	float operator()() override {
+		return 0.f;
+	}
   void update(PlateParams params) { m_params = params; }
   void reset();
 

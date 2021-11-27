@@ -28,6 +28,7 @@ float Chorus::operator()(float in)
 	update();
 	float out = delay();
 	delay.write(in);
+	m_output = out;
 	return out;
 }
 

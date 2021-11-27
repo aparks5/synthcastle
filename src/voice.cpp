@@ -64,7 +64,7 @@ void Voice::modUpdate()
 
 
 
-float Voice::apply()
+float Voice::operator()()
 {
 	auto output = 0.f;
 
@@ -79,12 +79,12 @@ float Voice::apply()
 	// VCA 
 	m_env1out = m_env.apply(1);
 	m_gain.setGainf(m_env1out);
-	output = m_gain.apply(output);
+	output = m_gain(output);
 	Gain gain(SAMPLE_RATE);
 
 	// OUTPUTGAIN
 	gain.setGaindB(-5);
-	output = gain.apply(output);
+	output = gain(output);
 
 	return output;
 }
@@ -122,7 +122,7 @@ void Voice::oscillate(float& output)
 			osc2out = m_square2();
 			break;
 		}
-		output += 0.707 * m_osc2gain.apply(osc2out);
+		output += 0.707 * m_osc2gain(osc2out);
 	}
 
 }

@@ -4,7 +4,7 @@ Scale::Scale(Key key, ScalePattern pattern, ScaleMode mode)
 	: m_key(key)
 	, m_pattern(pattern)
 	, m_mode(mode)
-	, m_lowestOctave(3)
+	, m_lowestOctave(2)
 	, m_numOctaveRange(1)
 {
     /// calculate notes in scale
