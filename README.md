@@ -39,6 +39,13 @@ Output device name: 'Speakers (Elektron Digitakt)'
 >>>
 ```
 
+The OpenGL visualizer window currently has three modes. You must press 1, 2, 3 to switch modes:
+```
+1 - Time-domain oscilloscope (256 sample display)
+2 - VU RMS meter
+3 - FFT (256 samples, real-valued power spectrum)
+```
+
 # Excellent reference books used to help make this:
 - Will Pirkle - Designing Software Synthesizer Plugins in C++ 
 - Will Pirkle - Designing Audio Effect Plugins in C++
