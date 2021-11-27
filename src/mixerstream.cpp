@@ -14,6 +14,7 @@ MixerStream::MixerStream(size_t fs, CallbackData* userData)
 	, m_callbackData(userData)
 	, m_bRecording(false)
 	, m_gfx(graphicsThread)
+	, m_mixer(fs)
 	, m_synth(fs)
 	, m_synth2(fs)
 	, m_kick(fs, "C:\\drum_samples\\bd01.wav")
@@ -23,10 +24,6 @@ MixerStream::MixerStream(size_t fs, CallbackData* userData)
 	, m_fdn(4)
 	, m_plate(fs)
 {
-
-	for (size_t idx = 0; idx < 16; idx++) {
-		m_trackGains.push_back(Gain(fs));
-	}
 
 	VoiceParams params;
 	params.envParams = { 1, 250, 0, 1 };
@@ -43,6 +40,13 @@ MixerStream::MixerStream(size_t fs, CallbackData* userData)
 	params2.filtQ = 1.3;
 
 	m_synth2.update(params2);
+
+	m_mixer.addInput(&m_synth);
+	m_mixer.addInput(&m_synth2);
+	m_mixer.addInput(&m_kick);
+	m_mixer.addInput(&m_hat);
+	m_mixer.addInput(&m_clap);
+	m_mixer.addInput(&m_snare);
 
 }
 
@@ -179,9 +183,7 @@ void MixerStream::update(VoiceParams params)
 void MixerStream::updateTrackGainDB(size_t trackNum, float gainDB)
 {
 	gainDB = clamp(gainDB, -60.f, 0.f);
-	if (trackNum < m_trackGains.size()) {
-		m_trackGains[trackNum].setGaindB(gainDB);
-	}
+	m_mixer.setInputGain(trackNum, gainDB);
 }
 
 
@@ -213,14 +215,7 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 	{
 		auto output = 0.f;
 
-		output = (1 / sqrt(2 * 6)) * (
-			(m_trackGains[0].apply(m_synth())) +
-			(m_trackGains[1].apply(m_synth2())) +
-			(m_trackGains[2].apply(m_kick())) +
-			(m_trackGains[3].apply(m_hat())) +
-			(m_trackGains[4].apply(m_snare())) +
-			(m_trackGains[5].apply(m_clap()))
-			);
+		output = m_mixer();
 		
 		output = clip(output);
 

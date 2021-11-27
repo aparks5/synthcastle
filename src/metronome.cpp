@@ -2,7 +2,7 @@
 #include "constants.h"
 
 Metronome::Metronome()
-	: m_bpm(60)
+	: m_bpm(120)
 	, m_bOnBeat(true)
 	, m_samplesElapsed(0)
 {

@@ -45,7 +45,7 @@ struct VoiceParams
         : bIsActive(false)
         , osc(OscillatorType::SAW)
         , osc2(OscillatorType::SAW)
-        , bpm(60.f)
+        , bpm(120.f)
         , bEnableOsc2(false)
         , osc2coarse(0.f)
         , osc2fine(0.f)
@@ -68,7 +68,8 @@ class Voice : public Module
 {
 public:
 	Voice(size_t fs);
-	float apply();
+	float operator()() override;
+    float operator()(float in) override { return 0.f; }
     void update(VoiceParams params);
     void modUpdate();
     bool active() { return m_params.bIsActive; }

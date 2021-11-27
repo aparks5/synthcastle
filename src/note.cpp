@@ -70,8 +70,8 @@ std::queue<NoteEvent> NoteGenerator::randomPattern(size_t trackNum, size_t numSt
 	
 	// now use `events`
 	auto timestamp = 0.;
-	float minDur = 0.125;
-	float maxDur = 0.5;
+	float minDur = 0.0625;
+	float maxDur = 0.250;
 
 	for (size_t idx = 0; idx < numSteps; idx++) {
 		// split notes into duration and note

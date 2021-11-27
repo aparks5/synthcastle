@@ -11,7 +11,8 @@ public:
 	void update(float delayMs, float feedbackRatio);
 	void reset();
 	void write(float val);
-	float operator()();
+	float operator()() override;
+	float operator()(float in) override { return 0.f; }
 	float tap(float ms);
 
 private:

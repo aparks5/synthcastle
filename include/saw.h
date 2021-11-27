@@ -10,6 +10,7 @@ public:
     Saw(float fs);
     void freq(float frequency) override;
     float operator()() override;
+    float operator()(float in) override { return 0.f; }
 
 };
 

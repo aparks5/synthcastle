@@ -7,7 +7,8 @@ class Comb : public Module
 {
 public:
 	Comb(size_t fs, float delayMs, float feedbackRatio);
-	float operator()(float in);
+	float operator()(float in) override;
+	float operator()() override { return 0.f; }
 
 private:
 	Delay m_delay;

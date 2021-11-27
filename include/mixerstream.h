@@ -9,6 +9,7 @@
 #include "sampler.h"
 #include "fdn.h"
 #include "platereverb.h"
+#include "mixer.h"
 
 #include "commands.h"
 
@@ -54,6 +55,7 @@ private:
     std::ofstream m_writeStream;
     bool m_bRecording;
     std::thread m_gfx;
+    Mixer m_mixer;
     Synth m_synth;
     Synth m_synth2;
     Sampler m_kick;
@@ -61,7 +63,6 @@ private:
     Sampler m_clap;
     Sampler m_snare;
     FeedbackDelayNetwork m_fdn;
-    std::vector<Gain> m_trackGains;
     PlateReverb m_plate;
 
 };

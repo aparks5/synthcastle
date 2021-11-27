@@ -32,5 +32,6 @@ float Allpass::operator()(float in)
 	m_delay.write(in);
 	// feed-forward path
 	out -= (in * m_feedbackRatio);
+	m_output = out;
 	return out;
 }

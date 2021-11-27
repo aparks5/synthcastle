@@ -9,7 +9,8 @@ class Allpass : public Module
 {
 public:
 	Allpass(size_t fs, float delayTimeMs, float feedbackRatio);
-	float operator()(float in);
+	float operator()(float in) override;
+	float operator()() override { return 0.f; }
 	void reset();
 	void update(float delayTimeMs);
 	float tap(float ms);

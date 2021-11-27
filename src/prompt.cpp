@@ -292,6 +292,7 @@ void Prompt::open()
 			int loopCount = std::stod(prompt);
 			while (loopCount > 0) {
 				auto temp = gen.randomPattern(1, 8, 33, 72);
+				notes = temp;
 				playPattern(temp, params.bpm);
 				loopCount--;
 			}

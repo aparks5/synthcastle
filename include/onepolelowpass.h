@@ -7,7 +7,8 @@ class OnePoleLowpass : public Module
 {
 public:
 	OnePoleLowpass(size_t fs);
-	float operator()(float in);
+	float operator()(float in) override;
+	float operator()() override { return 0.f; }
 	void reset();
 	void update(float damping);
 

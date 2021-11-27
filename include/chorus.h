@@ -13,7 +13,8 @@ public:
 	void depth(float gain) { m_depth = gain; }
 	void reset();
 	void update();
-	float operator()(float in);
+	float operator()(float in) override;
+	float operator()() override { return 0.f; }
 
 private:
 	Delay delay;

@@ -20,7 +20,8 @@ public:
     void update(VoiceParams params);
     void update(FxParams params);
     void blockRateUpdate();
-    float operator()();
+    float operator()() override;
+    float operator()(float in) override { return 0.f; }
 
 
 
