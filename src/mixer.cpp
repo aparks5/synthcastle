@@ -15,6 +15,23 @@ void Mixer::addInput(Module* module)
 	m_overallGain.setGainf(m_scaleFactor);
 }
 
+std::vector<std::string> Mixer::getInputsAsString()
+{
+	std::vector<std::string> inputStrings;
+
+	for (auto mod : m_inputs) {
+		std::string name = mod->getName();
+		if (name.size() > 0) {
+			inputStrings.push_back(name);
+		}
+		else {
+			inputStrings.push_back("unnamed module (!)");
+		}
+	}
+
+	return inputStrings;
+}
+
 void Mixer::setInputGain(size_t trackNum, float gaindB)
 {
 	if (trackNum < m_inputGains.size()) {

@@ -5,6 +5,7 @@
 #include "portaudio.h"
 #include <vector>
 #include <thread>
+#include <string>
 #include "synth.h"
 #include "sampler.h"
 #include "fdn.h"
@@ -27,6 +28,7 @@ public:
     void noteOn(int noteVal, int track);
     void noteOff(int noteVal, int track);
     void record(bool bStart);
+    std::vector<std::string> getTrackList();
 
 private:
     /// @brief The instance callback, where we have access to every method/variable in object of class MixerStream */
