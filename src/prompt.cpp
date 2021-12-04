@@ -37,6 +37,20 @@ void Prompt::open()
 		if (prompt == "start") {
 			stream.start();
 		}
+		if (prompt == "tracks") {
+			std::cout << ">>> list of tracks" << std::endl;
+			size_t trackCount = 0;
+
+			std::vector<std::string> trackList = stream.getTrackList();
+
+			for (auto track : trackList) {
+				std::cout << trackCount << ": " << track << std::endl;
+				trackCount++;
+			}
+
+
+		}
+
 		if (prompt == "bpm") {
 			std::cout << ">> enter bpm (20-200 beats per minute)" << std::endl;
 			std::cin >> prompt;

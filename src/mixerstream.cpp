@@ -6,6 +6,7 @@
 #include "graphics.h"
 #include <iostream>
 #include <thread>
+#include <string>
 #include "util.h"
 
 
@@ -40,6 +41,13 @@ MixerStream::MixerStream(size_t fs, CallbackData* userData)
 	params2.filtQ = 1.3;
 
 	m_synth2.update(params2);
+
+	m_synth.setName("synth1");
+	m_synth2.setName("synth2");
+	m_kick.setName("kick");
+	m_hat.setName("hat");
+	m_clap.setName("clap");
+	m_snare.setName("snare");
 
 	m_mixer.addInput(&m_synth);
 	m_mixer.addInput(&m_synth2);
@@ -261,6 +269,11 @@ void MixerStream::record(bool bStart)
 		m_callbackData->commandsToAudioCallback->enqueue(Commands::STOP_RECORDING);
 		m_bRecording = false;
 	}
+}
+
+std::vector<std::string> MixerStream::getTrackList() 
+{
+	return m_mixer.getInputsAsString();
 }
 
 int MixerStream::paCallback(const void* inputBuffer, void* outputBuffer,
