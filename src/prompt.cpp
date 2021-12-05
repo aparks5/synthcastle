@@ -2,6 +2,8 @@
 #include "util.h"
 #include "windows.h"
 
+#include <deque>
+
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/sinks/rotating_file_sink.h"
@@ -13,6 +15,22 @@ Prompt::Prompt(MixerStream& s)
 
 }
 
+static void logVoiceParams(VoiceParams params) {
+	spdlog::info("voice params updated");
+	spdlog::info("bpm: {}", params.bpm);
+	spdlog::info("filter cutoff (Hz): {}", params.filtFreq);
+	spdlog::info("osc2-enable: {}", params.bEnableOsc2);
+}
+
+static void logFxParams(FxParams fxparams) {
+	spdlog::info("fx params updated");
+	spdlog::info("delay1-enable: {}", fxparams.bEnableDelay1);
+	spdlog::info("delay2-enable: {}", fxparams.bEnableDelay2);
+	spdlog::info("chorus-enable: {}", fxparams.bEnableChorus);
+}
+
+
+
 void Prompt::open()
 {
 	std::string prompt;
@@ -20,7 +38,7 @@ void Prompt::open()
 	FxParams fxparams;
 	params.envParams = { 1,250,0,0 };
 	stream.update(params);
-	std::queue<NoteEvent> notes;
+	std::deque<NoteEvent> notes;
 	NoteGenerator gen;
 	bool bParamChanged = false;
 	bool bFxParamChanged = false;
@@ -42,10 +60,10 @@ void Prompt::open()
 		std::cin >> prompt;
 		if (prompt == "help") {
 			spdlog::info(">>> commands: stop, tracks, mix, osc, freq, filt-freq, filt-q, filt-lfo-freq, pitch/filt-lfo-on/off, ");
-			std::cout << ">>> pitch-lfo-freq, pitch-lfo-depth, reverb-on/off, chorus-on/off, delay-on/off" << std::endl;
-			std::cout << ">>> delay-time, delay-feedback, delay-mix" << std::endl;
-			std::cout << ">>> osc2-enable, osc2-coarse, osc2-fine, env [attackMs decayMs susdB]" << std::endl;
-			std::cout << ">>> play [note] [note-note2-note3:duration,note4:duration2...], loop loopNumTimes" << std::endl;
+			spdlog::info(">>> pitch-lfo-freq, pitch-lfo-depth, reverb-on/off, chorus-on/off, delay-on/off");
+			spdlog::info(">>> delay-time, delay-feedback, delay-mix");
+			spdlog::info(">>> osc2-enable, osc2-coarse, osc2-fine, env [attackMs decayMs susdB]");
+			spdlog::info(">>> play [note] [note-note2-note3:duration,note4:duration2...], loop loopNumTimes");
 		}
 
 		if (prompt == "stop") {
@@ -309,10 +327,11 @@ void Prompt::open()
 			std::cin >> pattern;
 
 			NoteGenerator gen;
+			spdlog::info("play " + pattern);
 			auto temp = gen.makeSequence(pattern);
 			while (!temp.empty()) {
-				notes.push(temp.front());
-				temp.pop();
+				notes.push_back(temp.front());
+				temp.pop_front();
 			}
 
 		}
@@ -361,6 +380,9 @@ void Prompt::open()
 
 		if (prompt == "pattern") {
 			if (notes.size() > 0) {
+				for (auto note : notes) {
+					spdlog::info("{}", note);
+				}
 				playPattern(notes, params.bpm);
 			}
 			else {
@@ -393,22 +415,27 @@ void Prompt::open()
 		}
 
 		if (bParamChanged) {
+			logVoiceParams(params);
 			stream.update(params);
+			bParamChanged = false;
+
 		}
 
 		if (bFxParamChanged) {
+			logFxParams(fxparams);
 			stream.update(fxparams);
+			bFxParamChanged = false;
 		}
 	}
 }
 
-static std::queue<NoteEvent> sortTimeVal(std::queue<NoteEvent> notes)
+static std::deque<NoteEvent> sortTimeVal(std::deque<NoteEvent> notes)
 {
 	// sort then play
 	std::vector<NoteEvent> noteVec;
 	while (!notes.empty()) {
 		noteVec.push_back(notes.front());
-		notes.pop();
+		notes.pop_front();
 	}
 
 	std::sort(
@@ -421,7 +448,7 @@ static std::queue<NoteEvent> sortTimeVal(std::queue<NoteEvent> notes)
 	notes = {};
 
 	for (int i = 0; i < noteVec.size(); i++) {
-		notes.push(noteVec[i]);
+		notes.push_back(noteVec[i]);
 	}
 
 	return notes;
@@ -429,7 +456,7 @@ static std::queue<NoteEvent> sortTimeVal(std::queue<NoteEvent> notes)
 }
 
 
-void Prompt::playPattern(std::queue<NoteEvent> notes, size_t bpm)
+void Prompt::playPattern(std::deque<NoteEvent> notes, size_t bpm)
 {
 
 	float now = 0.f;
@@ -451,7 +478,7 @@ void Prompt::playPattern(std::queue<NoteEvent> notes, size_t bpm)
 		now += tv - now;
 
 
-		temp.pop();
+		temp.pop_front();
 		double stamp = 0;
 		auto nBytes = 0;
 		auto message = &ev.message;

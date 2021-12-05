@@ -2,18 +2,18 @@
 #include "util.h"
 #include "scale.h"
 
-std::queue<NoteEvent> NoteGenerator::loopSequence(std::string input, size_t nTimes)
+std::deque<NoteEvent> NoteGenerator::loopSequence(std::string input, size_t nTimes)
 {
-	std::queue<NoteEvent> noteEvents;
+	std::deque<NoteEvent> noteEvents;
 	for (size_t i = 0; i < nTimes; i++) {
 		makeSequence(input);
 	}
 	return noteEvents;
 }
 
-std::queue<NoteEvent> NoteGenerator::makeSequence(std::string input)
+std::deque<NoteEvent> NoteGenerator::makeSequence(std::string input)
 {
-	std::queue<NoteEvent> noteEvents;
+	std::deque<NoteEvent> noteEvents;
 	
 	char noteGroup = '-';
 	char trackSpecifier = '=';
@@ -56,16 +56,16 @@ std::queue<NoteEvent> NoteGenerator::makeSequence(std::string input)
 			timestamp = clamp(timestamp, 0., 8.);
 			numNotes--;
 			auto ev = makeNote(stod(note), true, timestamp, track);
-			noteEvents.push(ev);
+			noteEvents.push_back(ev);
 		}
 	}
 
 	return noteEvents;
 }
 
-std::queue<NoteEvent> NoteGenerator::randomPattern(std::string track, size_t numSteps, size_t lowNote, size_t highNote) 
+std::deque<NoteEvent> NoteGenerator::randomPattern(std::string track, size_t numSteps, size_t lowNote, size_t highNote) 
 {
-	std::queue<NoteEvent> noteEvents;
+	std::deque<NoteEvent> noteEvents;
 	Scale scale(Key::A, ScalePattern::MINOR, ScaleMode::IONIAN);
 	
 	// now use `events`
@@ -79,18 +79,18 @@ std::queue<NoteEvent> NoteGenerator::randomPattern(std::string track, size_t num
 		timestamp += (randDur16ths*minDur);
 		size_t randScaleIdx = rand() % (scale.length() + 1);
 		auto ev = makeNote(scale(randScaleIdx), true, timestamp, track);
-		noteEvents.push(ev);
+		noteEvents.push_back(ev);
 	}
 
 	return noteEvents;
 }
 
-std::queue<NoteEvent> NoteGenerator::scalePattern(Key key, ScalePattern pattern, ScaleMode mode)
+std::deque<NoteEvent> NoteGenerator::scalePattern(Key key, ScalePattern pattern, ScaleMode mode)
 {
 	(void)key;
 	(void)pattern;
 	(void)mode;
-	std::queue<NoteEvent> noteEvents;
+	std::deque<NoteEvent> noteEvents;
 	Scale scale(key, pattern, mode);
 	
 	// now use `events`
@@ -104,7 +104,7 @@ std::queue<NoteEvent> NoteGenerator::scalePattern(Key key, ScalePattern pattern,
 		timestamp += minDur;
 		size_t randScaleIdx = rand() % (scale.length() + 1);
 		auto ev = makeNote(scale(idx), true, timestamp, track);
-		noteEvents.push(ev);
+		noteEvents.push_back(ev);
 	}
 
 	return noteEvents;

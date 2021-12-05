@@ -14,7 +14,7 @@ public:
 	void open();
 private:
 	MixerStream& stream;
-	void playPattern(std::queue<NoteEvent> notes, size_t bpm);
+	void playPattern(std::deque<NoteEvent> notes, size_t bpm);
 
 };
 
