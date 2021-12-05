@@ -15,7 +15,8 @@ public:
 	Sampler(size_t sampleRate, std::string path);
 	float operator()() override;
 	float operator()(float in) override { return 0.f; }
-    void noteOn();
+    virtual void noteOn(size_t noteVal) override;
+    virtual void noteOff(size_t noteVal) override;
 
 private:
 	AudioFile<float> audioFile;

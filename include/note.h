@@ -10,8 +10,8 @@ struct NoteEvent
 {
 	std::vector<unsigned char> message;
 	float timeVal;
-	int track;
-	NoteEvent() : timeVal(0.f), track(1) {};
+	std::string track;
+	NoteEvent() : timeVal(0.f), track("") {};
 };
 
 
@@ -19,10 +19,10 @@ class NoteGenerator
 {
 public: 
 	NoteGenerator() {}
-	NoteEvent makeNote(int noteVal, bool bNoteOn, float timeVal, int track);
+	NoteEvent makeNote(int noteVal, bool bNoteOn, float timeVal, std::string track);
 	std::queue<NoteEvent> loopSequence(std::string input, size_t nTimes);
 	std::queue<NoteEvent> makeSequence(std::string input);
-	std::queue<NoteEvent> randomPattern(size_t trackNum, size_t numSteps, size_t lowNote, size_t highNote);
+	std::queue<NoteEvent> randomPattern(std::string track, size_t numSteps, size_t lowNote, size_t highNote);
 	std::queue<NoteEvent> scalePattern(Key key, ScalePattern pattern, ScaleMode mode);
 
 };

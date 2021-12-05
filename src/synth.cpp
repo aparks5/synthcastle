@@ -21,7 +21,7 @@ Synth::Synth(size_t fs)
 
 }
 
-void Synth::noteOn(int midiNote)
+void Synth::noteOn(size_t noteVal)
 {
 	auto activeVoices = 0;
 	for (auto voice : m_voices) {
@@ -29,7 +29,7 @@ void Synth::noteOn(int midiNote)
 			activeVoices++;
 		}
 		else { // we found an unused voice
-			voice->noteOn(midiNote);
+			voice->noteOn(noteVal);
 			lastActiveVoice++;
 			if (lastActiveVoice>= 4) {
 				lastActiveVoice = 0;
@@ -40,7 +40,7 @@ void Synth::noteOn(int midiNote)
 
 	// all voices are exhausted, we need to turn one off
 	if (activeVoices >= m_voices.size()) {
-		m_voices[lastActiveVoice]->noteOn(midiNote);
+		m_voices[lastActiveVoice]->noteOn(noteVal);
 		lastActiveVoice++;
 		if (lastActiveVoice >= 4) {
 			lastActiveVoice = 0;
@@ -49,10 +49,10 @@ void Synth::noteOn(int midiNote)
 
 }
 
-void Synth::noteOff(int midiNote)
+void Synth::noteOff(size_t noteVal)
 {
 	for (auto voice : m_voices) {
-		voice->noteOff(midiNote);
+		voice->noteOff(noteVal);
 	}
 }
 

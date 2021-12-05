@@ -28,14 +28,15 @@ void MIDI::midiCallback(double deltatime, std::vector<unsigned char>* message, v
 		float velocity = (int)message->at(2);
 		if (byte0 == 144) {
 			if (velocity != 0) {
-				stream->noteOn(noteVal, 1);
+				// TODO: allow midiCallback to use and specified track by modifying userData 
+				stream->noteOn(noteVal, "synth1");
 			}
 			else {
-				stream->noteOff(noteVal, 1);
+				stream->noteOff(noteVal, "synth1");
 			}
 		}
 		else if (byte0 == 128) {
-			stream->noteOff(noteVal, 1);
+			stream->noteOff(noteVal, "synth1");
 		}
 	}
 }
