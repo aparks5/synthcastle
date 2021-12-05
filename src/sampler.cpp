@@ -15,9 +15,15 @@ Sampler::Sampler(size_t sampleRate, std::string path)
 	m_pos = audioFile.getNumSamplesPerChannel();
 }
 
-void Sampler::noteOn()
+void Sampler::noteOn(size_t noteVal)
 {
+	(void)noteVal;
 	m_pos = 0;
+}
+
+void Sampler::noteOff(size_t noteVal)
+{
+	(void)noteVal;
 }
 
 float Sampler::operator()()

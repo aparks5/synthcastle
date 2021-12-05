@@ -24,9 +24,9 @@ public:
     bool stop();
     void update(VoiceParams params);
     void update(FxParams fxparams);
-    void updateTrackGainDB(size_t trackNum, float gainDB);
-    void noteOn(int noteVal, int track);
-    void noteOff(int noteVal, int track);
+    void updateTrackGainDB(std::string track, float gainDB);
+    void noteOn(int noteVal, std::string track);
+    void noteOff(int noteVal, std::string track);
     void record(bool bStart);
     std::vector<std::string> getTrackList();
 

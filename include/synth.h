@@ -15,8 +15,8 @@ class Synth : public Module
 {
 public:
 	Synth(size_t fs);
-    void noteOn(int midiNote);
-    void noteOff(int midiNote);
+    virtual void noteOn(size_t noteVal) override;
+    virtual void noteOff(size_t noteVal) override;
     void update(VoiceParams params);
     void update(FxParams params);
     void blockRateUpdate();

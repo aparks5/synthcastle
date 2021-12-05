@@ -24,7 +24,7 @@ void Prompt::open()
 		std::cout << ">>> ";
 		std::cin >> prompt;
 		if (prompt == "help") {
-			std::cout << ">>> commands: stop, osc, freq, filt-freq, filt-q, filt-lfo-freq, pitch/filt-lfo-on/off, " << std::endl;
+			std::cout << ">>> commands: stop, tracks, mix, osc, freq, filt-freq, filt-q, filt-lfo-freq, pitch/filt-lfo-on/off, " << std::endl;
 			std::cout << ">>> pitch-lfo-freq, pitch-lfo-depth, reverb-on/off, chorus-on/off, delay-on/off" << std::endl;
 			std::cout << ">>> delay-time, delay-feedback, delay-mix" << std::endl;
 			std::cout << ">>> osc2-enable, osc2-coarse, osc2-fine, env [attackMs decayMs susdB]" << std::endl;
@@ -305,7 +305,7 @@ void Prompt::open()
 			std::cin >> prompt;
 			int loopCount = std::stod(prompt);
 			while (loopCount > 0) {
-				auto temp = gen.randomPattern(1, 8, 33, 72);
+				auto temp = gen.randomPattern("synth1", 8, 33, 72);
 				notes = temp;
 				playPattern(temp, params.bpm);
 				loopCount--;
@@ -353,7 +353,7 @@ void Prompt::open()
 			notes = {};
 		}
 		if (prompt == "mix") {
-			std::cout << ">> mix <tracknum> <dB (-60...0)>" << std::endl;
+			std::cout << ">> mix <trackname> <dB (-60...0)>" << std::endl;
 			std::vector<std::string> param;
 			size_t paramCount = 0;
 			std::string gainParams;
@@ -361,16 +361,14 @@ void Prompt::open()
 				param.push_back(gainParams);
 				paramCount++;
 			}
-			int trackNum = 0;
+			std::string track;
+			track = param[0];
 			float fGainDB = 0.f;
-
-			std::sscanf(param[0].c_str(), "%zu", &trackNum);
 			std::sscanf(param[1].c_str(), "%f", &fGainDB);
 
-			trackNum = clamp(trackNum, 0, 16);
 			fGainDB = clamp(fGainDB, -60.f, 0.f);
 
-			stream.updateTrackGainDB(trackNum, fGainDB);
+			stream.updateTrackGainDB(track, fGainDB);
 
 			bParamChanged = true;
 

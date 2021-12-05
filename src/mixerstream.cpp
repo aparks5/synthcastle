@@ -144,43 +144,17 @@ bool MixerStream::stop()
 }
 
 
-void MixerStream::noteOn(int noteVal, int track)
+void MixerStream::noteOn(int noteVal, std::string track)
 {
-	if (track == 1) {
-		m_synth.noteOn(noteVal);
-	}
-	else if (track == 2) {
-		m_synth2.noteOn(noteVal);
-	}
-	else if (track == 3) {
-		(void)noteVal;
-		m_kick.noteOn();
-	}
-	else if (track == 4) {
-		(void)noteVal;
-		m_hat.noteOn();
-	}
-	else if (track == 5) {
-		(void)noteVal;
-		m_clap.noteOn();
-	}
-	else if (track == 6) {
-		(void)noteVal;
-		m_snare.noteOn();
-	}
 
+	m_mixer.noteOn(noteVal, track);
 	m_fdn.reset();
 
 }
 
-void MixerStream::noteOff(int noteVal, int track)
+void MixerStream::noteOff(int noteVal, std::string track)
 {
-	if (track == 1) {
-		m_synth.noteOff(noteVal);
-	}
-	else if (track == 2) {
-		m_synth2.noteOff(noteVal);
-	}
+	m_mixer.noteOn(noteVal, track);
 }
 
 void MixerStream::update(VoiceParams params)
@@ -188,10 +162,10 @@ void MixerStream::update(VoiceParams params)
 	m_synth.update(params);
 }
 
-void MixerStream::updateTrackGainDB(size_t trackNum, float gainDB)
+void MixerStream::updateTrackGainDB(std::string track, float gainDB)
 {
 	gainDB = clamp(gainDB, -60.f, 0.f);
-	m_mixer.setInputGain(trackNum, gainDB);
+	m_mixer.setInputGain(track, gainDB);
 }
 
 

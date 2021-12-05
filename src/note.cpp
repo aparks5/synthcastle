@@ -22,12 +22,12 @@ std::queue<NoteEvent> NoteGenerator::makeSequence(std::string input)
 
 	// get events first
 	auto trackSplit = tokenize(input, '=');
-	auto trackNum = 1;
+	std::string track = "";
 
 	auto eventIdx = 0;
 
 	if (trackSplit.size() > 1) {
-		trackNum = std::stod(trackSplit[0]);
+		track = trackSplit[0];
 		eventIdx = 1;
 	}
 	else {
@@ -55,7 +55,7 @@ std::queue<NoteEvent> NoteGenerator::makeSequence(std::string input)
 			}
 			timestamp = clamp(timestamp, 0., 8.);
 			numNotes--;
-			auto ev = makeNote(stod(note), true, timestamp, trackNum);
+			auto ev = makeNote(stod(note), true, timestamp, track);
 			noteEvents.push(ev);
 		}
 	}
@@ -63,7 +63,7 @@ std::queue<NoteEvent> NoteGenerator::makeSequence(std::string input)
 	return noteEvents;
 }
 
-std::queue<NoteEvent> NoteGenerator::randomPattern(size_t trackNum, size_t numSteps, size_t lowNote, size_t highNote) 
+std::queue<NoteEvent> NoteGenerator::randomPattern(std::string track, size_t numSteps, size_t lowNote, size_t highNote) 
 {
 	std::queue<NoteEvent> noteEvents;
 	Scale scale(Key::A, ScalePattern::MINOR, ScaleMode::IONIAN);
@@ -78,7 +78,7 @@ std::queue<NoteEvent> NoteGenerator::randomPattern(size_t trackNum, size_t numSt
 		float randDur16ths = rand() % (4 - 1 + 1);
 		timestamp += (randDur16ths*minDur);
 		size_t randScaleIdx = rand() % (scale.length() + 1);
-		auto ev = makeNote(scale(randScaleIdx), true, timestamp, trackNum);
+		auto ev = makeNote(scale(randScaleIdx), true, timestamp, track);
 		noteEvents.push(ev);
 	}
 
@@ -97,13 +97,13 @@ std::queue<NoteEvent> NoteGenerator::scalePattern(Key key, ScalePattern pattern,
 	auto timestamp = 0.;
 	float minDur = 0.0625; // 1/16 note
 	float maxDur = 0.25; // 1/4 note
-	size_t trackNum = 1;
+	std::string track = "synth";
 
 	for (size_t idx = 0; idx <= scale.length(); idx++) {
 		// split notes into duration and note
 		timestamp += minDur;
 		size_t randScaleIdx = rand() % (scale.length() + 1);
-		auto ev = makeNote(scale(idx), true, timestamp, trackNum);
+		auto ev = makeNote(scale(idx), true, timestamp, track);
 		noteEvents.push(ev);
 	}
 
@@ -113,7 +113,7 @@ std::queue<NoteEvent> NoteGenerator::scalePattern(Key key, ScalePattern pattern,
 
 
 
-NoteEvent NoteGenerator::makeNote(int noteVal, bool bNoteOn, float timeVal, int track)
+NoteEvent NoteGenerator::makeNote(int noteVal, bool bNoteOn, float timeVal, std::string track)
 {
 	NoteEvent note;
 	std::vector<unsigned char> message;
