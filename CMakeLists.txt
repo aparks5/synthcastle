@@ -19,6 +19,11 @@ include_directories(
 
 add_executable (${PROJECT_NAME} ${source})
 
+#### spdlog
+add_subdirectory("C:/spdlog" "C:/spdlog/out" EXCLUDE_FROM_ALL)
+target_include_directories(${PROJECT_NAME} PRIVATE "C:/spdlog/include")
+
+
 #### libfftw
 add_subdirectory("C:/fftw3" "C:/fftw3/out" EXCLUDE_FROM_ALL)
 target_include_directories(${PROJECT_NAME} PRIVATE "C:/fftw3/api")

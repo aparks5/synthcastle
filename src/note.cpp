@@ -97,7 +97,7 @@ std::queue<NoteEvent> NoteGenerator::scalePattern(Key key, ScalePattern pattern,
 	auto timestamp = 0.;
 	float minDur = 0.0625; // 1/16 note
 	float maxDur = 0.25; // 1/4 note
-	std::string track = "synth";
+	std::string track = "synth1";
 
 	for (size_t idx = 0; idx <= scale.length(); idx++) {
 		// split notes into duration and note

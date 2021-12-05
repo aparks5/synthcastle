@@ -2,9 +2,15 @@
 #include "util.h"
 #include "windows.h"
 
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/sinks/rotating_file_sink.h"
+
+
 Prompt::Prompt(MixerStream& s)
 	: stream(s)
 {
+
 }
 
 void Prompt::open()
@@ -20,11 +26,22 @@ void Prompt::open()
 	bool bFxParamChanged = false;
 	std::cout << ">>> type 'help' to list commands" << std::endl;
 
+	std::vector<spdlog::sink_ptr> sinks;
+	sinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_st>());
+	sinks.push_back(std::make_shared<spdlog::sinks::rotating_file_sink_mt>("history.log",1024*1024,5,false));
+	auto logger = std::make_shared<spdlog::logger>("logger", begin(sinks), end(sinks));
+	//register it if you need to access it globally
+	spdlog::register_logger(logger);
+	spdlog::set_default_logger(logger);
+	spdlog::flush_on(spdlog::level::info);
+
+	spdlog::info("opening history log...");
+
 	while (true) {
 		std::cout << ">>> ";
 		std::cin >> prompt;
 		if (prompt == "help") {
-			std::cout << ">>> commands: stop, tracks, mix, osc, freq, filt-freq, filt-q, filt-lfo-freq, pitch/filt-lfo-on/off, " << std::endl;
+			spdlog::info(">>> commands: stop, tracks, mix, osc, freq, filt-freq, filt-q, filt-lfo-freq, pitch/filt-lfo-on/off, ");
 			std::cout << ">>> pitch-lfo-freq, pitch-lfo-depth, reverb-on/off, chorus-on/off, delay-on/off" << std::endl;
 			std::cout << ">>> delay-time, delay-feedback, delay-mix" << std::endl;
 			std::cout << ">>> osc2-enable, osc2-coarse, osc2-fine, env [attackMs decayMs susdB]" << std::endl;
@@ -38,7 +55,7 @@ void Prompt::open()
 			stream.start();
 		}
 		if (prompt == "tracks") {
-			std::cout << ">>> list of tracks" << std::endl;
+			spdlog::info(">> > list of tracks");
 			size_t trackCount = 0;
 
 			std::vector<std::string> trackList = stream.getTrackList();
@@ -290,6 +307,7 @@ void Prompt::open()
 		if (prompt == "play") {
 			std::string pattern;
 			std::cin >> pattern;
+
 			NoteGenerator gen;
 			auto temp = gen.makeSequence(pattern);
 			while (!temp.empty()) {

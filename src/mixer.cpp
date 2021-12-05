@@ -50,7 +50,11 @@ float Mixer::operator()()
 	for (const auto& inputKeyValue : m_inputs) {
 		std::string moduleName = inputKeyValue.first;
 		Module* pModule = inputKeyValue.second;
-		float temp = (*pModule)();
+		
+		float temp = 0.f;
+		if (pModule) {
+			temp = (*pModule)();
+		}
 		Gain trackGain(m_sampleRate);
 		trackGain.setGaindB(m_inputGains[moduleName]);
 		temp = trackGain(temp);
