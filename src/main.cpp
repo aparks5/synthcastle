@@ -20,21 +20,37 @@
 #include "prompt.h"
 #include "util.h"
 #include <memory>
+#include "controller.h"
 
 
 
-void controlThread(std::shared_ptr<MixerStream> stream);
+void uiThread(std::shared_ptr<MixerStream> stream);
 void audioThread(std::shared_ptr<MixerStream> stream);
+void controlThread(std::shared_ptr<MixerStream> stream);
 void banner();
 
-void controlThread(std::shared_ptr<MixerStream> stream)
+
+
+void uiThread(std::shared_ptr<MixerStream> stream)
 {
 	MIDI midi(stream);
 	Prompt prompt(stream);
 	prompt.open();
 	// infinite loop, todo: maybe poll thread for exit code
-	while (1);
+	while (1) {};
 }
+
+void controlThread(std::shared_ptr<MixerStream> stream)
+{
+	Controller m_control(stream);
+	while (1) {
+		while (stream->shouldLoop()) {
+			m_control.loop();
+		}
+	}
+	
+}
+
 
 void audioThread(std::shared_ptr<MixerStream> stream)
 {
@@ -90,12 +106,11 @@ int main(void)
 	userData.commandsToAudioCallback = sendCommands;
 	userData.server = server;
 	std::shared_ptr<MixerStream> stream = std::make_shared<MixerStream>(SAMPLE_RATE, &userData);
-
-
-	std::thread control(controlThread, stream);
-	// todo: move graphics thread out of audio thread
+	std::thread ui(uiThread, stream);
 	std::thread audio(audioThread, stream);
-	audio.detach();
+	std::thread control(controlThread, stream);
 	control.join();
+	audio.detach();
+	ui.join();
 	return 0;
 }

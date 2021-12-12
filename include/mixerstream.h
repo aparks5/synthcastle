@@ -32,8 +32,11 @@ public:
     void noteOff(int noteVal, std::string track);
     void record(bool bStart);
     std::vector<std::string> getTrackList();
-    void playPattern(std::deque<NoteEvent> notes, size_t bpm);
+    void playPattern(std::deque<NoteEvent>& notes, size_t& bpm);
     void queueLoop(size_t numLoops, std::deque<NoteEvent> notes, size_t bpm);
+    bool shouldLoop() { return m_bLoop; }
+    bool stopLoop() { return m_bLoop; }
+    void loop();
 
 private:
     /// @brief The instance callback, where we have access to every method/variable in object of class MixerStream */
@@ -56,7 +59,6 @@ private:
     void paStreamFinishedMethod();
      /// @brief This routine is called by portaudio when playback is done.
     static void paStreamFinished(void* userData);
-    void loop();
 
     PaStream* stream;
     CallbackData* m_callbackData;

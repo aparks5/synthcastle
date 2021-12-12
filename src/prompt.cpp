@@ -9,12 +9,6 @@
 #include "spdlog/sinks/rotating_file_sink.h"
 
 
-Prompt::Prompt(std::shared_ptr<MixerStream> s)
-	: stream(s)
-{
-
-}
-
 static void logVoiceParams(VoiceParams params) {
 	spdlog::info("voice params updated");
 	spdlog::info("bpm: {}", params.bpm);
@@ -29,7 +23,11 @@ static void logFxParams(FxParams fxparams) {
 	spdlog::info("chorus-enable: {}", fxparams.bEnableChorus);
 }
 
+Prompt::Prompt(std::shared_ptr<MixerStream> s)
+	: stream(s)
+{
 
+}
 
 void Prompt::open()
 {
@@ -185,7 +183,7 @@ void Prompt::open()
 			auto delayTimeMs = std::stof(prompt);
 			delayTimeMs = clamp(delayTimeMs, 0.f, 1000.f);
 			fxparams.delay1time = delayTimeMs;
-			bParamChanged = true;
+			bFxParamChanged = true;
 		}
 		if (prompt == "delay-feedback") {
 			std::cout << ">> enter delay feedback as a ratio (0. - 1.)" << std::endl;
@@ -193,7 +191,7 @@ void Prompt::open()
 			auto delayFeedbackRatio = std::stof(prompt);
 			delayFeedbackRatio = clamp(delayFeedbackRatio, 0.f, 1.f);
 			fxparams.delay1feedback = delayFeedbackRatio;
-			bParamChanged = true;
+			bFxParamChanged = true;
 		}
 		if (prompt == "delay-mix") {
 			std::cout << ">> enter delay wet/dry mix as a ratio (0. - 1.)" << std::endl;

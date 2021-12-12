@@ -24,6 +24,7 @@ MixerStream::MixerStream(size_t fs, CallbackData* userData)
 	, m_snare(fs, "C:\\drum_samples\\sd01.wav")
 	, m_fdn(4)
 	, m_plate(fs)
+	, m_bLoop(false)
 {
 
 	VoiceParams params;
@@ -175,7 +176,7 @@ void MixerStream::update(FxParams fxparams)
 }
 
 
-void MixerStream::playPattern(std::deque<NoteEvent> notes, size_t bpm)
+void MixerStream::playPattern(std::deque<NoteEvent>& notes, size_t& bpm)
 {
 
 	float now = 0.f;
@@ -262,9 +263,6 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 	(void)statusFlags;
 	(void)inputBuffer;
 
-	m_synth.blockRateUpdate();
-	m_synth2.blockRateUpdate();
-
 	std::array<float, FRAMES_PER_BUFFER> writeBuff = { 0.f };
 
 	for (size_t sampIdx = 0; sampIdx < framesPerBuffer; sampIdx++)
@@ -311,16 +309,23 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 		m_callbackData->server->write(writeBuff);
 	}
 
+	m_synth.blockRateUpdate();
+	m_synth2.blockRateUpdate();
+
+
+
 	return paContinue;
 }
 
 void MixerStream::loop()
 {
-	while (m_loopTimes > 0) {
-		playPattern(m_pattern, m_bpm);
-		m_loopTimes--;
+	if (m_bLoop) {
+		while (m_loopTimes > 0) {
+			playPattern(m_pattern, m_bpm);
+			m_loopTimes--;
+		}
+		m_bLoop = false;
 	}
-	m_bLoop = false;
 }
 
 void MixerStream::record(bool bStart)

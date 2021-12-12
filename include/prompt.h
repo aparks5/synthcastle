@@ -14,9 +14,7 @@ public:
 	Prompt(std::shared_ptr<MixerStream> s);
 	void open();
 private:
-	std::thread m_audioThread;
 	std::shared_ptr<MixerStream> stream;
-	void playPattern(std::deque<NoteEvent> notes, size_t bpm);
 
 };
 
