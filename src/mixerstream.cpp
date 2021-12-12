@@ -25,6 +25,8 @@ MixerStream::MixerStream(size_t fs, CallbackData* userData)
 	, m_fdn(4)
 	, m_plate(fs)
 	, m_bLoop(false)
+	, m_bPendingSynthUpdate(false)
+	, m_bPendingFxUpdate(false)
 {
 
 	VoiceParams params;
@@ -160,7 +162,8 @@ void MixerStream::noteOff(int noteVal, std::string track)
 
 void MixerStream::update(VoiceParams params)
 {
-	m_synth.update(params);
+	m_synthUpdate = params;
+	m_bPendingSynthUpdate = true;
 }
 
 void MixerStream::updateTrackGainDB(std::string track, float gainDB)
@@ -172,11 +175,12 @@ void MixerStream::updateTrackGainDB(std::string track, float gainDB)
 
 void MixerStream::update(FxParams fxparams)
 {
-	m_synth.update(fxparams);
+	m_fxUpdate = fxparams;
+	m_bPendingFxUpdate = true;
 }
 
 
-void MixerStream::playPattern(std::deque<NoteEvent>& notes, size_t& bpm)
+void MixerStream::playPattern(std::deque<NoteEvent> notes, size_t bpm)
 {
 
 	float now = 0.f;
@@ -311,6 +315,18 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 
 	m_synth.blockRateUpdate();
 	m_synth2.blockRateUpdate();
+
+	if (m_bPendingSynthUpdate) {
+		m_synth.update(m_synthUpdate);
+		m_bPendingSynthUpdate = false;
+	}
+
+	if (m_bPendingFxUpdate) {
+		m_synth.update(m_fxUpdate);
+		m_bPendingFxUpdate = false;
+	}
+
+
 
 
 

@@ -358,7 +358,7 @@ void Prompt::open()
 			ScalePattern pattern = Scale::strToScalePattern(patStr);
 			ScaleMode mode = Scale::strToScaleMode(modeStr);
 			auto temp = gen.scalePattern(key, pattern, mode);
-			stream->playPattern(temp, params.bpm);
+			stream->queueLoop(1, temp, params.bpm);
 			std::cout << "now playing scale" << std::endl;
 		}
 
@@ -378,7 +378,7 @@ void Prompt::open()
 				for (auto note : notes) {
 					spdlog::info("{}", note);
 				}
-				stream->playPattern(notes, params.bpm);
+				stream->queueLoop(1, notes, params.bpm);
 			}
 			else {
 				std::cout << "no notes to play!" << std::endl;
