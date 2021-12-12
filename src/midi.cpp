@@ -1,13 +1,13 @@
 #include "midi.h"
 #include <functional>
 
-MIDI::MIDI(MixerStream& stream)
+MIDI::MIDI(std::shared_ptr<MixerStream> stream)
 	: midiin(std::make_shared<RtMidiIn>())
 {
 
 	chooseMidiInPort(midiin);
 
-	midiUserData.stream = &stream;
+	midiUserData.stream = stream;
 	std::queue<NoteEvent> notes;
 	midiUserData.notes = notes;
 
@@ -17,7 +17,7 @@ MIDI::MIDI(MixerStream& stream)
 void MIDI::midiCallback(double deltatime, std::vector<unsigned char>* message, void* userData)
 {
     MIDIUserData* pUserData = (MIDIUserData*)userData;
-    MixerStream* stream = pUserData->stream;
+    std::shared_ptr<MixerStream> stream = pUserData->stream;
 	// midi note to freq formula https://newt.phys.unsw.edu.au/jw/notes.html
 	double stamp = 0;
 	auto nBytes = 0;

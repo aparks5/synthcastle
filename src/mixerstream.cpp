@@ -154,7 +154,7 @@ void MixerStream::noteOn(int noteVal, std::string track)
 
 void MixerStream::noteOff(int noteVal, std::string track)
 {
-	m_mixer.noteOn(noteVal, track);
+	m_mixer.noteOff(noteVal, track);
 }
 
 void MixerStream::update(VoiceParams params)
@@ -172,6 +172,80 @@ void MixerStream::updateTrackGainDB(std::string track, float gainDB)
 void MixerStream::update(FxParams fxparams)
 {
 	m_synth.update(fxparams);
+}
+
+
+void MixerStream::playPattern(std::deque<NoteEvent> notes, size_t bpm)
+{
+
+	float now = 0.f;
+
+	auto temp = NoteGenerator::sortTimeVal(notes);
+
+	NoteEvent ev = static_cast<NoteEvent>(temp.front());
+
+	while (!temp.empty()) {
+
+		ev = static_cast<NoteEvent>(temp.front());
+		// we are in 4/4
+		float tv = ev.timeVal * 4 * 60.f * 1000.f / bpm;
+
+		if (tv != now) {
+			Sleep(tv - now);
+		}
+
+		now += tv - now;
+
+
+		temp.pop_front();
+		double stamp = 0;
+		auto nBytes = 0;
+		auto message = &ev.message;
+		nBytes = message->size();
+		if (nBytes == 3) {
+			int byte0 = (int)message->at(0);
+			auto noteVal = (int)message->at(1);
+			float velocity = (int)message->at(2);
+			if (byte0 == 144) {
+				if (noteVal == 0)
+				{
+					if (tv - now > 0) {
+						Sleep(tv - now);
+					}
+				}
+				else if (velocity != 0) {
+					noteOn(noteVal, ev.track);
+				}
+			}
+			else if (byte0 == 128) {
+				noteOff(noteVal, ev.track);
+			}
+		}
+
+
+		if (tv - now < 0) {
+			now = tv;
+		}
+
+	}
+
+	// if "now" is before the end of a measure, sleep until the measure if over
+
+	// find nearest multiple of "now" to the duration of one measure of 4/4 at the bpm:
+	float m = 4.f * 60.f * 1000.f / bpm;
+    // https://math.stackexchange.com/questions/291468/how-to-find-the-nearest-multiple-of-16-to-my-given-number-n
+	float nearest = (m == 0) ? now : ceil(now / m) * m;
+	float endOfMeasure = nearest - now;
+	Sleep(endOfMeasure);
+
+}
+
+void MixerStream::queueLoop(size_t numLoops, std::deque<NoteEvent> notes, size_t bpm)
+{
+	m_pattern = notes;
+	m_loopTimes = numLoops;
+	m_bpm = bpm;
+	m_callbackData->commandsToAudioCallback->enqueue(Commands::START_LOOP);
 }
 
 int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
@@ -215,6 +289,13 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 		Commands cmd = *(m_callbackData->commandsToAudioCallback->peek());
 		m_callbackData->commandsToAudioCallback->pop();
 		switch (cmd) {
+		case Commands::START_LOOP:
+			m_bLoop = true;
+			break;
+		case Commands::STOP_LOOP:
+			m_bLoop = false;
+			break;
+
 		case Commands::START_RECORDING:
 			m_callbackData->server->openWrite();
 			break;
@@ -231,6 +312,15 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 	}
 
 	return paContinue;
+}
+
+void MixerStream::loop()
+{
+	while (m_loopTimes > 0) {
+		playPattern(m_pattern, m_bpm);
+		m_loopTimes--;
+	}
+	m_bLoop = false;
 }
 
 void MixerStream::record(bool bStart)

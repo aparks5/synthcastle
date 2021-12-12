@@ -9,7 +9,7 @@
 #include "spdlog/sinks/rotating_file_sink.h"
 
 
-Prompt::Prompt(MixerStream& s)
+Prompt::Prompt(std::shared_ptr<MixerStream> s)
 	: stream(s)
 {
 
@@ -37,7 +37,7 @@ void Prompt::open()
 	VoiceParams params;
 	FxParams fxparams;
 	params.envParams = { 1,250,0,0 };
-	stream.update(params);
+	stream->update(params);
 	std::deque<NoteEvent> notes;
 	NoteGenerator gen;
 	bool bParamChanged = false;
@@ -67,16 +67,16 @@ void Prompt::open()
 		}
 
 		if (prompt == "stop") {
-			stream.stop();
+			stream->stop();
 		}
 		if (prompt == "start") {
-			stream.start();
+			stream->start();
 		}
 		if (prompt == "tracks") {
 			spdlog::info(">> > list of tracks");
 			size_t trackCount = 0;
 
-			std::vector<std::string> trackList = stream.getTrackList();
+			std::vector<std::string> trackList = stream->getTrackList();
 
 			for (auto track : trackList) {
 				std::cout << trackCount << ": " << track << std::endl;
@@ -213,10 +213,10 @@ void Prompt::open()
 			bFxParamChanged = true;
 		}
 		if (prompt == "record-start") {
-			stream.record(true);
+			stream->record(true);
 		}
 		if (prompt == "record-stop") {
-			stream.record(false);
+			stream->record(false);
 		}
 		if (prompt == "bitcrusher-on") {
 			fxparams.bEnableBitcrusher = true;
@@ -344,7 +344,7 @@ void Prompt::open()
 			while (loopCount > 0) {
 				auto temp = gen.randomPattern("synth1", 8, 33, 72);
 				notes = temp;
-				playPattern(temp, params.bpm);
+				stream->playPattern(temp, params.bpm);
 				loopCount--;
 			}
 			std::cout << "generated random pattern, play with 'pattern' command" << std::endl;
@@ -360,7 +360,7 @@ void Prompt::open()
 			ScalePattern pattern = Scale::strToScalePattern(patStr);
 			ScaleMode mode = Scale::strToScaleMode(modeStr);
 			auto temp = gen.scalePattern(key, pattern, mode);
-			playPattern(temp, params.bpm);
+			stream->playPattern(temp, params.bpm);
 			std::cout << "now playing scale" << std::endl;
 		}
 
@@ -371,10 +371,7 @@ void Prompt::open()
 				std::cout << "nothing to loop, use play to declare a sequence..." << std::endl;
 			}
 			else {
-				while (loopCount > 0) {
-					playPattern(notes, params.bpm);
-					loopCount--;
-				}
+				stream->queueLoop(loopCount, notes, params.bpm);
 			}
 		}
 
@@ -383,7 +380,7 @@ void Prompt::open()
 				for (auto note : notes) {
 					spdlog::info("{}", note);
 				}
-				playPattern(notes, params.bpm);
+				stream->playPattern(notes, params.bpm);
 			}
 			else {
 				std::cout << "no notes to play!" << std::endl;
@@ -408,7 +405,7 @@ void Prompt::open()
 
 			fGainDB = clamp(fGainDB, -60.f, 0.f);
 
-			stream.updateTrackGainDB(track, fGainDB);
+			stream->updateTrackGainDB(track, fGainDB);
 
 			bParamChanged = true;
 
@@ -416,107 +413,16 @@ void Prompt::open()
 
 		if (bParamChanged) {
 			logVoiceParams(params);
-			stream.update(params);
+			stream->update(params);
 			bParamChanged = false;
 
 		}
 
 		if (bFxParamChanged) {
 			logFxParams(fxparams);
-			stream.update(fxparams);
+			stream->update(fxparams);
 			bFxParamChanged = false;
 		}
 	}
 }
 
-static std::deque<NoteEvent> sortTimeVal(std::deque<NoteEvent> notes)
-{
-	// sort then play
-	std::vector<NoteEvent> noteVec;
-	while (!notes.empty()) {
-		noteVec.push_back(notes.front());
-		notes.pop_front();
-	}
-
-	std::sort(
-		noteVec.begin(),
-		noteVec.end(),
-		[](const NoteEvent& lhs, const NoteEvent& rhs)
-		{ return lhs.timeVal < rhs.timeVal; }
-	);
-
-	notes = {};
-
-	for (int i = 0; i < noteVec.size(); i++) {
-		notes.push_back(noteVec[i]);
-	}
-
-	return notes;
-
-}
-
-
-void Prompt::playPattern(std::deque<NoteEvent> notes, size_t bpm)
-{
-
-	float now = 0.f;
-
-	auto temp = sortTimeVal(notes);
-
-	NoteEvent ev = static_cast<NoteEvent>(temp.front());
-
-	while (!temp.empty()) {
-
-		ev = static_cast<NoteEvent>(temp.front());
-		// we are in 4/4
-		float tv = ev.timeVal * 4 * 60.f * 1000.f / bpm;
-
-		if (tv != now) {
-			Sleep(tv - now);
-		}
-
-		now += tv - now;
-
-
-		temp.pop_front();
-		double stamp = 0;
-		auto nBytes = 0;
-		auto message = &ev.message;
-		nBytes = message->size();
-		if (nBytes == 3) {
-			int byte0 = (int)message->at(0);
-			auto noteVal = (int)message->at(1);
-			float velocity = (int)message->at(2);
-			if (byte0 == 144) {
-				if (noteVal == 0)
-				{
-					if (tv - now > 0) {
-						Sleep(tv - now);
-					}
-				}
-				else if (velocity != 0) {
-					stream.noteOn(noteVal, ev.track);
-				}
-			}
-			else if (byte0 == 128) {
-				stream.noteOff(noteVal, ev.track);
-			}
-		}
-
-
-		if (tv - now < 0) {
-			now = tv;
-		}
-
-	}
-
-	// if "now" is before the end of a measure, sleep until the measure if over
-
-	// find nearest multiple of "now" to the duration of one measure of 4/4 at the bpm:
-	float m = 4.f * 60.f * 1000.f / bpm;
-    // https://math.stackexchange.com/questions/291468/how-to-find-the-nearest-multiple-of-16-to-my-given-number-n
-	float nearest = (m == 0) ? now : ceil(now / m) * m;
-	float endOfMeasure = nearest - now;
-	Sleep(endOfMeasure);
-
-}

@@ -16,6 +16,7 @@ public:
 	void setInputGain(std::string track, float gaindB);
 	Module* getModuleByName(std::string track);
 	void noteOn(size_t noteVal, std::string track);
+	void noteOff(size_t noteVal, std::string track);
 
 	float operator()() override;
 	float operator()(float in) override { return 0.f; }

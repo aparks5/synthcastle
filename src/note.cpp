@@ -63,6 +63,35 @@ std::deque<NoteEvent> NoteGenerator::makeSequence(std::string input)
 	return noteEvents;
 }
 
+std::deque<NoteEvent> NoteGenerator::sortTimeVal(std::deque<NoteEvent> notes)
+{
+	// sort then play
+	std::vector<NoteEvent> noteVec;
+	while (!notes.empty()) {
+		noteVec.push_back(notes.front());
+		notes.pop_front();
+	}
+
+	std::sort(
+		noteVec.begin(),
+		noteVec.end(),
+		[](const NoteEvent& lhs, const NoteEvent& rhs)
+		{ return lhs.timeVal < rhs.timeVal; }
+	);
+
+	notes = {};
+
+	for (int i = 0; i < noteVec.size(); i++) {
+		notes.push_back(noteVec[i]);
+	}
+
+	return notes;
+
+}
+
+
+
+
 std::deque<NoteEvent> NoteGenerator::randomPattern(std::string track, size_t numSteps, size_t lowNote, size_t highNote) 
 {
 	std::deque<NoteEvent> noteEvents;

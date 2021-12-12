@@ -23,40 +23,44 @@
 
 
 
-void audioThread();
+void controlThread(std::shared_ptr<MixerStream> stream);
+void audioThread(std::shared_ptr<MixerStream> stream);
 void banner();
 
-void audioThread()
+void controlThread(std::shared_ptr<MixerStream> stream)
 {
-	banner();
-	std::cout << "PortAudio: sample rate " << SAMPLE_RATE << ", buffer size " << FRAMES_PER_BUFFER << std::endl;
-
-	PortAudioHandler paInit;
-	CallbackData userData;
-	std::shared_ptr<moodycamel::ReaderWriterQueue<Commands>> sendCommands = std::make_shared<moodycamel::ReaderWriterQueue<Commands>>(5);
-	std::shared_ptr<moodycamel::ReaderWriterQueue<Commands>> receiveCommands = std::make_shared<moodycamel::ReaderWriterQueue<Commands>>(5);
-	std::shared_ptr<IOServer> server = std::make_shared<IOServer>();
-	userData.commandsFromAudioCallback = receiveCommands;
-	userData.commandsToAudioCallback = sendCommands;
-	userData.server = server;
-
-	MixerStream stream(SAMPLE_RATE, &userData);
 	MIDI midi(stream);
 	Prompt prompt(stream);
+	prompt.open();
+	// infinite loop, todo: maybe poll thread for exit code
+	while (1);
+}
 
-if (stream.open(Pa_GetDefaultOutputDevice()))
+void audioThread(std::shared_ptr<MixerStream> stream)
+{
+	std::cout << "PortAudio: sample rate " << SAMPLE_RATE << ", buffer size " << FRAMES_PER_BUFFER << std::endl;
+
+	if (stream->open(Pa_GetDefaultOutputDevice()))
 	{
 
 		std::vector<unsigned char> message;
 		VoiceParams params;
 
-		if (stream.start()) {
-			prompt.open();
+		bool bStarted = false;
+		bStarted = stream->start();
+		if (!bStarted) {
+			stream->close();
 		}
-
-		stream.close();
+		else {
+			// infinite loop, todo: maybe poll thread for exit code
+			while (1);
+		}
 	}
+
+
 }
+
+
 void banner()
 {
 	std::cout << R"(
@@ -68,11 +72,30 @@ void banner()
 |_____/   |_|  |_| \_|  |_|  |_|  |_|\_____/_/    \_\_____/   |_|  |______|______|
     )" << std::endl;
 }
+
 int main(void);
 
 int main(void)
 {
-	std::thread audio(audioThread);
-	audio.join();
+
+	banner();
+
+
+	PortAudioHandler paInit;
+	CallbackData userData;
+	std::shared_ptr<moodycamel::ReaderWriterQueue<Commands>> sendCommands = std::make_shared<moodycamel::ReaderWriterQueue<Commands>>(5);
+	std::shared_ptr<moodycamel::ReaderWriterQueue<Commands>> receiveCommands = std::make_shared<moodycamel::ReaderWriterQueue<Commands>>(5);
+	std::shared_ptr<IOServer> server = std::make_shared<IOServer>();
+	userData.commandsFromAudioCallback = receiveCommands;
+	userData.commandsToAudioCallback = sendCommands;
+	userData.server = server;
+	std::shared_ptr<MixerStream> stream = std::make_shared<MixerStream>(SAMPLE_RATE, &userData);
+
+
+	std::thread control(controlThread, stream);
+	// todo: move graphics thread out of audio thread
+	std::thread audio(audioThread, stream);
+	audio.detach();
+	control.join();
 	return 0;
 }
