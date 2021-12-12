@@ -7,7 +7,9 @@
 enum class Commands
 {
     START_RECORDING,
-    STOP_RECORDING
+    STOP_RECORDING,
+	START_LOOP,
+	STOP_LOOP
 };
 
 

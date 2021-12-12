@@ -2,6 +2,7 @@
 #define PROMPT_H_
 
 #include <iostream>
+#include <thread>
 
 #include "midi.h"
 #include "note.h"
@@ -10,11 +11,10 @@
 class Prompt
 {
 public:
-	Prompt(MixerStream& s);
+	Prompt(std::shared_ptr<MixerStream> s);
 	void open();
 private:
-	MixerStream& stream;
-	void playPattern(std::deque<NoteEvent> notes, size_t bpm);
+	std::shared_ptr<MixerStream> stream;
 
 };
 

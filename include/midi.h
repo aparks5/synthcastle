@@ -11,12 +11,12 @@
 class MIDI
 {
 public:
-	MIDI(MixerStream& stream);
+	MIDI(std::shared_ptr<MixerStream> stream);
 
 private:
 	struct MIDIUserData
 	{
-		MixerStream* stream;
+		std::shared_ptr<MixerStream> stream;
 		std::queue<NoteEvent> notes;
 		MIDIUserData() : stream(nullptr) {};
 	};

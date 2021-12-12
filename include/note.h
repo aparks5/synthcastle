@@ -35,6 +35,7 @@ public:
 	std::deque<NoteEvent> makeSequence(std::string input);
 	std::deque<NoteEvent> randomPattern(std::string track, size_t numSteps, size_t lowNote, size_t highNote);
 	std::deque<NoteEvent> scalePattern(Key key, ScalePattern pattern, ScaleMode mode);
+	static std::deque<NoteEvent> sortTimeVal(std::deque<NoteEvent> notes);
 
 };
 

@@ -11,6 +11,9 @@
 #include "fdn.h"
 #include "platereverb.h"
 #include "mixer.h"
+#include "note.h"
+#include <deque>
+#include <mutex>
 
 #include "commands.h"
 
@@ -29,6 +32,11 @@ public:
     void noteOff(int noteVal, std::string track);
     void record(bool bStart);
     std::vector<std::string> getTrackList();
+    void playPattern(std::deque<NoteEvent>& notes, size_t& bpm);
+    void queueLoop(size_t numLoops, std::deque<NoteEvent> notes, size_t bpm);
+    bool shouldLoop() { return m_bLoop; }
+    bool stopLoop() { return m_bLoop; }
+    void loop();
 
 private:
     /// @brief The instance callback, where we have access to every method/variable in object of class MixerStream */
@@ -66,6 +74,11 @@ private:
     Sampler m_snare;
     FeedbackDelayNetwork m_fdn;
     PlateReverb m_plate;
+    bool m_bLoop;
+    std::deque<NoteEvent> m_pattern;
+    size_t m_loopTimes;
+    size_t m_bpm;
+    std::mutex m_mtx;
 
 };
 

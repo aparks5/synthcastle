@@ -44,6 +44,15 @@ void Mixer::noteOn(size_t noteVal, std::string track)
 	}
 }
 
+void Mixer::noteOff(size_t noteVal, std::string track)
+{
+	Module* pMod = m_inputs[track];
+	if (pMod) {
+		pMod->noteOff(noteVal);
+	}
+}
+
+
 float Mixer::operator()()
 {
 	float output = 0.f;
