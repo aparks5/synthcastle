@@ -11,6 +11,47 @@ std::deque<NoteEvent> NoteGenerator::loopSequence(std::string input, size_t nTim
 	return noteEvents;
 }
 
+std::deque<NoteEvent> NoteGenerator::makeDrumPattern(std::vector<std::string> input)
+{
+	std::deque<NoteEvent> noteEvents;
+
+	char kick = 'x';
+	char hat = 't';
+	char rest = '-';
+	char snare = 'o';
+	char clap = 'c';
+
+	// each char is an eigth note
+	auto timestamp = 0.;
+	for (auto& ch : input[0]) {
+
+		// split notes into duration and note
+		// 69 = 440Hz = A4
+		std::string track;
+		if (ch == kick) {
+			track = "kick";
+		}
+		else if (ch == hat) {
+			track = "hat";
+		}
+		else if (ch == snare) {
+			track = "snare";
+		}
+		else if (ch == clap) {
+			track = "clap";
+		}
+
+		if (ch != rest) {
+			auto ev = makeNote(69, true, timestamp, track);
+			noteEvents.push_back(ev);
+		}
+
+		timestamp += 0.125;
+	}
+
+	return noteEvents;
+}
+
 std::deque<NoteEvent> NoteGenerator::makeSequence(std::string input)
 {
 	std::deque<NoteEvent> noteEvents;
@@ -35,6 +76,11 @@ std::deque<NoteEvent> NoteGenerator::makeSequence(std::string input)
 	}
 
 	auto events = tokenize(trackSplit[eventIdx], ',');
+
+	// special sauce for drum notation
+	if (track == "drums") {
+		return makeDrumPattern(events);
+	}
 
 	// now use `events`
 	auto timestamp = 0.;
