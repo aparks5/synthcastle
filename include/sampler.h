@@ -21,8 +21,10 @@ public:
 private:
 	AudioFile<float> audioFile;
 	size_t m_pos;
+	double m_accum;
+	double m_rate;
 	std::vector<float> m_samples;
-	float m_increment;
+	double m_increment;
 };
 
 
