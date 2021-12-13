@@ -65,13 +65,13 @@ void Prompt::open()
 		}
 
 		if (prompt == "stop") {
-			stream->stop();
+			stream->stopLoop();
 		}
 		if (prompt == "start") {
 			stream->start();
 		}
 		if (prompt == "tracks") {
-			spdlog::info(">> > list of tracks");
+			spdlog::info(">> list of tracks");
 			size_t trackCount = 0;
 
 			std::vector<std::string> trackList = stream->getTrackList();
@@ -80,8 +80,6 @@ void Prompt::open()
 				std::cout << trackCount << ": " << track << std::endl;
 				trackCount++;
 			}
-
-
 		}
 
 		if (prompt == "bpm") {
@@ -135,6 +133,48 @@ void Prompt::open()
 			freq = clamp(freq, 0.f, 40.f);
 			params.pitchLFOFreq = freq;
 			bParamChanged = true;
+		}
+		if (prompt == "track") {
+
+			auto trackCount = 0;
+			std::vector<std::string> trackList = stream->getTrackList();
+			spdlog::info(">> list of tracks");
+			for (auto track : trackList) {
+				spdlog::info("{}: {}", trackCount, track);
+				trackCount++;
+			}
+
+			std::cin >> prompt;
+			auto trackNum = 0;
+
+			bool bErr = false;
+			try {
+				trackNum = std::stoi(prompt);
+			}
+			// Catch stoi errors
+			catch (const std::invalid_argument& e) {
+				spdlog::error("invalid argument");
+				bErr = true;
+			}
+			catch (const std::out_of_range& e) {
+				spdlog::error("input out of range");
+				bErr = true;
+			}
+
+			trackNum = clamp(trackNum, 0, trackCount);
+			std::string trackName;
+			trackCount = 0;
+			for (auto track : trackList) {
+				if (trackNum == trackCount) {
+					stream->setActiveTrackName(track);
+					spdlog::info("setting active track name to: {}", track);
+					break;
+				}
+				else {
+					trackCount++;
+				}
+			}
+
 		}
 		if (prompt == "pitch-lfo-depth") {
 			std::cout << ">> enter pitch LFO depth (0. - 1.)" << std::endl;
@@ -284,6 +324,7 @@ void Prompt::open()
 			auto coarse = std::stof(prompt);
 			coarse = clamp(coarse, -24.f, 24.f);
 			params.osc2coarse = coarse;
+			bParamChanged = true;
 		}
 		if (prompt == "osc2-fine") {
 			std::cin >> prompt;
@@ -358,7 +399,7 @@ void Prompt::open()
 			ScalePattern pattern = Scale::strToScalePattern(patStr);
 			ScaleMode mode = Scale::strToScaleMode(modeStr);
 			auto temp = gen.scalePattern(key, pattern, mode);
-			stream->playPattern(temp, params.bpm);
+			stream->queueLoop(1, temp, params.bpm);
 			std::cout << "now playing scale" << std::endl;
 		}
 
@@ -378,7 +419,7 @@ void Prompt::open()
 				for (auto note : notes) {
 					spdlog::info("{}", note);
 				}
-				stream->playPattern(notes, params.bpm);
+				stream->queueLoop(1, notes, params.bpm);
 			}
 			else {
 				std::cout << "no notes to play!" << std::endl;

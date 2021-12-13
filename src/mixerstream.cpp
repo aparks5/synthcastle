@@ -25,6 +25,11 @@ MixerStream::MixerStream(size_t fs, CallbackData* userData)
 	, m_fdn(4)
 	, m_plate(fs)
 	, m_bLoop(false)
+	, m_loopTimes(1)
+	, m_bpm(120)
+	, m_bPendingSynthUpdate(false)
+	, m_bPendingFxUpdate(false)
+	, m_activeTrackName("synth1")
 {
 
 	VoiceParams params;
@@ -160,7 +165,8 @@ void MixerStream::noteOff(int noteVal, std::string track)
 
 void MixerStream::update(VoiceParams params)
 {
-	m_synth.update(params);
+	m_synthUpdate = params;
+	m_bPendingSynthUpdate = true;
 }
 
 void MixerStream::updateTrackGainDB(std::string track, float gainDB)
@@ -172,11 +178,12 @@ void MixerStream::updateTrackGainDB(std::string track, float gainDB)
 
 void MixerStream::update(FxParams fxparams)
 {
-	m_synth.update(fxparams);
+	m_fxUpdate = fxparams;
+	m_bPendingFxUpdate = true;
 }
 
 
-void MixerStream::playPattern(std::deque<NoteEvent>& notes, size_t& bpm)
+void MixerStream::playPattern(std::deque<NoteEvent> notes, size_t bpm)
 {
 
 	float now = 0.f;
@@ -232,8 +239,8 @@ void MixerStream::playPattern(std::deque<NoteEvent>& notes, size_t& bpm)
 
 	// if "now" is before the end of a measure, sleep until the measure if over
 
-	// find nearest multiple of "now" to the duration of one measure of 4/4 at the bpm:
-	float m = 4.f * 60.f * 1000.f / bpm;
+	// find nearest multiple of "now" to the duration of quarter note of 4/4 at the bpm:
+	float m = 1.f * 60.f * 1000.f / bpm;
     // https://math.stackexchange.com/questions/291468/how-to-find-the-nearest-multiple-of-16-to-my-given-number-n
 	float nearest = (m == 0) ? now : ceil(now / m) * m;
 	float endOfMeasure = nearest - now;
@@ -247,6 +254,11 @@ void MixerStream::queueLoop(size_t numLoops, std::deque<NoteEvent> notes, size_t
 	m_loopTimes = numLoops;
 	m_bpm = bpm;
 	m_callbackData->commandsToAudioCallback->enqueue(Commands::START_LOOP);
+}
+
+void MixerStream::stopLoop()
+{
+	m_callbackData->commandsToAudioCallback->enqueue(Commands::STOP_LOOP);
 }
 
 int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
@@ -312,6 +324,18 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 	m_synth.blockRateUpdate();
 	m_synth2.blockRateUpdate();
 
+	if (m_bPendingSynthUpdate) {
+		m_synth.update(m_synthUpdate);
+		m_bPendingSynthUpdate = false;
+	}
+
+	if (m_bPendingFxUpdate) {
+		m_synth.update(m_fxUpdate);
+		m_bPendingFxUpdate = false;
+	}
+
+
+
 
 
 	return paContinue;
@@ -320,7 +344,7 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 void MixerStream::loop()
 {
 	if (m_bLoop) {
-		while (m_loopTimes > 0) {
+		while (m_loopTimes > 0 && m_bLoop) {
 			playPattern(m_pattern, m_bpm);
 			m_loopTimes--;
 		}
