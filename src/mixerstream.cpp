@@ -25,8 +25,11 @@ MixerStream::MixerStream(size_t fs, CallbackData* userData)
 	, m_fdn(4)
 	, m_plate(fs)
 	, m_bLoop(false)
+	, m_loopTimes(1)
+	, m_bpm(120)
 	, m_bPendingSynthUpdate(false)
 	, m_bPendingFxUpdate(false)
+	, m_activeTrackName("synth1")
 {
 
 	VoiceParams params;
@@ -236,8 +239,8 @@ void MixerStream::playPattern(std::deque<NoteEvent> notes, size_t bpm)
 
 	// if "now" is before the end of a measure, sleep until the measure if over
 
-	// find nearest multiple of "now" to the duration of one measure of 4/4 at the bpm:
-	float m = 4.f * 60.f * 1000.f / bpm;
+	// find nearest multiple of "now" to the duration of quarter note of 4/4 at the bpm:
+	float m = 1.f * 60.f * 1000.f / bpm;
     // https://math.stackexchange.com/questions/291468/how-to-find-the-nearest-multiple-of-16-to-my-given-number-n
 	float nearest = (m == 0) ? now : ceil(now / m) * m;
 	float endOfMeasure = nearest - now;
@@ -251,6 +254,11 @@ void MixerStream::queueLoop(size_t numLoops, std::deque<NoteEvent> notes, size_t
 	m_loopTimes = numLoops;
 	m_bpm = bpm;
 	m_callbackData->commandsToAudioCallback->enqueue(Commands::START_LOOP);
+}
+
+void MixerStream::stopLoop()
+{
+	m_callbackData->commandsToAudioCallback->enqueue(Commands::STOP_LOOP);
 }
 
 int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
@@ -336,7 +344,7 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 void MixerStream::loop()
 {
 	if (m_bLoop) {
-		while (m_loopTimes > 0) {
+		while (m_loopTimes > 0 && m_bLoop) {
 			playPattern(m_pattern, m_bpm);
 			m_loopTimes--;
 		}

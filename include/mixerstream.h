@@ -35,8 +35,12 @@ public:
     void playPattern(std::deque<NoteEvent> notes, size_t bpm);
     void queueLoop(size_t numLoops, std::deque<NoteEvent> notes, size_t bpm);
     bool shouldLoop() { return m_bLoop; }
-    bool stopLoop() { return m_bLoop; }
+    void stopLoop();
     void loop();
+    std::string getActiveTrackName() const { return m_activeTrackName; }
+    void setActiveTrackName(std::string trackName) {
+        m_activeTrackName = trackName;
+    }
 
 private:
     /// @brief The instance callback, where we have access to every method/variable in object of class MixerStream */
@@ -83,6 +87,7 @@ private:
     VoiceParams m_synthUpdate;
     bool m_bPendingFxUpdate;
     FxParams m_fxUpdate;
+    std::string m_activeTrackName;
 
 };
 

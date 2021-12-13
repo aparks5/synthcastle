@@ -12,3 +12,8 @@ void Controller::loop()
 		stream->loop();
 	}
 }
+
+void Controller::stop()
+{
+	stream->stopLoop();
+}

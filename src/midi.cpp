@@ -8,8 +8,6 @@ MIDI::MIDI(std::shared_ptr<MixerStream> stream)
 	chooseMidiInPort(midiin);
 
 	midiUserData.stream = stream;
-	std::queue<NoteEvent> notes;
-	midiUserData.notes = notes;
 
 	midiin->setCallback(&MIDI::midiCallback, &midiUserData);
 }
@@ -28,15 +26,14 @@ void MIDI::midiCallback(double deltatime, std::vector<unsigned char>* message, v
 		float velocity = (int)message->at(2);
 		if (byte0 == 144) {
 			if (velocity != 0) {
-				// TODO: allow midiCallback to use and specified track by modifying userData 
-				stream->noteOn(noteVal, "synth1");
+				stream->noteOn(noteVal, stream->getActiveTrackName());
 			}
 			else {
-				stream->noteOff(noteVal, "synth1");
+				stream->noteOff(noteVal, stream->getActiveTrackName());
 			}
 		}
 		else if (byte0 == 128) {
-			stream->noteOff(noteVal, "synth1");
+			stream->noteOff(noteVal, stream->getActiveTrackName());
 		}
 	}
 }

@@ -11,15 +11,15 @@
 class MIDI
 {
 public:
-	MIDI(std::shared_ptr<MixerStream> stream);
-
-private:
 	struct MIDIUserData
 	{
 		std::shared_ptr<MixerStream> stream;
-		std::queue<NoteEvent> notes;
 		MIDIUserData() : stream(nullptr) {};
 	};
+
+	MIDI(std::shared_ptr<MixerStream> stream);
+
+private:
 
 
 	std::shared_ptr<RtMidiIn> midiin;

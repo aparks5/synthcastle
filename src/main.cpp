@@ -51,7 +51,6 @@ void controlThread(std::shared_ptr<MixerStream> stream)
 	
 }
 
-
 void audioThread(std::shared_ptr<MixerStream> stream)
 {
 	std::cout << "PortAudio: sample rate " << SAMPLE_RATE << ", buffer size " << FRAMES_PER_BUFFER << std::endl;
