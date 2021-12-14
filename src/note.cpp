@@ -11,7 +11,7 @@ std::deque<NoteEvent> NoteGenerator::loopSequence(std::string input, size_t nTim
 	return noteEvents;
 }
 
-std::deque<NoteEvent> NoteGenerator::makeDrumPattern(std::vector<std::string> input)
+std::deque<NoteEvent> NoteGenerator::makeDrumPattern(float quantization, std::vector<std::string> input)
 {
 	std::deque<NoteEvent> noteEvents;
 
@@ -46,7 +46,7 @@ std::deque<NoteEvent> NoteGenerator::makeDrumPattern(std::vector<std::string> in
 			noteEvents.push_back(ev);
 		}
 
-		timestamp += 0.125;
+		timestamp += quantization;
 	}
 
 	return noteEvents;
@@ -78,12 +78,20 @@ std::deque<NoteEvent> NoteGenerator::makeSequence(std::string input)
 	auto events = tokenize(trackSplit[eventIdx], ',');
 
 	// special sauce for drum notation
-	if (track == "drums") {
-		return makeDrumPattern(events);
+	if (track == "drum8") {
+		return makeDrumPattern(0.125, events);
 	}
+
+	if (track == "drum16") {
+		return makeDrumPattern(0.0625, events);
+	}
+
+
 
 	// now use `events`
 	auto timestamp = 0.;
+	
+	// catch exception if track isn't found
 	
 	for (auto event : events) {
 		// split notes into duration and note
@@ -148,10 +156,16 @@ std::deque<NoteEvent> NoteGenerator::randomPattern(std::string track, size_t num
 	float minDur = 0.0625;
 	float maxDur = 0.250;
 
+	srand((unsigned int)time(NULL));
+
 	for (size_t idx = 0; idx < numSteps; idx++) {
 		// split notes into duration and note
-		float randDur16ths = rand() % (4 - 1 + 1);
+		float randDur16ths = (rand() % 4) + 1;
 		timestamp += (randDur16ths*minDur);
+		// only generate one bar
+		if (timestamp >= 1.) {
+			break;
+		}
 		size_t randScaleIdx = rand() % (scale.length() + 1);
 		auto ev = makeNote(scale(randScaleIdx), true, timestamp, track);
 		noteEvents.push_back(ev);

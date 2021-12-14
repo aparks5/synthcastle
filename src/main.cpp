@@ -36,7 +36,7 @@ void uiThread(std::shared_ptr<MixerStream> stream)
 	MIDI midi(stream);
 	Prompt prompt(stream);
 	prompt.open();
-	// infinite loop, todo: maybe poll thread for exit code
+	// infinite loop, todo: maybe poll ui thread for exit code?
 	while (1) {};
 }
 
@@ -44,6 +44,7 @@ void controlThread(std::shared_ptr<MixerStream> stream)
 {
 	Controller m_control(stream);
 	while (1) {
+		Sleep(500);
 		while (stream->shouldLoop()) {
 			m_control.loop();
 		}
@@ -66,10 +67,10 @@ void audioThread(std::shared_ptr<MixerStream> stream)
 		if (!bStarted) {
 			stream->close();
 		}
-		else {
-			// infinite loop, todo: maybe poll thread for exit code
-			while (1);
-		}
+		//else {
+		//	// infinite loop, todo: maybe poll thread for exit code
+		//	while (1);
+		//}
 	}
 
 
@@ -92,24 +93,28 @@ int main(void);
 
 int main(void)
 {
-
 	banner();
-
 
 	PortAudioHandler paInit;
 	CallbackData userData;
+
 	std::shared_ptr<moodycamel::ReaderWriterQueue<Commands>> sendCommands = std::make_shared<moodycamel::ReaderWriterQueue<Commands>>(5);
 	std::shared_ptr<moodycamel::ReaderWriterQueue<Commands>> receiveCommands = std::make_shared<moodycamel::ReaderWriterQueue<Commands>>(5);
 	std::shared_ptr<IOServer> server = std::make_shared<IOServer>();
+
 	userData.commandsFromAudioCallback = receiveCommands;
 	userData.commandsToAudioCallback = sendCommands;
 	userData.server = server;
+	
 	std::shared_ptr<MixerStream> stream = std::make_shared<MixerStream>(SAMPLE_RATE, &userData);
+
 	std::thread ui(uiThread, stream);
 	std::thread audio(audioThread, stream);
 	std::thread control(controlThread, stream);
+
 	control.join();
-	audio.detach();
+	audio.join();
 	ui.join();
+
 	return 0;
 }
