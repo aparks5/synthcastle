@@ -41,10 +41,14 @@ MixerStream::MixerStream(size_t fs, CallbackData* userData)
 	m_synth.update(params);
 
 	VoiceParams params2;
-	params2.envParams = { 1, 250, 0, 1 };
-	params2.osc = OscillatorType::SQUARE;
-	params2.filtFreq = 800;
-	params2.filtQ = 1.3;
+	params2.envParams = { 1, 0, 0, 250 };
+	params2.osc = OscillatorType::SAW;
+	params2.bEnableOsc2 = true;
+	params2.osc2coarse = 7;
+	params2.bEnableFiltLFO = true;
+	params2.filtLFOFreq = 0.25;
+	params2.filtFreq = 1500;
+	params2.filtQ = 0.7;
 
 	m_synth2.update(params2);
 

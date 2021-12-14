@@ -1,4 +1,6 @@
 #include "synth.h"
+#include <iostream>
+#include <spdlog/spdlog.h>
 
 Synth::Synth(size_t fs)
 	: Module(fs)
@@ -81,7 +83,7 @@ float Synth::operator()()
 	auto output = 0.f;
 
 	for (auto voice : m_voices) {
-		output += (*voice)() * (1 / sqrt(m_voices.capacity() * 2));
+		output += (*voice)() * (1 / sqrt(2));
 	}
 
 	int fxCount = 0;
