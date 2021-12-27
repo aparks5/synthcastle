@@ -4,7 +4,7 @@
 
 Synth::Synth(size_t fs)
 	: Module(fs)
-	, delay(fs, 1.f)
+	, delay(fs)
 	, delay2(fs, 1.f)
 	, delay3(fs, 1.f)
 	, bitcrush(fs)
@@ -19,7 +19,7 @@ Synth::Synth(size_t fs)
 		m_voices.push_back(v);
 	}
 
-	delay.update(333, 0.5f);
+	delay.update(333);
 
 }
 
@@ -68,7 +68,7 @@ void Synth::update(VoiceParams params)
 void Synth::update(FxParams fxParams)
 {
 	m_fxParams = fxParams;
-	delay.update(m_fxParams.delay1time, m_fxParams.delay1feedback);
+	delay.update(m_fxParams.delay1time);
 }
 
 void Synth::blockRateUpdate()
@@ -100,8 +100,7 @@ float Synth::operator()()
 	}
 	if (m_fxParams.bEnableDelay1) {
 		float temp = output;
-		output += delay();
-		delay.write(temp);
+		output += delay(temp);
 		fxCount++;
 	}
 	if (m_fxParams.bEnableDelay2) {

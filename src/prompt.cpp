@@ -70,6 +70,13 @@ void Prompt::open()
 		if (prompt == "start") {
 			stream->start();
 		}
+		if (prompt == "midilog-on") {
+			stream->enableMidiLogging();
+		}
+		if (prompt == "midilog-off") {
+			stream->disableMidiLogging();
+		}
+
 		if (prompt == "tracks") {
 			spdlog::info(">> list of tracks");
 			size_t trackCount = 0;
@@ -365,9 +372,12 @@ void Prompt::open()
 			std::string pattern;
 			std::cin >> pattern;
 
+
+			std::vector<std::string> trackList = stream->getTrackList();
+
 			NoteGenerator gen;
 			spdlog::info("play " + pattern);
-			auto temp = gen.makeSequence(pattern);
+			auto temp = gen.makeSequence(pattern, trackList);
 			while (!temp.empty()) {
 				notes.push_back(temp.front());
 				temp.pop_front();
@@ -376,16 +386,20 @@ void Prompt::open()
 		}
 		if (prompt == "randompattern") {
 
-			std::cout << "usage: randompattern <looptimes>. generated random pattern N times. play with 'pattern' command" << std::endl;
+			std::cout << "usage: randompattern <scale>. generated random pattern N times. play with 'pattern' command" << std::endl;
+
 			NoteGenerator gen;
-			std::cin >> prompt;
-			int loopCount = std::stod(prompt);
-			while (loopCount > 0) {
-				auto temp = gen.randomPattern("synth1", 8, 33, 72);
-				notes = temp;
-				stream->playPattern(temp, params.bpm);
-				loopCount--;
-			}
+			std::string keyStr, patStr, modeStr;
+			std::cin >> keyStr >> patStr >> modeStr;
+
+			// TODO: combine these to method. populate key, pattern, mode
+			Key key = Scale::strToKey(keyStr);
+			ScalePattern pattern = Scale::strToScalePattern(patStr);
+			ScaleMode mode = Scale::strToScaleMode(modeStr);
+			Scale scale = Scale(key, pattern, mode);
+
+			auto temp = gen.randomPattern("synth1", 8, scale);
+			notes = temp;
 			std::cout << "generated random pattern, play with 'pattern' command" << std::endl;
 
 		}
@@ -415,8 +429,10 @@ void Prompt::open()
 		}
 
 		if (prompt == "pattern") {
-			if (notes.size() > 0) {
-				for (auto note : notes) {
+			auto temp = NoteGenerator::sortTimeVal(notes);
+			spdlog::info("(notes in pattern sorted by timestamp)");
+			if (temp.size() > 0) {
+				for (auto note : temp) {
 					spdlog::info("{}", note);
 				}
 				stream->queueLoop(1, notes, params.bpm);

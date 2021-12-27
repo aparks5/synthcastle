@@ -30,6 +30,7 @@ MixerStream::MixerStream(size_t fs, CallbackData* userData)
 	, m_bPendingSynthUpdate(false)
 	, m_bPendingFxUpdate(false)
 	, m_activeTrackName("synth1")
+	, m_bLogMidi(false)
 {
 
 	VoiceParams params;
@@ -156,6 +157,9 @@ bool MixerStream::stop()
 
 void MixerStream::noteOn(int noteVal, std::string track)
 {
+	if (m_bLogMidi) {
+		spdlog::info("midi note: {}", noteVal);
+	}
 
 	m_mixer.noteOn(noteVal, track);
 	m_fdn.reset();
