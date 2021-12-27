@@ -41,6 +41,13 @@ public:
     void setActiveTrackName(std::string trackName) {
         m_activeTrackName = trackName;
     }
+    void enableMidiLogging() {
+        m_bLogMidi = true;
+    }
+    void disableMidiLogging() {
+        m_bLogMidi = false;
+    }
+
 
 private:
     /// @brief The instance callback, where we have access to every method/variable in object of class MixerStream */
@@ -88,6 +95,7 @@ private:
     bool m_bPendingFxUpdate;
     FxParams m_fxUpdate;
     std::string m_activeTrackName;
+    bool m_bLogMidi;
 
 };
 

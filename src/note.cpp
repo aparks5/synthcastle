@@ -2,11 +2,11 @@
 #include "util.h"
 #include "scale.h"
 
-std::deque<NoteEvent> NoteGenerator::loopSequence(std::string input, size_t nTimes)
+std::deque<NoteEvent> NoteGenerator::loopSequence(std::string input, size_t nTimes, std::vector<std::string> trackList)
 {
 	std::deque<NoteEvent> noteEvents;
 	for (size_t i = 0; i < nTimes; i++) {
-		makeSequence(input);
+		makeSequence(input, trackList);
 	}
 	return noteEvents;
 }
@@ -52,7 +52,7 @@ std::deque<NoteEvent> NoteGenerator::makeDrumPattern(float quantization, std::ve
 	return noteEvents;
 }
 
-std::deque<NoteEvent> NoteGenerator::makeSequence(std::string input)
+std::deque<NoteEvent> NoteGenerator::makeSequence(std::string input, std::vector<std::string> trackList)
 {
 	std::deque<NoteEvent> noteEvents;
 	
@@ -84,6 +84,13 @@ std::deque<NoteEvent> NoteGenerator::makeSequence(std::string input)
 
 	if (track == "drum16") {
 		return makeDrumPattern(0.0625, events);
+	}
+
+
+	// now check if the track name is in trackList, otherwise print a warning and return an empty list
+	if (std::find(trackList.begin(), trackList.end(), track) == trackList.end()) {
+		spdlog::warn("'{}' is not in track list! see 'tracks' for available tracks, drum8 and drum16 are also valid", track);
+		return noteEvents;
 	}
 
 
@@ -146,10 +153,9 @@ std::deque<NoteEvent> NoteGenerator::sortTimeVal(std::deque<NoteEvent> notes)
 
 
 
-std::deque<NoteEvent> NoteGenerator::randomPattern(std::string track, size_t numSteps, size_t lowNote, size_t highNote) 
+std::deque<NoteEvent> NoteGenerator::randomPattern(std::string track, size_t numSteps, Scale scale)
 {
 	std::deque<NoteEvent> noteEvents;
-	Scale scale(Key::A, ScalePattern::MINOR, ScaleMode::IONIAN);
 	
 	// now use `events`
 	auto timestamp = 0.;

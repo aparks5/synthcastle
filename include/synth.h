@@ -8,7 +8,7 @@
 #include "fx.h"
 #include "bitcrusher.h"
 #include "chorus.h"
-#include "delay.h"
+#include "tapedelay.h"
 #include "platereverb.h"
 
 class Synth : public Module
@@ -29,7 +29,7 @@ private:
     std::vector<std::shared_ptr<Voice>> m_voices;
     FxParams m_fxParams;
     Chorus chorus;
-    Delay delay;
+    TapeDelay delay;
     Delay delay2;
     Delay delay3;
     Bitcrusher bitcrush;
