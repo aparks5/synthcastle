@@ -18,8 +18,10 @@ public:
 	void noteOn(size_t noteVal, std::string track);
 	void noteOff(size_t noteVal, std::string track);
 
+
 	float operator()() override;
 	float operator()(float in) override { return 0.f; }
+	void operator()(std::vector<std::vector<float>> &outputBuffer);
 		
 private:
 	Gain m_overallGain;

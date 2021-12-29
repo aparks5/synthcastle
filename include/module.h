@@ -2,6 +2,8 @@
 #define MODULE_H_
 
 #include <string>
+#include <memory>
+#include <vector>
 
 class Module {
 public:
@@ -17,8 +19,8 @@ protected:
 	size_t m_sampleRate;
 	float m_output;
 	std::string m_name;
-	float** m_inputs;
-	float** m_outputs;
+	std::shared_ptr<std::vector<std::vector<float>>> m_inputs;
+	std::shared_ptr<std::vector<std::vector<float>>> m_outputs;
 
 
 };

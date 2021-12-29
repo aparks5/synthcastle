@@ -102,9 +102,17 @@ int main(void)
 	std::shared_ptr<moodycamel::ReaderWriterQueue<Commands>> receiveCommands = std::make_shared<moodycamel::ReaderWriterQueue<Commands>>(5);
 	std::shared_ptr<IOServer> server = std::make_shared<IOServer>();
 
+	std::vector<std::vector<float>> callbackBuffer;
+
+	std::vector<float> myRow(128, 0.f);
+	for (size_t idx = 0; idx < 2; idx++) {
+		callbackBuffer.push_back(myRow);
+	}
+
 	userData.commandsFromAudioCallback = receiveCommands;
 	userData.commandsToAudioCallback = sendCommands;
 	userData.server = server;
+	userData.callbackBuffer = callbackBuffer;
 	
 	std::shared_ptr<MixerStream> stream = std::make_shared<MixerStream>(SAMPLE_RATE, &userData);
 
