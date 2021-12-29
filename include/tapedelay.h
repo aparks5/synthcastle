@@ -7,7 +7,7 @@
 #include "delay.h"
 #include "onepolehighpass.h"
 #include "onepolelowpass.h"
-#include "square.h"
+#include "sine.h"
 
 
 class TapeDelay : public Module
@@ -21,9 +21,13 @@ public:
 private:
 	Delay m_delay;
 	float m_delayTimeMs;
-	Square m_lfo;
+	float m_prevDelayTimeMs;
+	Sine m_lfo;
 	OnePoleHighpass m_hp;
 	OnePoleLowpass m_lp;
+	float m_lfoZeroCrossing;
+	float m_slewDelta;
+	float m_slewTime;
 
 
 };

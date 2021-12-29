@@ -89,7 +89,6 @@ float Delay::operator()()
 
 	auto yn1 = m_circBuff[prevReadIdx];
 
-	
 	float out = linearInterpolate(yn, yn1, fractionalDelay);
 	m_feedbackOut = out;
 	return out;

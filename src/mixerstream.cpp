@@ -283,6 +283,7 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 	(void)statusFlags;
 	(void)inputBuffer;
 
+	// <-- this gets passed to the mixer
 	std::array<float, FRAMES_PER_BUFFER> writeBuff = { 0.f };
 
 	for (size_t sampIdx = 0; sampIdx < framesPerBuffer; sampIdx++)
@@ -294,8 +295,8 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 		output = clip(output);
 
 		// write output
-		*out++ = output;
-		*out++ = output;
+		*out++ = output; // left
+		*out++ = output; // right
 
 		writeBuff[sampIdx] = output;
 		g_buffer[sampIdx] = static_cast<float>(output*1.0);

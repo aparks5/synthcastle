@@ -17,6 +17,8 @@ protected:
 	size_t m_sampleRate;
 	float m_output;
 	std::string m_name;
+	float** m_inputs;
+	float** m_outputs;
 
 
 };

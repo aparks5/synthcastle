@@ -35,6 +35,20 @@ static T linearInterpolate(T y1, T y2, T x)
     return x * y2 + (1. - x) * y1;
 }
 
+// https://stackoverflow.com/questions/1125666/how-do-you-do-bicubic-or-other-non-linear-interpolation-of-re-sampled-audio-da
+template <class T>
+static T cubicInterpolate(T x0, T x1, T x2, T x3, T t)
+{
+    double a0, a1, a2, a3;
+
+    a0 = x3 - x2 - x0 + x1;
+    a1 = x0 - x1 - a0;
+    a2 = x2 - x0;
+    a3 = x1;
+
+    return a0 * (t*t*t) + a1 * (t*t) + a2 * t + a3;
+}
+
 /// see MadBrain's post: https://www.kvraudio.com/forum/viewtopic.php?t=195315
 /// """
 /// Dunno, for soft clip, I hard clip, then use a polynomial to smooth the
