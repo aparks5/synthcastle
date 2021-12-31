@@ -18,6 +18,7 @@ typedef struct
 	std::shared_ptr<moodycamel::ReaderWriterQueue<Commands>> commandsToAudioCallback;
 	std::shared_ptr<moodycamel::ReaderWriterQueue<Commands>> commandsFromAudioCallback;
 	std::shared_ptr<IOServer> server;
+	std::vector<std::vector<float>> callbackBuffer;
 } CallbackData;
 
 #endif CALLBACK_TYPES_H_

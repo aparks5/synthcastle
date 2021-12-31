@@ -283,23 +283,34 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 	(void)statusFlags;
 	(void)inputBuffer;
 
+	// <-- this gets passed to the mixer
 	std::array<float, FRAMES_PER_BUFFER> writeBuff = { 0.f };
+	size_t numChans = 2;
 
-	for (size_t sampIdx = 0; sampIdx < framesPerBuffer; sampIdx++)
-	{
-		auto output = 0.f;
+	// auto output = 0.f;
+	std::array<std::array<float, 256>, 2> scratchBuff = { };
 
-		output = m_mixer();
-		
-		output = clip(output);
 
-		// write output
-		*out++ = output;
-		*out++ = output;
+	m_mixer(scratchBuff);
+	// output = clip(output);
 
-		writeBuff[sampIdx] = output;
-		g_buffer[sampIdx] = static_cast<float>(output*1.0);
+
+	for (size_t sampIdx = 0; sampIdx < framesPerBuffer; sampIdx++) {
+		for (size_t chanIdx = 0; chanIdx < 2; chanIdx++) {
+			// write interleaved output -- L/R
+			*out++ = scratchBuff[chanIdx][sampIdx];
+		}
+		// deinterleaved is (numSamps * chanIdx) + sampIdx
+		// record and display only Left for now
+		writeBuff[sampIdx] = scratchBuff[0][sampIdx];
 	}
+
+
+	for (size_t sampIdx = 0; sampIdx < framesPerBuffer / numChans; sampIdx++) {
+		g_buffer[sampIdx] = scratchBuff[0][sampIdx];
+		g_buffer[sampIdx] = scratchBuff[1][sampIdx];
+	}
+
 
 	g_ready = true;
 

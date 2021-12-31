@@ -52,6 +52,21 @@ void Mixer::noteOff(size_t noteVal, std::string track)
 	}
 }
 
+// call class operator to fill outputBuffer
+void Mixer::operator()(std::array<std::array<float, 256>, 2> &outputBuffer)
+{
+	size_t numChans = outputBuffer.size();
+	size_t numSamps = outputBuffer[0].size();
+
+
+	for (size_t samp = 0; samp < numSamps; samp++) {
+		float output = (*this)() * 1.f;
+		for (size_t chan = 0; chan < numChans; chan++) {
+			outputBuffer[chan][samp] = output;
+		}
+	}
+}
+
 
 float Mixer::operator()()
 {
@@ -75,3 +90,6 @@ float Mixer::operator()()
 	return output;
 
 }
+
+
+

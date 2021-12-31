@@ -4,12 +4,13 @@
 
 Synth::Synth(size_t fs)
 	: Module(fs)
+	, chorus(fs, 0.2, 0.8, 0.0)
 	, delay(fs)
 	, delay2(fs, 1.f)
 	, delay3(fs, 1.f)
 	, bitcrush(fs)
 	, reverb(fs)
-	, chorus(fs, 0.2, 0.8, 0.0)
+	, pitch(fs)
 	, lastActiveVoice(0)
 {
 	auto nVoices = 8;
@@ -112,6 +113,8 @@ float Synth::operator()()
 		output = 0.8*output + 0.1*reverb(output);
 		fxCount++;
 	}
+	output = 0.5f*output + 0.5f*pitch(output);
+	fxCount++;
 
 
 	output *= 1. / sqrt(2 * (fxCount + 1));

@@ -14,9 +14,9 @@ public:
 	float operator()() override;
 	float operator()(float in) override { return 0.f; }
 	float tap(float ms);
+	void skip();
 
 private:
-	float m_fs;
 	float m_delayMs;
 	size_t m_delaySamps;
 	float m_maxDelaySamps;

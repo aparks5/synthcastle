@@ -5,14 +5,19 @@ TapeDelay::TapeDelay(size_t sampleRate)
 	: Module(sampleRate)
 	, m_delay(sampleRate, 1.f)
 	, m_delayTimeMs(250.)
+	, m_prevDelayTimeMs(250.)
 	, m_lfo(sampleRate)
 	, m_hp(sampleRate)
 	, m_lp(sampleRate)
+	, m_lfoZeroCrossing(-1)
+	, m_slewDelta(0.f)
+	, m_slewTime(m_delayTimeMs)
 {
 	m_delay.update(250, 0.8);
 	m_hp.update(1000);
 	m_lp.update(0.7);
-	m_lfo.freq(12);
+	m_lfo.freq(0.1);
+	srand(time(NULL));
 }
 
 void TapeDelay::update(float delayTimeMs)
@@ -38,12 +43,26 @@ float TapeDelay::operator()(float in)
 	m_delay.write(temp);
 
 	// modulate delay line
-	srand(time(NULL));
 
 	// only update the delay time once a cycle
-	if (m_lfo() == 1.f) {
-		m_delay.update((3 * (0.01 * (rand() % 100))) + m_delayTimeMs, 0.8);
-	}
+	//float tempLFO = m_lfo();
+	//if (tempLFO != m_lfoZeroCrossing) { // the square wave altered cycles (from 1 to -1, or -1 to 1)
+	//	m_lfoZeroCrossing = tempLFO;
+	//	m_prevDelayTimeMs = (10 * 0.01 * (rand() % 100)) + m_delayTimeMs;
+	//	m_slewDelta = (m_prevDelayTimeMs - m_slewTime) / 36;
+	//	// slew rate limiter
+	//}
+
+
+	// slew to catch up to new delay time
+
+	//if (abs(m_prevDelayTimeMs - m_slewTime) >= 0.01) {
+	//	m_slewTime = m_slewTime + m_slewDelta;
+	//}
+
+	m_delay.update(m_delayTimeMs + (m_lfo() * 2.f), 0.8);
+	
+
 	return m_delay();
 }
 
