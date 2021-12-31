@@ -10,6 +10,7 @@
 #include "chorus.h"
 #include "tapedelay.h"
 #include "platereverb.h"
+#include "pitchshift_timedomain.h"
 
 class Synth : public Module
 {
@@ -34,6 +35,7 @@ private:
     Delay delay3;
     Bitcrusher bitcrush;
     PlateReverb reverb;
+    PitchShift pitch;
     size_t lastActiveVoice;
 
 

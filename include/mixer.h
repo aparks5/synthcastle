@@ -6,6 +6,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <array>
 
 class Mixer : public Module
 {
@@ -21,7 +22,7 @@ public:
 
 	float operator()() override;
 	float operator()(float in) override { return 0.f; }
-	void operator()(std::vector<std::vector<float>> &outputBuffer);
+	void operator()(std::array<std::array<float, 256>, 2> &outputBuffer);
 		
 private:
 	Gain m_overallGain;

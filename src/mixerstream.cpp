@@ -288,13 +288,7 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 	size_t numChans = 2;
 
 	// auto output = 0.f;
-	std::vector<std::vector<float>> scratchBuff;
-
-	std::vector<float> myRow(framesPerBuffer, 0);
-	std::fill(myRow.begin(), myRow.end(), 0.f);
-	for (size_t idx = 0; idx < numChans; idx++) {
-		scratchBuff.push_back(myRow);
-	}
+	std::array<std::array<float, 256>, 2> scratchBuff = { };
 
 
 	m_mixer(scratchBuff);
@@ -308,10 +302,15 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 		}
 		// deinterleaved is (numSamps * chanIdx) + sampIdx
 		// record and display only Left for now
-		// writeBuff[sampIdx] = scratchBuff[0][sampIdx];
-		// g_buffer[(2*sampIdx)] = scratchBuff[0][sampIdx]; 
-		// g_buffer[(2*sampIdx)+1] = scratchBuff[0][sampIdx];  
+		writeBuff[sampIdx] = scratchBuff[0][sampIdx];
 	}
+
+
+	for (size_t sampIdx = 0; sampIdx < framesPerBuffer / numChans; sampIdx++) {
+		g_buffer[sampIdx] = scratchBuff[0][sampIdx];
+		g_buffer[sampIdx] = scratchBuff[1][sampIdx];
+	}
+
 
 	g_ready = true;
 

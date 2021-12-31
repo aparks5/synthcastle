@@ -62,7 +62,7 @@ float Delay::operator()()
 	int integerDelay = (int)(m_delayMs / 1000.f * m_sampleRate);
 
 	if (static_cast<int>(m_writeIdx) - integerDelay < 0) {
-		m_readIdx = m_bufSize + 1 + (m_writeIdx - integerDelay);
+		m_readIdx = m_bufSize + 1 + (m_writeIdx - integerDelay); 
 	}
 	else {
 		m_readIdx = m_writeIdx - static_cast<int>(integerDelay);
