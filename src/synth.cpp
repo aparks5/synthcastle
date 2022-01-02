@@ -113,8 +113,8 @@ float Synth::operator()()
 		output = 0.8*output + 0.1*reverb(output);
 		fxCount++;
 	}
-	output = 0.5f*output + 0.5f*pitch(output);
-	fxCount++;
+	//output = 0.5f*output + 0.5f*pitch(output);
+	// fxCount++;
 
 
 	output *= 1. / sqrt(2 * (fxCount + 1));

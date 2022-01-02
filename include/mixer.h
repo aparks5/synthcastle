@@ -7,6 +7,8 @@
 #include <unordered_map>
 #include <vector>
 #include <array>
+#include "sine.h"
+#include "pan.h"
 
 class Mixer : public Module
 {
@@ -29,6 +31,7 @@ private:
 	std::unordered_map<std::string,Module*> m_inputs;
 	std::unordered_map<std::string,float> m_inputGains;
 	float m_scaleFactor;
+	Pan m_pan;
 };
 
 #endif

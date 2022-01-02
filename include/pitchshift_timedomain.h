@@ -7,13 +7,14 @@
 #include "sine.h"
 
 // naive pitch shifting method using a delay line and speeding up reading
+// a C++ port of the following PureData patch: http://msp.ucsd.edu/techniques/v0.11/book-html/node125.html
 class PitchShift : public Module
 {
 public:
 	PitchShift(size_t fs);
 	float operator()(float in) override;
 	float operator()() override { return 0.f; }
-	void update(float shiftSemitones) { m_shiftSemitones = shiftSemitones; }
+	void update(float numSemitones);
 
 private:
 	Delay m_delay;
@@ -21,7 +22,8 @@ private:
 	Saw m_saw;
 	Sine m_env;
 	size_t m_shiftSemitones;
-	float m_prevOut;
+	bool m_bShiftUp;
+	float m_windowTime;
 };
 
 #endif

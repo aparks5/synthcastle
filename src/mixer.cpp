@@ -4,6 +4,7 @@ Mixer::Mixer(size_t fs)
 	: Module(fs)
 	, m_overallGain(fs)
 	, m_scaleFactor(0.f)
+	, m_pan(fs)
 {
 }
 
@@ -65,6 +66,8 @@ void Mixer::operator()(std::array<std::array<float, 256>, 2> &outputBuffer)
 			outputBuffer[chan][samp] = output;
 		}
 	}
+
+	m_pan(outputBuffer);
 }
 
 
