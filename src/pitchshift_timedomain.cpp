@@ -9,24 +9,32 @@ PitchShift::PitchShift(size_t fs)
 	, m_saw(fs)
 	, m_env(fs)
 	, m_shiftSemitones(7)
-	, m_prevOut(0.)
+	, m_bShiftUp(true)
+	, m_windowTime(80)
 { 
-	m_delay.update(0.f, 0.0f);
-	m_delayInv.update(0.f, 0.0f);
-	// http://msp.ucsd.edu/techniques/v0.11/book-html/node125.html
-	float semi = m_shiftSemitones;
-	float temp = expf(semi * 0.05776f) - 1;
-	temp = temp / 0.08; // window
-	m_saw.freq(temp);
-	m_env.freq(temp / 2);
+	m_delay.update(0.f, 0.3f);
+	m_delayInv.update(0.f, 0.3f);
+	update(m_shiftSemitones);
 
 }
 
+void PitchShift::update(float semitones)
+{
+	float semi = semitones;
+	m_bShiftUp = (semi < 0) ? false : true;
+	semi = abs(semi);
+	float temp = expf(semi * 0.05776f) - 1;
+
+	temp = temp / (m_windowTime * 0.001); // window
+	// todo: saw should handle negative frequencies
+	m_saw.freq(temp);
+	m_env.freq(temp / 2);
+}
 
 float PitchShift::operator()(float in) {
 
-	// http://msp.ucsd.edu/techniques/v0.11/book-html/node125.html
-	float delay1Modulation = m_saw();
+	float shiftUp = (m_bShiftUp) ? -1.f : 1.f;
+	float delay1Modulation = shiftUp * m_saw();
 	// make saw unipolar
 	delay1Modulation = (delay1Modulation * 0.5f) + 0.5f;
 
@@ -36,8 +44,8 @@ float PitchShift::operator()(float in) {
 		delay2Modulation -= 1;
 	}
 
-	m_delay.update((delay1Modulation * 80) + 67, 0.0f);
-	m_delayInv.update((delay2Modulation * 80) + 67, 0.0f);
+	m_delay.update((delay1Modulation * m_windowTime) + 10, 0.67f);
+	m_delayInv.update((delay2Modulation * m_windowTime) + 10, 0.67f);
 
 	float temp = m_delay();
 	// restrict cosine from -.25 to .25
