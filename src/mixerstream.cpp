@@ -22,6 +22,7 @@ MixerStream::MixerStream(size_t fs, CallbackData* userData)
 	, m_hat(fs, "C:\\drum_samples\\hh01.wav")
 	, m_clap(fs, "C:\\drum_samples\\cp01.wav")
 	, m_snare(fs, "C:\\drum_samples\\sd01.wav")
+	, m_granular(fs, "C:\\drum_samples\\synthcastle-granular-from-ableton.aif")
 	, m_fdn(4)
 	, m_plate(fs)
 	, m_bLoop(false)
@@ -59,13 +60,14 @@ MixerStream::MixerStream(size_t fs, CallbackData* userData)
 	m_hat.setName("hat");
 	m_clap.setName("clap");
 	m_snare.setName("snare");
+	m_granular.setName("granular");
 
 	m_mixer.addInput(&m_synth);
 	m_mixer.addInput(&m_synth2);
 	m_mixer.addInput(&m_kick);
 	m_mixer.addInput(&m_hat);
 	m_mixer.addInput(&m_clap);
-	m_mixer.addInput(&m_snare);
+	m_mixer.addInput(&m_granular);
 
 }
 
