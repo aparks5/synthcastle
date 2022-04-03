@@ -42,24 +42,6 @@ float TapeDelay::operator()(float in)
 	temp = tanh(temp);
 	m_delay.write(temp);
 
-	// modulate delay line
-
-	// only update the delay time once a cycle
-	//float tempLFO = m_lfo();
-	//if (tempLFO != m_lfoZeroCrossing) { // the square wave altered cycles (from 1 to -1, or -1 to 1)
-	//	m_lfoZeroCrossing = tempLFO;
-	//	m_prevDelayTimeMs = (10 * 0.01 * (rand() % 100)) + m_delayTimeMs;
-	//	m_slewDelta = (m_prevDelayTimeMs - m_slewTime) / 36;
-	//	// slew rate limiter
-	//}
-
-
-	// slew to catch up to new delay time
-
-	//if (abs(m_prevDelayTimeMs - m_slewTime) >= 0.01) {
-	//	m_slewTime = m_slewTime + m_slewDelta;
-	//}
-
 	m_delay.update(m_delayTimeMs + (m_lfo() * 2.f), 0.8);
 	
 

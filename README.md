@@ -32,22 +32,18 @@ The syntax once you run `main.cpp` is very simple:
 PortAudio Test: output triangle wave. SR = 44100, BufSize = 256
 Output device name: 'Speakers (Elektron Digitakt)'
 
->> enter start to start streaming
-start
->> commands: start, stop, freq, exit
-stop
-stream finished.
->> commands: start, stop, freq, exit
-start
->> commands: start, stop, freq, exit
-freq
->> enter frequency in Hz
-50
->> commands: start, stop, freq, exit
-stop
-stream finished.
->> commands: start, stop, freq, exit
-exit
+>>> commands: stop, osc, freq, filt-freq, filt-q, filt-lfo-freq, pitch/filt-lfo-on/off,
+>>> pitch-lfo-freq, pitch-lfo-depth, reverb-on/off, chorus-on/off, delay-on/off
+>>> osc2-enable, osc2-coarse, osc2-fine, env [attackMs decayMs susdB]
+>>> play [note], loop [note-note2-note3:duration,note4:duration2... loopNumTimes]
+>>>
+```
+
+The OpenGL visualizer window currently has three modes. You must press 1, 2, 3 to switch modes:
+```
+1 - Time-domain oscilloscope (256 sample display)
+2 - VU RMS meter
+3 - FFT (256 samples, real-valued power spectrum)
 ```
 
 # Excellent reference books used to help make this:
