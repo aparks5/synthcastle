@@ -16,7 +16,9 @@ public:
 
 private:
 
-	Sine m_panLfo;
+	Sine m_panLFO;
+	float m_panLFOdepth;
+	bool m_bEnableLFO;
 	float m_percent;
 	float m_leftGain;
 	float m_rightGain;
