@@ -9,6 +9,10 @@ Welcome to...
                                                                                   
 ```
 
+# News
+- complete UI overhaul in progress using imgui, implot, imnodes
+- imgui branch now open for business
+
 # synthcastle
 an interactive text-based synthesizer in modern c++
 
