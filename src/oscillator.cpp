@@ -1,25 +1,24 @@
-#include "gain.h"
-
+#include "oscillator.h"
 #include "imnodes.h"
 
-Gain::Gain(int id)
-    : Node(NodeType::GAIN, id)
+Oscillator::Oscillator(int id)
+    : Node(NodeType::OSCILLATOR, id) 
 {
-    for (size_t idx = 0; idx < GainParams::NUM_PARAMS; idx++) {
+    for (size_t idx = 0; idx < OscillatorParams::NUM_PARAMS; idx++) {
         params.push_back(0);
     }
 }
 
-float Gain::process()
+float Oscillator::process()
 {
     return 0;
 }
 
-void Gain::display()
+void Oscillator::display()
 {
 	ImNodes::BeginNode(id);
 	ImNodes::BeginNodeTitleBar();
-	ImGui::TextUnformatted("Gain");
+	ImGui::TextUnformatted("Oscillator");
 	ImNodes::EndNodeTitleBar();
 
 	ImNodes::BeginInputAttribute(id << 8);
@@ -28,8 +27,18 @@ void Gain::display()
 
 	ImNodes::BeginStaticAttribute(id << 16);
 	ImGui::PushItemWidth(120.0f);
-	ImGui::SliderFloat("Gain", &params[Gain::GAIN], 0., 1.);
+	ImGui::SliderFloat("Frequency", &params[Oscillator::FREQ], 20., 10000.);
 	ImGui::PopItemWidth();
+	ImNodes::EndStaticAttribute();
+
+	static int selected = -1;
+
+	ImNodes::BeginStaticAttribute(id << 20);
+	// Simplified one-liner Combo() API, using values packed in a single constant string
+	ImGui::PushItemWidth(120.0f);
+	static int waveform = 0;
+	ImGui::Combo("Waveform", &waveform, "Saw\0Sine\0Square\0");
+	params[Oscillator::WAVEFORM] = waveform;
 	ImNodes::EndStaticAttribute();
 
 	ImNodes::BeginOutputAttribute(id << 24);

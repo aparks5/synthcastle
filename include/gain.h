@@ -1,22 +1,17 @@
-#ifndef GAIN_H_
-#define GAIN_H_
+#pragma once
 
-#include "module.h"
+#include "node.h"
 
-class Gain : public Module
+class Gain : public Node
 {
 public:
-	Gain(size_t sampleRate);
-	float operator()(float in) override;
-	float operator()() override { return 0.f; }
+	Gain(int id);
+	virtual ~Gain() {};
+	float process() override;
+	enum GainParams {
+		GAIN,
+		NUM_PARAMS
+	};
 
-	void setGaindB(float gaindB);
-	void setGainf(float gainf);
-
-private:
-	int floatTodB(float f) const;
-	float dBtoFloat(int db) const;
-	float m_fgain;
+	virtual void display() override;
 };
-
-#endif // GAIN_H_
