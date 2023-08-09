@@ -1,83 +1,80 @@
-﻿cmake_minimum_required (VERSION 3.8)
+# CMakeList.txt : CMake project for synthcastle, include source and define
+# project specific logic here.
+#
+cmake_minimum_required (VERSION 3.8)
+# ...set this right below the cmake_minimum_required
+set(CMAKE_TOOLCHAIN_FILE ./vcpkg/scripts/buildsystems/vcpkg.cmake)
+set(VCPKG_TARGET_TRIPLET x64-windows CACHE STRING "")
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# Enable Hot Reload for MSVC compilers if supported.
+if (POLICY CMP0141)
+  cmake_policy(SET CMP0141 NEW)
+  set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
+endif()
 
 project ("synthcastle")
 
 file(GLOB source
 	"${PROJECT_SOURCE_DIR}/include/*.h"
-	"${PROJECT_SOURCE_DIR}/include/moog/*.h"
-	"${PROJECT_SOURCE_DIR}/include/thirdparty/*.h"
 	"${PROJECT_SOURCE_DIR}/src/*.cpp"
 	"${PROJECT_SOURCE_DIR}/src/*.c")
 
 include_directories(
     ${PROJECT_SOURCE_DIR}/include 
-	${PROJECT_SOURCE_DIR}/include/moog
     ${PROJECT_SOURCE_DIR}/src)
 
+# Add source to this project's executable.
 add_executable (${PROJECT_NAME} ${source})
+ 
+if (CMAKE_VERSION VERSION_GREATER 3.12)
+  set_property(TARGET ${CMAKE_PROJECT_NAME} PROPERTY CXX_STANDARD 20)
+endif()
 
-#### spdlog
-add_subdirectory("C:/spdlog" "C:/spdlog/out" EXCLUDE_FROM_ALL)
-target_include_directories(${PROJECT_NAME} PRIVATE "C:/spdlog/include")
+# TODO: Add tests and install targets if needed.
+#vcpkg install imgui
 
+include_directories(./vcpkg/installed/x64-windows/include)
+link_directories(./vcpkg/installed/x64-windows/lib)
 
-#### libfftw
-add_subdirectory("C:/fftw3" "C:/fftw3/out" EXCLUDE_FROM_ALL)
-target_include_directories(${PROJECT_NAME} PRIVATE "C:/fftw3/api")
-target_link_libraries(${PROJECT_NAME} fftw3)
+if(MSVC)
+    add_compile_definitions(SDL_MAIN_HANDLED)
+    add_compile_options(/W4 /WX)
+else()
+    add_compile_options(-Wall -Wextra -Wpedantic -Werror)
+endif()
 
-#### PortAudio
-add_subdirectory("C:/portaudio" "C:/portaudio/out" EXCLUDE_FROM_ALL)
-target_link_libraries(${PROJECT_NAME} portaudio_static)
+find_package(PThreads4W REQUIRED)
+find_package(portaudio CONFIG REQUIRED)
+find_package(rtmidi CONFIG REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
+find_package(fftw3 CONFIG REQUIRED)
+find_package(SDL2 CONFIG REQUIRED)
+find_package(glfw3 CONFIG REQUIRED)
+find_package(glad CONFIG REQUIRED)
+find_package(imgui CONFIG REQUIRED)
 
-#### RtMidi
-add_subdirectory("C:/rtmidi " "C:/rtmidi/out" EXCLUDE_FROM_ALL)
-target_link_libraries(${PROJECT_NAME} rtmidi)
+# Imnodes
+add_library(imnodes)
+target_sources(imnodes PRIVATE
+    ${PROJECT_SOURCE_DIR}/include/imnodes.h
+    ${PROJECT_SOURCE_DIR}/include/imnodes_internal.h
+    ${PROJECT_SOURCE_DIR}/src/imnodes.cpp)
+target_include_directories(imnodes PUBLIC ${CMAKE_SOURCE_DIR})
+target_link_libraries(imnodes PUBLIC imgui::imgui)
 
-#### GLFW (OpenGL)
-set(GLFW_DIR "C:/GL/glfw")
-add_subdirectory("${GLFW_DIR}" "${GLFW_DIR}/out" EXCLUDE_FROM_ALL)
-target_include_directories(${PROJECT_NAME} PRIVATE "${GLFW_DIR}/include")
-target_include_directories(${PROJECT_NAME} PRIVATE "${GLFW_DIR}/deps")
-target_link_libraries(${PROJECT_NAME} "glfw" "${GLFW_LIBRARIES}")
+find_package(SDL2 CONFIG REQUIRED)
+    target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE
+        $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
+        $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>)
 
-#### glad (OpenGL)
-set(GLAD_DIR "C:/GL/glad")
-add_library("glad" "${GLAD_DIR}/src/glad.c")
-target_include_directories("glad" PRIVATE "${GLAD_DIR}/include")
-target_link_libraries(${PROJECT_NAME} "glad" "${CMAKE_DL_LIBS}")
-target_include_directories(${PROJECT_NAME} PRIVATE "${GLAD_DIR}/include")
-
-#### google test
-include(FetchContent)
-FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/609281088cfefc76f9d0ce82e1ff6c30cc3591e5.zip
-)
-# For Windows: Prevent overriding the parent project's compiler/linker settings
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
-
-#### unit tests
-enable_testing()
-
-file(GLOB tests 
-	"${PROJECT_SOURCE_DIR}/src/tests/*.cpp")
-
-add_executable(gtest_test ${tests})
-
-target_link_libraries(
-  gtest_test 
-  gtest_main
-)
-
-include(GoogleTest)
-gtest_discover_tests(
- gtest_test
-)
-
-
+target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE
+    "opengl32"
+    PThreads4W::PThreads4W
+    portaudio
+    RtMidi::rtmidi
+    spdlog::spdlog
+    FFTW3::fftw3
+    glfw
+    glad::glad
+    imgui::imgui)
 
