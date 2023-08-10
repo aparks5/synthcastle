@@ -27,8 +27,8 @@ PlateReverb::PlateReverb(size_t fs)
 
 
 	auto modfb = m_params.decayDiffusion1;
-	m_diffusionLFO1.freq(0.1f);
-	m_diffusionLFO2.freq(0.1f);
+	m_diffusionLFO1.params[Oscillator::FREQ] = 0.1f;
+	m_diffusionLFO2.params[Oscillator::FREQ] = 0.1f;
 
 	m_modulatedDiffusor.push_back(std::make_unique<Allpass>(fs, kModulationDiffusionMs[0], modfb));
 	m_modulatedDiffusor.push_back(std::make_unique<Allpass>(fs, kModulationDiffusionMs[1], modfb));
@@ -74,7 +74,7 @@ float PlateReverb::operator()(float in)
 
 	out += m_decayDiffusion2FeedbackSample;
 
-	(*m_modulatedDiffusor[static_cast<size_t>(ModulatedAllpasses::MODAP672)]).update(22.58 + (1.f * m_diffusionLFO1()));
+	(*m_modulatedDiffusor[static_cast<size_t>(ModulatedAllpasses::MODAP672)]).update(22.58 + (1.f * m_diffusionLFO1.process()));
 	(*m_modulatedDiffusor[static_cast<size_t>(ModulatedAllpasses::MODAP672)])(out);
 
 	float tmpRead = (*m_delays[0])();
@@ -92,7 +92,7 @@ float PlateReverb::operator()(float in)
 
 	m_decayDiffusion1FeedbackSample = out * m_params.decay;
 
-	(*m_modulatedDiffusor[static_cast<size_t>(ModulatedAllpasses::MODAP908)]).update(30.51 + (1.f * m_diffusionLFO1()));
+	(*m_modulatedDiffusor[static_cast<size_t>(ModulatedAllpasses::MODAP908)]).update(30.51 + (1.f * m_diffusionLFO1.process()));
 	(*m_modulatedDiffusor[static_cast<size_t>(ModulatedAllpasses::MODAP908)])(out);
 
 	tmpRead = (*m_delays[2])();

@@ -7,7 +7,7 @@ Chorus::Chorus(float sampleRate, float rate, float depth, float feedbackRatio)
 	, m_depth(depth)
 	, m_feedbackRatio(feedbackRatio)
 {
-	lfo.freq(rate);
+	lfo.params[Oscillator::FREQ] = rate;
 	delay.update(10, m_feedbackRatio);
 }
 
@@ -18,7 +18,7 @@ void Chorus::reset()
 
 void Chorus::update()
 {
-	float mod = m_depth * lfo();
+	float mod = m_depth * lfo.process();
 	delay.update((mod * 10.) + 15., m_feedbackRatio);
 }
 

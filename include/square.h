@@ -4,15 +4,13 @@
 
 #include "oscillator.h"
 
-class Square : public Oscillator<float>
+class Square : public Oscillator
 {
 public:
-    Square(float fs);
-    void freq(float frequency) override;
-    float operator()() override;
-    float operator()(float in) override {
-        return 0.f;
-    }
+    Square(int id);
+    float process() override;
+    void update() override;
+
 
 };
 

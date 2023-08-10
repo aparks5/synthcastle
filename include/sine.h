@@ -6,13 +6,13 @@
 
 constexpr auto TABLE_SIZE = 2048;
 
-class Sine : public Oscillator<float>
+class Sine : public Oscillator
 {
 public:
-    Sine(float fs);
-    void freq(float frequency) override;
-    float operator()() override;
-    float operator()(float in) override { return 0.f; }
+    Sine(int id);
+    float process() override;
+    float process(float in) override { return 0.f; }
+    void update() override;
 
 private:
 	float m_sine[TABLE_SIZE];

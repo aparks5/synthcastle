@@ -8,7 +8,6 @@
 #include <string>
 #include "synth.h"
 #include "sampler.h"
-#include "granular.h"
 #include "fdn.h"
 #include "platereverb.h"
 #include "mixer.h"
@@ -84,7 +83,6 @@ private:
     Sampler m_hat;
     Sampler m_clap;
     Sampler m_snare;
-    Granular m_granular;
     FeedbackDelayNetwork m_fdn;
     PlateReverb m_plate;
     bool m_bLoop;

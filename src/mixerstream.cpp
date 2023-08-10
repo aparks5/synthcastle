@@ -3,7 +3,6 @@
 #include "constants.h"
 #include "stdio.h"
 #include "math.h"
-#include "graphics.h"
 #include <iostream>
 #include <thread>
 #include <string>
@@ -14,7 +13,6 @@ MixerStream::MixerStream(size_t fs, CallbackData* userData)
 	: stream(0)
 	, m_callbackData(userData)
 	, m_bRecording(false)
-	, m_gfx(graphicsThread)
 	, m_mixer(fs)
 	, m_synth(fs)
 	, m_synth2(fs)
@@ -22,7 +20,6 @@ MixerStream::MixerStream(size_t fs, CallbackData* userData)
 	, m_hat(fs, "C:\\drum_samples\\hh01.wav")
 	, m_clap(fs, "C:\\drum_samples\\cp01.wav")
 	, m_snare(fs, "C:\\drum_samples\\sd01.wav")
-	, m_granular(fs, "C:\\drum_samples\\synthcastle-granular-from-ableton.aif")
 	, m_fdn(4)
 	, m_plate(fs)
 	, m_bLoop(false)
@@ -60,14 +57,12 @@ MixerStream::MixerStream(size_t fs, CallbackData* userData)
 	m_hat.setName("hat");
 	m_clap.setName("clap");
 	m_snare.setName("snare");
-	m_granular.setName("granular");
 
 	m_mixer.addInput(&m_synth);
 	m_mixer.addInput(&m_synth2);
 	m_mixer.addInput(&m_kick);
 	m_mixer.addInput(&m_hat);
 	m_mixer.addInput(&m_clap);
-	m_mixer.addInput(&m_granular);
 
 }
 
@@ -306,15 +301,6 @@ int MixerStream::paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 		// record and display only Left for now
 		writeBuff[sampIdx] = scratchBuff[0][sampIdx];
 	}
-
-
-	for (size_t sampIdx = 0; sampIdx < framesPerBuffer / numChans; sampIdx++) {
-		g_buffer[sampIdx] = scratchBuff[0][sampIdx];
-		g_buffer[sampIdx] = scratchBuff[1][sampIdx];
-	}
-
-
-	g_ready = true;
 
 	while (m_callbackData->commandsToAudioCallback->size_approx()) {
 		Commands cmd = *(m_callbackData->commandsToAudioCallback->peek());

@@ -14,7 +14,7 @@ Pan::Pan(size_t fs)
 	, m_rightGain(0.5)
 
 {
-	m_panLFO.freq(1.f);
+	m_panLFO.params[Oscillator::FREQ] = 1.f;
 }
 
 float Pan::operator()(float in)
@@ -26,7 +26,7 @@ void Pan::operator()(std::array<std::array<float, 256>, 2>& outputBuffer)
 {
 	for (size_t samp = 0; samp < outputBuffer[0].size(); samp++) {
 		if (m_bEnableLFO) {
-			update(m_panLFO() * m_panLFOdepth);
+			update(m_panLFO.process() * m_panLFOdepth);
 		}
 		else {
 			update(m_percent);

@@ -4,13 +4,13 @@
 
 #include "oscillator.h"
 
-class Saw : public Oscillator<float>
+class Saw : public Oscillator
 {
 public:
-    Saw(float fs);
-    void freq(float frequency) override;
-    float operator()() override;
-    float operator()(float in) override { return 0.f; }
+    Saw(int id);
+    float process() override;
+    float process(float in) override { return 0.f; }
+    void update() override;
 
 };
 

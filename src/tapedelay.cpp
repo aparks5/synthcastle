@@ -16,7 +16,7 @@ TapeDelay::TapeDelay(size_t sampleRate)
 	m_delay.update(250, 0.8);
 	m_hp.update(1000);
 	m_lp.update(0.7);
-	m_lfo.freq(0.1);
+	m_lfo.params[Oscillator::FREQ] = 0.1;
 	srand(time(NULL));
 }
 
@@ -42,7 +42,7 @@ float TapeDelay::operator()(float in)
 	temp = tanh(temp);
 	m_delay.write(temp);
 
-	m_delay.update(m_delayTimeMs + (m_lfo() * 2.f), 0.8);
+	m_delay.update(m_delayTimeMs + (m_lfo.process() * 2.f), 0.8);
 	
 
 	return m_delay();

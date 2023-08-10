@@ -4,13 +4,13 @@
 
 #include "oscillator.h"
 
-class Triangle : public Oscillator<float>
+class Triangle : public Oscillator
 {
 public:
-    Triangle(float fs);
-    void freq(float frequency) override;
-    float operator()() override;
-    float operator()(float in) override { return 0.f; }
+    Triangle(int id);
+    float process() override;
+    float process(float in) override { return 0.f; }
+    void update() override;
 
 private:
     bool m_bRising;

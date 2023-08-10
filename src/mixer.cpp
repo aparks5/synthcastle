@@ -84,8 +84,8 @@ float Mixer::operator()()
 		}
 		Gain trackGain(m_sampleRate);
 		trackGain.setGaindB(m_inputGains[moduleName]);
-		temp = trackGain(temp);
-		temp = m_overallGain(temp);
+		temp = trackGain.process(temp);
+		temp = m_overallGain.process(temp);
 		output += temp;
 
 	}

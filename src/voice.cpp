@@ -25,7 +25,7 @@ Voice::Voice(size_t fs)
 	m_moogFilter.freq(1000.f);
 	m_filtFreq = 1000.f;
 	m_moogFilter.q(3.f);
-	m_lfo.freq(1.f);
+	m_lfo.params[Oscillator::FREQ] = 1.f;
 }
 
 void Voice::update(VoiceParams params)
@@ -35,8 +35,8 @@ void Voice::update(VoiceParams params)
 	m_env.setParams(m_params.envParams);
 	m_moogFilter.q(m_params.filtQ);
 	m_moogFilter.freq(m_params.filtFreq);
-	m_lfo.freq(m_params.filtLFOFreq);
-	m_pitchLfo.freq(m_params.pitchLFOFreq);
+	m_lfo.params[Oscillator::FREQ] = m_params.filtLFOFreq;
+	m_pitchLfo.params[Oscillator::FREQ] = m_params.pitchLFOFreq;
 
 }
 
@@ -45,7 +45,7 @@ void Voice::modUpdate()
 {
 	if (m_params.bEnableFiltLFO) {
 
-		auto lfoSamp = m_lfo();
+		auto lfoSamp = m_lfo.process();
 		float filtLfo = (1 + lfoSamp * 0.5f);
 		m_moogFilter.freq(m_params.filtFreq * filtLfo);
 
@@ -56,7 +56,7 @@ void Voice::modUpdate()
 
 	if (m_params.bEnablePitchLFO)
 	{
-		auto pitchLfoSamp = m_pitchLfo();
+		auto pitchLfoSamp = m_pitchLfo.process();
 		modFreq(m_params.freq + (pitchLfoSamp * m_params.freq * m_params.pitchLFOdepth));
 		modFreqOsc2(m_params.freq + (pitchLfoSamp * m_params.freq * m_params.pitchLFOdepth));
 	}
@@ -70,8 +70,8 @@ float Voice::operator()()
 
 	// OSCILLATOR
 	oscillate(output);
-	m_lfo();
-	m_pitchLfo();
+	m_lfo.process();
+	m_pitchLfo.process();
 
 	// FILTER
 	m_moogFilter.apply(&output, 1);
@@ -79,12 +79,12 @@ float Voice::operator()()
 	// VCA 
 	m_env1out = m_env.apply(1);
 	m_gain.setGainf(m_env1out);
-	output = m_gain(output);
+	output = m_gain.process(output);
 	Gain gain(SAMPLE_RATE);
 
 	// OUTPUTGAIN
 	gain.setGaindB(-5);
-	output = gain(output);
+	output = gain.process(output);
 
 	return output;
 }
@@ -93,16 +93,16 @@ void Voice::oscillate(float& output)
 {
 	switch (m_params.osc) {
 	case OscillatorType::SAW:
-		output = m_saw();
+		output = m_saw.process();
 		break;
 	case OscillatorType::SINE:
-		output = m_sine();
+		output = m_sine.process();
 		break;
 	case OscillatorType::TRIANGLE:
-		output = m_tri();
+		output = m_tri.process();
 		break;
 	case OscillatorType::SQUARE:
-		output = m_square();
+		output = m_square.process();
 		break;
 	}
 
@@ -110,19 +110,19 @@ void Voice::oscillate(float& output)
 		auto osc2out = 0.f;
 		switch (m_params.osc2) {
 		case OscillatorType::SAW:
-			osc2out = m_saw2();
+			osc2out = m_saw2.process();
 			break;
 		case OscillatorType::SINE:
-			osc2out = m_sine2();
+			osc2out = m_sine2.process();
 			break;
 		case OscillatorType::TRIANGLE:
-			osc2out = m_tri2();
+			osc2out = m_tri2.process();
 			break;
 		case OscillatorType::SQUARE:
-			osc2out = m_square2();
+			osc2out = m_square2.process();
 			break;
 		}
-		output += 0.707 * m_osc2gain(osc2out);
+		output += 0.707 * m_osc2gain.process(osc2out);
 	}
 
 }
@@ -141,19 +141,19 @@ void Voice::updateFreq(float freq)
 
 void Voice::modFreq(float freq)
 {
-	m_saw.freq(freq);
-	m_tri.freq(freq);
-	m_square.freq(freq);
-	m_sine.freq(freq);
+	m_saw.params[Oscillator::FREQ] = freq;
+	m_tri.params[Oscillator::FREQ] = freq;
+	m_square.params[Oscillator::FREQ] = freq;
+	m_sine.params[Oscillator::FREQ] = freq;
 }
 
 void Voice::modFreqOsc2(float freq)
 {
 	freq = freq * semitoneToRatio(m_params.osc2coarse) * semitoneToRatio(m_params.osc2fine);
-	m_saw2.freq(freq);
-	m_tri2.freq(freq);
-	m_square2.freq(freq);
-	m_sine2.freq(freq);
+	m_saw2.params[Oscillator::FREQ] = freq;
+	m_tri2.params[Oscillator::FREQ] = freq;
+	m_square2.params[Oscillator::FREQ] = freq;
+	m_sine2.params[Oscillator::FREQ] = freq;
 }
 
 void Voice::noteOn(int noteVal)

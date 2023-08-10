@@ -7,20 +7,19 @@
 #include <iostream>
 
 
-Triangle::Triangle(float fs)
-	: Oscillator<float>(fs, 0.f, 0.f, 0.f)
+Triangle::Triangle(int id)
+	: Oscillator(id)
 	, m_bRising(true)
 {
 }
 
-void Triangle::freq(float frequency)
+void Triangle::update()
 {
-	m_freq = frequency;
-	auto samplesPerCycle = 1. * m_sampleRate / m_freq;
+	auto samplesPerCycle = 1. * m_sampleRate / params[Oscillator::FREQ];
 	m_step = 4.0f / samplesPerCycle;
 }
 
-float Triangle::operator()()
+float Triangle::process()
 {
 	if ((m_out >= 0.9999f)) {
 		m_bRising = false;

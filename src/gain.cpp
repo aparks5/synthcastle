@@ -10,11 +10,6 @@ Gain::Gain(int id)
     }
 }
 
-float Gain::process()
-{
-    return 0;
-}
-
 void Gain::display()
 {
 	ImNodes::BeginNode(id);
@@ -38,4 +33,24 @@ void Gain::display()
 	ImGui::TextUnformatted("Left Output");
 	ImNodes::EndOutputAttribute();
 	ImNodes::EndNode();
+}
+
+void Gain::setGaindB(float gaindB)
+{
+	m_gain = dBtoFloat(gaindB);
+}
+
+int Gain::floatTodB(float f) const
+{
+	return 20 * log10(f);
+}
+
+float Gain::dBtoFloat(int db) const
+{
+	return pow(10, db / 20.f);
+}
+
+float Gain::process(float in)
+{
+	return in * m_gain;
 }

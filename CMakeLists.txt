@@ -21,6 +21,8 @@ file(GLOB source
 
 include_directories(
     ${PROJECT_SOURCE_DIR}/include 
+    ${PROJECT_SOURCE_DIR}/include/moog
+    ${PROJECT_SOURCE_DIR}/include/thirdparty
     ${PROJECT_SOURCE_DIR}/src)
 
 # Add source to this project's executable.

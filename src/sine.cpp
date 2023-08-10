@@ -6,10 +6,8 @@
 #include <iostream>
 #include "util.h"
 
-constexpr auto NUM_SECONDS = (2);
-
-Sine::Sine(float fs)
-	: Oscillator<float>(fs, 0.f, 0.f, 0.f)
+Sine::Sine(int id)
+	: Oscillator(id)
 {
 	// initialize look-up table
 	for (auto i = 0; i < TABLE_SIZE; i++) {
@@ -18,13 +16,12 @@ Sine::Sine(float fs)
 }
 
 
-void Sine::freq(float frequency)
+void Sine::update()
 {
-	m_freq = frequency;
-	m_step = (TABLE_SIZE * m_freq) / m_sampleRate * 1.0f;
+	m_step = (TABLE_SIZE * params[Oscillator::FREQ]) / m_sampleRate * 1.0f;
 }
 
-float Sine::operator()()
+float Sine::process()
 {
 	m_out += m_step;
 
