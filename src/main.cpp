@@ -1,8 +1,11 @@
 #include "node_editor.h"
-#include "color_node_editor.h"
 #include "oscillator.h"
 #include "gain.h"
 #include "signal_flow_editor.h"
+
+#include "portaudio.h"
+#include "portaudiohandler.h"
+#include "windows.h"
 
 #include <imgui.h>
 #include <imgui_impl_sdl2.h>
@@ -15,47 +18,121 @@
 #include <SDL2/SDL_opengl.h>
 #endif
 
+
 #include <stdio.h>
-
 #include <iostream>
-#include "imgui-piano.h"
-
 #include "mixer.h"
+#include <mutex>
 
 struct AudioData
 {
     std::vector<std::vector<float>> output;
     float sampleRate;
+    const NodeGraph* graph;
 };
 
-void audio_callback(void* user_data, uint8_t* raw_buffer, int bytes)
+float evaluate(const NodeGraph& graph)
 {
-    float* buffer = (float*)raw_buffer;
-    int nChans = 2;
-    int sampsPerChan = bytes / sizeof(float) / nChans;
-    AudioData* data = (AudioData*)user_data;
-
-    // output is interleaved LRLRLR
-    for (int i = 0; i < sampsPerChan; i++) {
-        for (size_t ch = 0; ch < nChans; ch++) {
-            buffer[(i * nChans) + ch] = (float)data->output[ch][i];
-        }
+    int root_node = graph.m_root;
+    if (root_node == -1) {
+        return 0.f;
     }
+	std::stack<int> postorder;
+	dfs_traverse(graph, root_node, [&postorder](const int node_id) -> void { postorder.push(node_id); });
+
+	std::stack<float> value_stack;
+	while (!postorder.empty())
+	{
+		const int id = postorder.top();
+		postorder.pop();
+		const auto& pNode = graph.node(id);
+
+		switch (pNode->type) {
+		case NodeType::OSCILLATOR:
+		{
+
+			pNode->update();
+            if (!value_stack.empty()) {
+                auto mod = value_stack.top();
+                value_stack.pop();
+                if (mod != INVALID_PARAM_VALUE) {
+                    pNode->params[Oscillator::MODFREQ] = mod;
+                }
+            }
+			auto temp = pNode->process();
+			value_stack.push(temp);
+		}
+		break;
+		case NodeType::GAIN:
+		{
+            if (!value_stack.empty()) {
+                auto in = value_stack.top();
+                value_stack.pop();
+				if (!value_stack.empty()) {
+					auto mod = value_stack.top();
+					value_stack.pop();
+					pNode->params[Gain::GAINMOD] = abs(mod);
+				}
+				auto val = pNode->process(in);
+				value_stack.push(val);
+            }
+		}
+		break;
+		case NodeType::VALUE:
+		{
+             //if the edge does not have an edge connecting to another node, then just use the value
+            // at this node. it means the node's input pin has not been connected to anything and
+            // the value comes from the node's ui.
+			if (graph.num_edges_from_node(id) == 0ull) {
+				value_stack.push(pNode->value);
+			}
+		}
+		break;
+		default:
+			break;
+		}
+	}
+
+	// The final output node isn't evaluated in the loop
+	float val = 0.;
+	if (!value_stack.empty()) {
+		val = 0.9 * value_stack.top();
+		value_stack.pop(); // stack should be empty now
+	}
+	return val;
 }
 
-void testDevices() {
-    for (uint8_t i = 0; i < SDL_GetNumAudioDrivers(); ++i) {
-        printf("Audio driver %d: %s\n", i, SDL_GetAudioDriver(i));
+static int paCallbackMethod(const void* inputBuffer, void* outputBuffer,
+    unsigned long framesPerBuffer,
+    const PaStreamCallbackTimeInfo* timeInfo,
+    PaStreamCallbackFlags statusFlags,
+    void* userData)
+{
+    AudioData* data = (AudioData*)userData;
+
+    auto* out = (float*)outputBuffer;
+
+    (void)timeInfo; /* Prevent unused variable warnings. */
+    (void)statusFlags;
+    (void)inputBuffer;
+
+    for (size_t sampIdx = 0; sampIdx < framesPerBuffer; sampIdx++) {
+        float output = 0.f;
+        output = evaluate(*(data->graph));
+
+        for (size_t chanIdx = 0; chanIdx < 2; chanIdx++) {
+            // write interleaved output -- L/R
+            *out++ = output;
+        }
     }
 
-    std::cout << "current audio driver is " << SDL_GetCurrentAudioDriver() << std::endl;
+    return paContinue;
+}
 
-    int nbDevice = SDL_GetNumAudioDevices(0);
-
-    for (int i = 0; i < nbDevice; ++i) {
-        std::cout << "device num" << i << ": ";
-        std::cout << SDL_GetAudioDeviceName(i, 0) << std::endl;
-    }
+static void paStreamFinishedMethod()
+{
+    printf("Finished playback.");
+    return;
 }
 
 const char* initSDL()
@@ -65,10 +142,6 @@ const char* initSDL()
         printf("Error: %s\n", SDL_GetError());
     }
 
-    // YOU WILL NOT GET SOUND WITHOUT THIS ENV VAR
-    _putenv("SDL_AUDIODRIVER=DirectSound");
-
-    SDL_Init(SDL_INIT_AUDIO);
     // Decide GL+GLSL versions
 #if defined(IMGUI_IMPL_OPENGL_ES2)
     // GL ES 2.0 + GLSL 100
@@ -102,16 +175,10 @@ const char* initSDL()
     return glsl_version;
 }
 
-bool pianoCallback(void* UserData, int Msg, int Key, float Vel) {
-    if (Key >= 128) return false; // midi max keys
-    /*if (Msg == NoteGetStatus) return KeyPresed[Key];
-    if (Msg == NoteOn) { KeyPresed[Key] = true; Send_Midi_NoteOn(Key, Vel * 127); }
-    if (Msg == NoteOff) { KeyPresed[Key] = false; Send_Midi_NoteOff(Key, Vel * 127); }*/
-    return true;
-}
-
 int main(int, char**)
 {
+	PaStream* stream;
+	PortAudioHandler paInit;
 
     const char* glsl_version = initSDL();
 
@@ -146,27 +213,58 @@ int main(int, char**)
     ImGui_ImplOpenGL3_Init(glsl_version);
 
     // Set up audio output
-    size_t bufSize = 2048;
+    size_t bufSize = 8192;
     AudioData audioData; // poll the editor if there is an output node to fill the buffer in audioData
-    std::vector<float> left(bufSize);
-    std::vector<float> right(bufSize);
-    audioData.output.push_back(left);
-    audioData.output.push_back(right);
-    SDL_AudioSpec want;
-    size_t sample_nr = 0;
-    want.freq = 44100; // number of samples per second
-    want.format = AUDIO_F32; // sample type (here: signed short i.e. 16 bit)
-    want.channels = 2;
-    want.samples = bufSize; // buffer-size
-    want.callback = audio_callback; // function SDL calls periodically to refill the buffer
-    want.userdata = &audioData; // counter, keeping track of current sample number
+    audioData.graph = signalFlowEditor.graph();
 
-    SDL_AudioSpec have;
-    SDL_AudioDeviceID device;
-    testDevices();
-    auto num = SDL_GetNumAudioDevices(0);
-	device = SDL_OpenAudioDevice(SDL_GetAudioDeviceName(1, 0), 0, &want, &have, 0);
-	SDL_PauseAudioDevice(device, 0);
+    PaStreamParameters outputParameters;
+
+    int index = Pa_GetDefaultOutputDevice();
+    outputParameters.device = index;
+    if (outputParameters.device == paNoDevice) {
+        return false;
+    }
+
+    const PaDeviceInfo* pInfo = Pa_GetDeviceInfo(index);
+    if (pInfo != 0)
+    {
+        printf("Output device name: '%s'\r", pInfo->name);
+    }
+
+    outputParameters.channelCount = 2;       /* stereo output */
+    outputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
+    outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
+    outputParameters.hostApiSpecificStreamInfo = NULL;
+
+    PaError err = Pa_OpenStream(
+        &stream,
+        NULL, /* no input */
+        &outputParameters,
+        44100,
+        1024,
+        paClipOff,      /* we won't output out of range samples so don't bother clipping them */
+        &paCallbackMethod,
+        &audioData            /* Using 'this' for userData so we can cast to MixerStream* in paCallback method */
+    );
+
+    if (err != paNoError)
+    {
+        printf("Failed to open stream to device !!!");
+    }
+
+    err = Pa_StartStream(stream);
+    if (err != paNoError)
+    {
+        printf("Failed to start stream!!!");
+    }
+
+//    err = Pa_SetStreamFinishedCallback(stream, &paStreamFinishedMethod);
+
+    if (err != paNoError)
+    {
+        Pa_CloseStream(stream);
+        stream = 0;
+    }
 
    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
@@ -192,14 +290,9 @@ int main(int, char**)
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
-        static int PrevNoteActive = -1;
-        ImGui_PianoKeyboard("PianoTest", ImVec2(1024, 100), &PrevNoteActive, 21, 108, pianoCallback, nullptr, nullptr);
-
         ImGui::ShowDemoWindow(nullptr);
         signalFlowEditor.show();
-
-        //NodeEditor::NodeEditorShow();
-        // edit = NodeEditor::NodeEditorAccess();
+        audioData.graph = signalFlowEditor.graph();
 
         // Rendering
         ImGui::Render();

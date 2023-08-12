@@ -7,10 +7,17 @@
 #include <iostream>
 
 
-Triangle::Triangle(int id)
-	: Oscillator(id)
+Triangle::Triangle()
+	: Oscillator()
 	, m_bRising(true)
 {
+}
+
+Triangle::Triangle(int sampleRate)
+	: Oscillator()
+	, m_bRising(true)
+{
+	m_sampleRate = sampleRate;
 }
 
 void Triangle::update()

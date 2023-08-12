@@ -5,13 +5,17 @@
 class Oscillator : public Node
 {
 public:
-	Oscillator(int id);
+	Oscillator();
 	virtual ~Oscillator() {};
 	float process() override;
 
 	enum OscillatorParams {
 		FREQ,
+		OUTPUT_ID,
+		MODFREQ_ID,
+		MODFREQ,
 		WAVEFORM,
+		NODE_ID,
 		NUM_PARAMS
 	};
 

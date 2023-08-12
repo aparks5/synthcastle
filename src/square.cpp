@@ -6,9 +6,15 @@
 
 #include <iostream>
 
-Square::Square(int id)
-	: Oscillator(id)
+Square::Square()
+	: Oscillator()
 {
+}
+
+Square::Square(int sampleRate)
+	: Oscillator()
+{
+	m_sampleRate = sampleRate;
 }
 
 void Square::update()

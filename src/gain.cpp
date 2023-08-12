@@ -8,29 +8,48 @@ Gain::Gain(int id)
     for (size_t idx = 0; idx < GainParams::NUM_PARAMS; idx++) {
         params.push_back(0);
     }
+
+	params[Gain::GAINMOD] = 1.f;
 }
+
+Gain::Gain()
+    : Node(NodeType::GAIN, -1)
+{
+    for (size_t idx = 0; idx < GainParams::NUM_PARAMS; idx++) {
+        params.push_back(0);
+    }
+}
+
+void Gain::link(const float* src, const float* dst)
+{
+	m_map[dst] = src;
+}
+
+
 
 void Gain::display()
 {
-	ImNodes::BeginNode(id);
+	ImNodes::BeginNode(params[GainParams::NODE_ID]);
 	ImNodes::BeginNodeTitleBar();
 	ImGui::TextUnformatted("Gain");
 	ImNodes::EndNodeTitleBar();
 
-	ImNodes::BeginInputAttribute(id << 8);
-	ImGui::TextUnformatted("Mono Channel");
+	ImNodes::BeginInputAttribute(params[GainParams::INPUT_ID]);
+	ImGui::TextUnformatted("In");
 	ImNodes::EndInputAttribute();
 
-	ImNodes::BeginStaticAttribute(id << 16);
-	ImGui::PushItemWidth(120.0f);
-	ImGui::SliderFloat("Gain", &params[Gain::GAIN], 0., 1.);
-	ImGui::PopItemWidth();
-	ImNodes::EndStaticAttribute();
+	ImNodes::BeginInputAttribute(params[GainParams::GAINMOD_ID]);
+	ImGui::TextUnformatted("Mod");
+	ImNodes::EndInputAttribute();
 
-	ImNodes::BeginOutputAttribute(id << 24);
-	const float text_width = ImGui::CalcTextSize("Left Output").x;
-	ImGui::Indent(120.f + ImGui::CalcTextSize("Frequency").x - text_width);
-	ImGui::TextUnformatted("Left Output");
+	ImGui::PushItemWidth(120.0f);
+	ImGui::SliderFloat("Gain", &params[GainParams::GAIN], 0., 1.);
+	ImGui::PopItemWidth();
+
+	ImNodes::BeginOutputAttribute(params[GainParams::NODE_ID]);
+	const float text_width = ImGui::CalcTextSize("Out").x;
+	ImGui::Indent(120.f + ImGui::CalcTextSize("Out").x - text_width);
+	ImGui::TextUnformatted("Out");
 	ImNodes::EndOutputAttribute();
 	ImNodes::EndNode();
 }
@@ -52,5 +71,5 @@ float Gain::dBtoFloat(int db) const
 
 float Gain::process(float in)
 {
-	return in * m_gain;
+	return in * params[Gain::GAIN] * params[Gain::GAINMOD];
 }

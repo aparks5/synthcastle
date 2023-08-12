@@ -5,8 +5,14 @@
 class Output : public Node
 {
 public:
-	Output(int id);
+	Output();
 	virtual ~Output() {};
 	float process() override;
 	void display() override;
+
+	enum OutputParams {
+		INPUT_ID,
+		NODE_ID,
+		NUM_PARAMS
+	};
 };

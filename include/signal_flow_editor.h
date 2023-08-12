@@ -3,9 +3,12 @@
 #include "imnodes.h"
 #include "node.h"
 #include "nodetypes.h"
-#include "graph.h"
+#include "nodegraph.h"
 #include <vector>
 #include <memory>
+#include <mutex>
+
+#define INVALID_PARAM_VALUE (-128)
 
 class SignalFlowEditor
 {
@@ -20,14 +23,19 @@ public:
 	};
 
 	void show();
-
+	float output();
+	int root() { return m_rootNodeId; }
+	const NodeGraph* graph() const; // returns a reference, not thread safe
+	
 private:
+	std::mutex m_mut;
 	ImNodesEditorContext* m_pContext;
-	Graph<Node> m_graph;
+	NodeGraph m_graph;
 	std::vector<std::shared_ptr<Node>> m_nodes; // need pointers to call process() and display()
 	std::vector<Link> m_links;
 	int m_currentId;
 	int m_rootNodeId;
+	float evaluate(const NodeGraph& graph, const int root_node);
 
 };
 

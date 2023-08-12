@@ -7,7 +7,8 @@
 class Square : public Oscillator
 {
 public:
-    Square(int id);
+    Square();
+    Square(int sampleRate);
     float process() override;
     void update() override;
 

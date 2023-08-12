@@ -9,7 +9,8 @@ constexpr auto TABLE_SIZE = 2048;
 class Sine : public Oscillator
 {
 public:
-    Sine(int id);
+    Sine();
+    Sine(int sampleRate);
     float process() override;
     float process(float in) override { return 0.f; }
     void update() override;

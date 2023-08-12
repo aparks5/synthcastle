@@ -3,58 +3,12 @@
 #include "gain.h"
 #include "oscillator.h"
 #include "output.h"
-#include "graph.h"
+#include "value.h"
+#include "nodegraph.h"
 #include <stack>
 #include <SDL_scancode.h>
-
+#include "sine.h"
 #include <memory>
-
-// props to imnode color_node_editor.cpp for this genius algorithm
-float evaluate(const Graph<Node>& graph, const int root_node)
-{
-	std::stack<int> postorder;
-	dfs_traverse(graph, root_node, [&postorder](const int node_id) -> void { postorder.push(node_id); });
-
-	std::stack<float> value_stack;
-	while (!postorder.empty())
-	{
-		const int id = postorder.top();
-		postorder.pop();
-		const Node node = graph.node(id);
-
-		switch (node.type)
-		{
-		case NodeType::GAIN:
-		{
-			const float input = value_stack.top();
-			value_stack.pop();
-			const float gain = value_stack.top();
-			value_stack.pop();
-			value_stack.push(input * gain);
-		}
-		break;
-		case NodeType::VALUE:
-		{
-			// If the edge does not have an edge connecting to another node, then just use the value
-			// at this node. It means the node's input pin has not been connected to anything and
-			// the value comes from the node's UI.
-			if (graph.num_edges_from_node(id) == 0ull)
-			{
-				value_stack.push(node.value);
-			}
-		}
-		break;
-		default:
-			break;
-		}
-	}
-
-	// The final output node isn't evaluated in the loop -- instead we just pop
-	// the three values which should be in the stack.
-	auto val = value_stack.top();
-	value_stack.pop(); // stack should be empty now
-	return val;
-}
 
 SignalFlowEditor::SignalFlowEditor()
 	: m_pContext(nullptr)
@@ -79,7 +33,12 @@ SignalFlowEditor::~SignalFlowEditor()
 {
 	ImNodes::EditorContextFree(m_pContext);
 }
-	
+
+const NodeGraph* SignalFlowEditor::graph() const {
+	// NodeGraph copy(m_graph); <-- too many heap allocations, eventually causes crash
+	return &m_graph;
+}
+
 void SignalFlowEditor::show()
 {
 	ImNodes::EditorContextSet(m_pContext);
@@ -91,66 +50,91 @@ void SignalFlowEditor::show()
 
     ImNodes::BeginNodeEditor();
 
-    int node_id = 0;
-
     if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
         ImNodes::IsEditorHovered()) {
         if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_A)) {
-            node_id = ++m_currentId;
-                ImNodes::SetNodeScreenSpacePos(node_id, ImGui::GetMousePos());
-                ImNodes::SnapNodeToGrid(node_id);
-				auto newOsc = std::make_shared<Oscillator>(node_id);
-				m_nodes.push_back(newOsc);
+				auto oscNode = std::make_shared<Sine>();
+				auto oscMod = std::make_shared<Value>(INVALID_PARAM_VALUE);
+				auto oscModId = m_graph.insert_node(oscMod);
+				auto id = m_graph.insert_node(oscNode);
+				oscNode->params[Oscillator::MODFREQ_ID] = oscModId;
+				oscNode->params[Oscillator::NODE_ID] = id;
+				m_graph.insert_edge(id, oscModId);
+				m_nodes.push_back(oscNode);
+                const ImVec2 click_pos = ImGui::GetMousePosOnOpeningCurrentPopup();
+				ImNodes::SetNodeScreenSpacePos(id, click_pos);
         }
 		else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_G)) {
-			node_id = ++m_currentId;
-			ImNodes::SetNodeScreenSpacePos(node_id, ImGui::GetMousePos());
-			ImNodes::SnapNodeToGrid(node_id);
-			auto newGain = std::make_shared<Gain>(node_id);
-			m_nodes.push_back(newGain);
+			auto gainNode = std::make_shared<Gain>();
+			auto gainIn = std::make_shared<Value>(0.f);
+			auto gainMod = std::make_shared<Value>(1.f);
+			// you need to assign this gain id for linking
+			auto gainModId = m_graph.insert_node(gainMod);
+			auto gainInId = m_graph.insert_node(gainIn);
+			auto gainId = m_graph.insert_node(gainNode);
+			gainNode->params[Gain::NODE_ID] = gainId;
+			gainNode->params[Gain::INPUT_ID] = gainInId;
+			gainNode->params[Gain::GAINMOD_ID] = gainModId;
+			m_graph.insert_edge(gainId, gainModId);
+			m_graph.insert_edge(gainId, gainInId);
+			m_nodes.push_back(gainNode);
+			const ImVec2 click_pos = ImGui::GetMousePosOnOpeningCurrentPopup();
+			ImNodes::SetNodeScreenSpacePos(gainId, click_pos);
 		}
 		else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_O)) {
-			node_id = ++m_currentId;
-			ImNodes::SetNodeScreenSpacePos(node_id, ImGui::GetMousePos());
-			ImNodes::SnapNodeToGrid(node_id);
-			auto newOutput = std::make_shared<Output>(node_id);
-			m_nodes.push_back(newOutput);
+			auto outputNode = std::make_shared<Output>();
+			auto valNode = std::make_shared<Value>(0.f);
+			auto valNodeId = m_graph.insert_node(valNode);
+			auto outputId = m_graph.insert_node(outputNode);
+			m_graph.insert_edge(outputId, valNodeId);
+			outputNode->params[Output::NODE_ID] = outputId;
+			outputNode->params[Output::INPUT_ID] = valNodeId;
+			m_nodes.push_back(outputNode);
+			const ImVec2 click_pos = ImGui::GetMousePosOnOpeningCurrentPopup();
+			ImNodes::SetNodeScreenSpacePos(outputId, click_pos);
+			m_rootNodeId = outputId;
+			m_graph.setRoot(m_rootNodeId);
 		}
 
     }
 
-    for (auto node : m_nodes) {
+	for (auto& node : m_nodes) {
 		// with overriding, no stupid case-switch needed
 		node->display();
-    }
+	}
 
-    for (const Link& link : m_links) {
-        ImNodes::Link(link.id, link.start_attr, link.end_attr);
-    }
+	for (const auto& edge : m_graph.edges()) {
+		// If edge doesn't start at value, then it's an internal edge, i.e.
+		// an edge which links a node's operation to its input. We don't
+		// want to render node internals with visible links.
+		auto node = m_graph.node(edge.from);
+		if (node->type != NodeType::VALUE) {
+			continue;
+		}
+
+		ImNodes::Link(edge.id, edge.from, edge.to);
+	}
+
 
     ImNodes::EndNodeEditor();
 
-    {
-        Link link;
-        if (ImNodes::IsLinkCreated(&link.start_attr, &link.end_attr))
-        {
-			link.id = ++m_currentId;
-            m_links.push_back(link);
-        }
-    }
+	{
+		int startAttr = 0;
+		int endAttr = 0;
+		bool bSnap = false;
+		if (ImNodes::IsLinkCreated(&startAttr, &endAttr, &bSnap)) {
+			const NodeType startType = m_graph.node(startAttr)->type;
+			const NodeType endType = m_graph.node(endAttr)->type;
 
-    {
-        int link_id;
-        if (ImNodes::IsLinkDestroyed(&link_id))
-        {
-            auto iter = std::find_if(
-                m_links.begin(), m_links.end(), [link_id](const Link& link) -> bool {
-                    return link.id == link_id;
-                });
-            assert(iter != m_links.end());
-            m_links.erase(iter);
-        }
-    }
+			const bool bLinkValid = (startType != endType);
+			if (bLinkValid) {
+				if (startType != NodeType::VALUE) {
+					std::swap(startAttr, endAttr);
+				}
+				m_graph.insert_edge(startAttr, endAttr);
+			}
+		}
+	}
 
     ImGui::End();
 }

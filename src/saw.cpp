@@ -1,9 +1,15 @@
 /// Copyright (c) 2021. Anthony Parks. All rights reserved.
 #include "saw.h" 
 
-Saw::Saw(int id)
-	: Oscillator(id)
+Saw::Saw()
+	: Oscillator()
 {
+}
+
+Saw::Saw(int sampleRate)
+	: Oscillator()
+{
+	m_sampleRate = sampleRate;
 }
 
 void Saw::update()

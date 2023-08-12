@@ -7,7 +7,8 @@
 class Triangle : public Oscillator
 {
 public:
-    Triangle(int id);
+    Triangle();
+    Triangle(int sampleRate);
     float process() override;
     float process(float in) override { return 0.f; }
     void update() override;

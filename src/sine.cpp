@@ -6,9 +6,19 @@
 #include <iostream>
 #include "util.h"
 
-Sine::Sine(int id)
-	: Oscillator(id)
+Sine::Sine()
+	: Oscillator()
 {
+	// initialize look-up table
+	for (auto i = 0; i < TABLE_SIZE; i++) {
+		m_sine[i] = static_cast<float>(std::sin((i * 1.0f / TABLE_SIZE) * M_PI * 2.0f));
+	}
+}
+
+Sine::Sine(int sampleRate)
+	: Oscillator()
+{
+	m_sampleRate = sampleRate;
 	// initialize look-up table
 	for (auto i = 0; i < TABLE_SIZE; i++) {
 		m_sine[i] = static_cast<float>(std::sin((i * 1.0f / TABLE_SIZE) * M_PI * 2.0f));
@@ -18,7 +28,15 @@ Sine::Sine(int id)
 
 void Sine::update()
 {
-	m_step = (TABLE_SIZE * params[Oscillator::FREQ]) / m_sampleRate * 1.0f;
+	float freq = params[Oscillator::FREQ];
+	if (params[Oscillator::MODFREQ] != 0) {
+		freq = params[Oscillator::FREQ] + (50 * params[Oscillator::MODFREQ]);
+	}
+	
+	if (((TABLE_SIZE * freq) / m_sampleRate * 1.0f) != m_step) {
+		m_step = (TABLE_SIZE * freq) / m_sampleRate * 1.0f;
+		//m_out = 0;
+	}
 }
 
 float Sine::process()

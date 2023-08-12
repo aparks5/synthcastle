@@ -7,7 +7,8 @@
 class Saw : public Oscillator
 {
 public:
-    Saw(int id);
+    Saw();
+    Saw(int sampleRate);
     float process() override;
     float process(float in) override { return 0.f; }
     void update() override;
