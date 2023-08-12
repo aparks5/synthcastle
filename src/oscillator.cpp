@@ -2,14 +2,11 @@
 #include "imnodes.h"
 
 Oscillator::Oscillator()
-    : Node(NodeType::OSCILLATOR, -1) 
+    : Node(NodeType::OSCILLATOR, 0., NUM_PARAMS) 
 	, m_step(0.)
 	, m_sampleRate(44100)
 	, m_out(0.)
 {
-    for (size_t idx = 0; idx < OscillatorParams::NUM_PARAMS; idx++) {
-        params.push_back(0);
-    }
 }
 
 float Oscillator::process()

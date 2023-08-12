@@ -11,20 +11,23 @@ public:
 		, value(0.)
 	{}
 
-	Node(NodeType type, float val)
+	Node(NodeType type, float val, int numParams)
 		: type(type)
 		, value(val)
+		, params(numParams)
 	{}
 
 	Node(const Node& n) {
 		type = n.type;
 		value = n.value;
-		params = n.params;
 	}
 
 	NodeType type;
-	std::vector<float> params;
 	float value;
+	// subclasses should initialize this 
+	// based on NUM_PARAMS at end of params enum
+	// per class
+	std::vector<float> params;
 
 	virtual ~Node() {};
 	virtual float process(float in) { return 0; }

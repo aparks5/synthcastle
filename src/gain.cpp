@@ -3,29 +3,15 @@
 #include "imnodes.h"
 
 Gain::Gain(int id)
-    : Node(NodeType::GAIN, id)
+    : Node(NodeType::GAIN, id, NUM_PARAMS)
 {
-    for (size_t idx = 0; idx < GainParams::NUM_PARAMS; idx++) {
-        params.push_back(0);
-    }
-
 	params[Gain::GAINMOD] = 1.f;
 }
 
 Gain::Gain()
-    : Node(NodeType::GAIN, -1)
+    : Node(NodeType::GAIN, -1, NUM_PARAMS)
 {
-    for (size_t idx = 0; idx < GainParams::NUM_PARAMS; idx++) {
-        params.push_back(0);
-    }
 }
-
-void Gain::link(const float* src, const float* dst)
-{
-	m_map[dst] = src;
-}
-
-
 
 void Gain::display()
 {

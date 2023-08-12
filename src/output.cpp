@@ -2,11 +2,8 @@
 #include "imnodes.h"
 
 Output::Output()
-    : Node(NodeType::OUTPUT)
+    : Node(NodeType::OUTPUT, 0., NUM_PARAMS)
 {
-	for (size_t idx = 0; idx < Output::NUM_PARAMS; idx++) {
-		params.push_back(0);
-	}
 }
 
 float Output::process()
@@ -21,12 +18,12 @@ void Output::display()
 	ImGui::TextUnformatted("Output");
 	ImNodes::EndNodeTitleBar();
 
-	ImNodes::BeginInputAttribute(params[Output::INPUT_ID]);
-	ImGui::TextUnformatted("In");
-	ImGui::SameLine();
-	ImGui::PushItemWidth(120);
-	ImGui::SliderFloat("##hidelabel", &value, -1.f, 1.f);
-	ImGui::PopItemWidth();
+	ImNodes::BeginInputAttribute(params[Output::INPUT_L_ID]);
+	ImGui::TextUnformatted("Left Out");
+	ImNodes::EndInputAttribute();
+
+	ImNodes::BeginInputAttribute(params[Output::INPUT_R_ID]);
+	ImGui::TextUnformatted("Right Out");
 	ImNodes::EndInputAttribute();
 
 	ImNodes::EndNode();

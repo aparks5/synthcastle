@@ -31,11 +31,11 @@ struct AudioData
     const NodeGraph* graph;
 };
 
-float evaluate(const NodeGraph& graph)
+std::tuple<float,float> evaluate(const NodeGraph& graph)
 {
     int root_node = graph.m_root;
     if (root_node == -1) {
-        return 0.f;
+        return std::make_tuple(0.,0.);
     }
 	std::stack<int> postorder;
 	dfs_traverse(graph, root_node, [&postorder](const int node_id) -> void { postorder.push(node_id); });
@@ -52,20 +52,17 @@ float evaluate(const NodeGraph& graph)
 		{
 
 			pNode->update();
-            if (!value_stack.empty()) {
-                auto mod = value_stack.top();
-                value_stack.pop();
-                if (mod != INVALID_PARAM_VALUE) {
-                    pNode->params[Oscillator::MODFREQ] = mod;
-                }
-                if (!value_stack.empty()) {
-                    auto depth = value_stack.top();
-                    value_stack.pop();
-                    if (depth != INVALID_PARAM_VALUE) {
-                        pNode->params[Oscillator::MODDEPTH] = depth;
-                    }
-                }
-            }
+			auto mod = value_stack.top();
+			value_stack.pop();
+			if (mod != INVALID_PARAM_VALUE) {
+				pNode->params[Oscillator::MODFREQ] = mod;
+			}
+			auto depth = value_stack.top();
+			value_stack.pop();
+			if (depth != INVALID_PARAM_VALUE) {
+				pNode->params[Oscillator::MODDEPTH] = depth;
+			}
+
 			auto temp = pNode->process();
 			value_stack.push(temp);
 		}
@@ -78,17 +75,13 @@ float evaluate(const NodeGraph& graph)
         break;
 		case NodeType::GAIN:
 		{
-            if (!value_stack.empty()) {
-                auto in = value_stack.top();
-                value_stack.pop();
-				if (!value_stack.empty()) {
-					auto mod = value_stack.top();
-					value_stack.pop();
-					pNode->params[Gain::GAINMOD] = abs(mod);
-				}
-				auto val = pNode->process(in);
-				value_stack.push(val);
-            }
+			auto in = value_stack.top();
+			value_stack.pop();
+			auto mod = value_stack.top();
+			value_stack.pop();
+			pNode->params[Gain::GAINMOD] = abs(mod);
+			auto val = pNode->process(in);
+			value_stack.push(val);
 		}
 		break;
 		case NodeType::VALUE:
@@ -107,12 +100,14 @@ float evaluate(const NodeGraph& graph)
 	}
 
 	// The final output node isn't evaluated in the loop
-	float val = 0.;
 	if (!value_stack.empty()) {
-		val = 0.9 * value_stack.top();
+		float right = value_stack.top();
 		value_stack.pop(); // stack should be empty now
+		float left = value_stack.top();
+		value_stack.pop(); // stack should be empty now
+        return std::make_tuple(left, right);
 	}
-	return val;
+    return std::make_tuple(0.,0.);
 }
 
 static int paCallbackMethod(const void* inputBuffer, void* outputBuffer,
@@ -131,12 +126,10 @@ static int paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 
     for (size_t sampIdx = 0; sampIdx < framesPerBuffer; sampIdx++) {
         float output = 0.f;
-        output = evaluate(*(data->graph));
-
-        for (size_t chanIdx = 0; chanIdx < 2; chanIdx++) {
+        auto lr = evaluate(*(data->graph));
             // write interleaved output -- L/R
-            *out++ = output;
-        }
+		*out++ = std::get<1>(lr);
+		*out++ = std::get<0>(lr);
     }
 
     return paContinue;

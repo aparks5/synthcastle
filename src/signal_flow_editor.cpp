@@ -97,12 +97,16 @@ void SignalFlowEditor::show()
 		}
 		else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_S)) {
 			auto outputNode = std::make_shared<Output>();
-			auto valNode = std::make_shared<Value>(0.f);
-			auto valNodeId = m_graph.insert_node(valNode);
+			auto leftNode = std::make_shared<Value>(0.f);
+			auto rightNode = std::make_shared<Value>(0.f);
+			auto rightNodeId = m_graph.insert_node(rightNode);
+			auto leftNodeId = m_graph.insert_node(leftNode);
 			auto outputId = m_graph.insert_node(outputNode);
-			m_graph.insert_edge(outputId, valNodeId);
+			m_graph.insert_edge(outputId, rightNodeId);
+			m_graph.insert_edge(outputId, leftNodeId);
 			outputNode->params[Output::NODE_ID] = outputId;
-			outputNode->params[Output::INPUT_ID] = valNodeId;
+			outputNode->params[Output::INPUT_R_ID] = rightNodeId;
+			outputNode->params[Output::INPUT_L_ID] = leftNodeId;
 			m_nodes.push_back(outputNode);
 			const ImVec2 click_pos = ImGui::GetMousePosOnOpeningCurrentPopup();
 			ImNodes::SetNodeScreenSpacePos(outputId, click_pos);

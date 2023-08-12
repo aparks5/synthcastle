@@ -11,8 +11,10 @@ public:
 	void display() override;
 
 	enum OutputParams {
-		INPUT_ID,
 		NODE_ID,
+		INPUT_L_ID,
+		INPUT_R_ID,
 		NUM_PARAMS
 	};
+
 };
