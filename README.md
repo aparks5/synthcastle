@@ -9,9 +9,9 @@ Welcome to...
                                                                                   
 ```
 
-# News
+# News 08/2023
 - complete UI overhaul in progress using imgui, implot, imnodes
-- imgui branch now open for business
+- `imgui` branch now open for business
 
 # synthcastle
 an interactive text-based synthesizer in modern c++
