@@ -58,11 +58,24 @@ float evaluate(const NodeGraph& graph)
                 if (mod != INVALID_PARAM_VALUE) {
                     pNode->params[Oscillator::MODFREQ] = mod;
                 }
+                if (!value_stack.empty()) {
+                    auto depth = value_stack.top();
+                    value_stack.pop();
+                    if (depth != INVALID_PARAM_VALUE) {
+                        pNode->params[Oscillator::MODDEPTH] = depth;
+                    }
+                }
             }
 			auto temp = pNode->process();
 			value_stack.push(temp);
 		}
 		break;
+        case NodeType::CONSTANT:
+        {
+            auto val = pNode->process();
+            value_stack.push(val);
+        }
+        break;
 		case NodeType::GAIN:
 		{
             if (!value_stack.empty()) {

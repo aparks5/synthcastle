@@ -25,7 +25,11 @@ void Oscillator::display()
 	ImNodes::EndNodeTitleBar();
 
 	ImNodes::BeginInputAttribute(params[OscillatorParams::MODFREQ_ID]);
-	ImGui::TextUnformatted("Mod");
+	ImGui::TextUnformatted("FreqMod");
+	ImNodes::EndInputAttribute();
+
+	ImNodes::BeginInputAttribute(params[OscillatorParams::MODDEPTH_ID]);
+	ImGui::TextUnformatted("FreqModDepth");
 	ImNodes::EndInputAttribute();
 
 	ImGui::PushItemWidth(120.0f);

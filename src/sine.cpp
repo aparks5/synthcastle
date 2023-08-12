@@ -30,7 +30,9 @@ void Sine::update()
 {
 	float freq = params[Oscillator::FREQ];
 	if (params[Oscillator::MODFREQ] != 0) {
-		freq = params[Oscillator::FREQ] + (50 * params[Oscillator::MODFREQ]);
+		float depth = params[Oscillator::MODDEPTH];
+		float modfreq = params[Oscillator::MODFREQ];
+		freq = freq + ((freq * depth) * modfreq);
 	}
 	
 	if (((TABLE_SIZE * freq) / m_sampleRate * 1.0f) != m_step) {

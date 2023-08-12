@@ -1,6 +1,7 @@
 #include "signal_flow_editor.h"
 
 #include "gain.h"
+#include "constant.h"
 #include "oscillator.h"
 #include "output.h"
 #include "value.h"
@@ -44,9 +45,10 @@ void SignalFlowEditor::show()
 	ImNodes::EditorContextSet(m_pContext);
 
     ImGui::Begin("signal_flow_editor");
-    ImGui::TextUnformatted("A -- add node");
+    ImGui::TextUnformatted("A -- add osc node");
+    ImGui::TextUnformatted("C -- add const node");
     ImGui::TextUnformatted("G -- add gain node");
-    ImGui::TextUnformatted("O -- add output node");
+    ImGui::TextUnformatted("S -- add sound output node");
 
     ImNodes::BeginNodeEditor();
 
@@ -55,15 +57,27 @@ void SignalFlowEditor::show()
         if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_A)) {
 				auto oscNode = std::make_shared<Sine>();
 				auto oscMod = std::make_shared<Value>(INVALID_PARAM_VALUE);
+				auto depthMod = std::make_shared<Value>(0.f);
+				auto depthModId = m_graph.insert_node(depthMod);
 				auto oscModId = m_graph.insert_node(oscMod);
 				auto id = m_graph.insert_node(oscNode);
+				oscNode->params[Oscillator::MODDEPTH_ID] = depthModId;
 				oscNode->params[Oscillator::MODFREQ_ID] = oscModId;
 				oscNode->params[Oscillator::NODE_ID] = id;
+				m_graph.insert_edge(id, depthModId);
 				m_graph.insert_edge(id, oscModId);
 				m_nodes.push_back(oscNode);
                 const ImVec2 click_pos = ImGui::GetMousePosOnOpeningCurrentPopup();
 				ImNodes::SetNodeScreenSpacePos(id, click_pos);
         }
+		else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_C)) {
+			auto kNode = std::make_shared<Constant>();
+			auto kId = m_graph.insert_node(kNode);
+			kNode->params[Constant::NODE_ID] = kId;
+			m_nodes.push_back(kNode);
+			const ImVec2 click_pos = ImGui::GetMousePosOnOpeningCurrentPopup();
+			ImNodes::SetNodeScreenSpacePos(kId, click_pos);
+		}
 		else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_G)) {
 			auto gainNode = std::make_shared<Gain>();
 			auto gainIn = std::make_shared<Value>(0.f);
@@ -81,7 +95,7 @@ void SignalFlowEditor::show()
 			const ImVec2 click_pos = ImGui::GetMousePosOnOpeningCurrentPopup();
 			ImNodes::SetNodeScreenSpacePos(gainId, click_pos);
 		}
-		else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_O)) {
+		else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_S)) {
 			auto outputNode = std::make_shared<Output>();
 			auto valNode = std::make_shared<Value>(0.f);
 			auto valNodeId = m_graph.insert_node(valNode);
