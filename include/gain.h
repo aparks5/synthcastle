@@ -5,7 +5,6 @@
 class Gain : public Node
 {
 public:
-	Gain(int id);
 	Gain();
 	virtual ~Gain() {};
 	float process(float in) override;

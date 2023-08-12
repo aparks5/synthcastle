@@ -18,7 +18,6 @@
 #include <SDL2/SDL_opengl.h>
 #endif
 
-
 #include <stdio.h>
 #include <iostream>
 #include "mixer.h"
@@ -50,7 +49,6 @@ std::tuple<float,float> evaluate(const NodeGraph& graph)
 		switch (pNode->type) {
 		case NodeType::OSCILLATOR:
 		{
-
 			pNode->update();
 			auto mod = value_stack.top();
 			value_stack.pop();

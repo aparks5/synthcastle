@@ -2,15 +2,10 @@
 
 #include "imnodes.h"
 
-Gain::Gain(int id)
-    : Node(NodeType::GAIN, id, NUM_PARAMS)
-{
-	params[Gain::GAINMOD] = 1.f;
-}
-
 Gain::Gain()
-    : Node(NodeType::GAIN, -1, NUM_PARAMS)
+    : Node(NodeType::GAIN, 1., NUM_PARAMS)
 {
+	params[Gain::GAIN] = 1.f;
 }
 
 void Gain::display()

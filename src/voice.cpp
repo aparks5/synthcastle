@@ -10,12 +10,12 @@ Voice::Voice(size_t fs)
 	, m_sine(fs)
 	, m_lfo(fs)
 	, m_pitchLfo(fs)
-	, m_osc2gain(fs)
+	, m_osc2gain()
 	, m_saw2(fs)
 	, m_tri2(fs)
 	, m_square2(fs)
 	, m_sine2(fs)
-	, m_gain(fs)
+	, m_gain()
 	, m_moogFilter(fs)
 	, m_bParamChanged(false)
 	, m_env1out(0.f)
@@ -80,7 +80,7 @@ float Voice::operator()()
 	m_env1out = m_env.apply(1);
 	m_gain.setGainf(m_env1out);
 	output = m_gain.process(output);
-	Gain gain(SAMPLE_RATE);
+	Gain gain;
 
 	// OUTPUTGAIN
 	gain.setGaindB(-5);
