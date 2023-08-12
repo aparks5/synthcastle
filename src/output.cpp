@@ -20,10 +20,14 @@ void Output::display()
 
 	ImNodes::BeginInputAttribute(params[Output::INPUT_L_ID]);
 	ImGui::TextUnformatted("Left Out");
+	ImGui::ProgressBar(params[Output::DISPLAY_L], ImVec2(0.0f, 0.0f), " ");
 	ImNodes::EndInputAttribute();
+
+
 
 	ImNodes::BeginInputAttribute(params[Output::INPUT_R_ID]);
 	ImGui::TextUnformatted("Right Out");
+	ImGui::ProgressBar(params[Output::DISPLAY_R], ImVec2(0.0f, 0.0f), " ");
 	ImNodes::EndInputAttribute();
 
 	ImNodes::EndNode();

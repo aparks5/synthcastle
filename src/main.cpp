@@ -2,6 +2,7 @@
 #include "oscillator.h"
 #include "gain.h"
 #include "signal_flow_editor.h"
+#include "output.h"
 
 #include "portaudio.h"
 #include "portaudiohandler.h"
@@ -91,20 +92,26 @@ std::tuple<float,float> evaluate(const NodeGraph& graph)
 				value_stack.push(pNode->value);
 			}
 		}
+        break;
+        case NodeType::OUTPUT:
+        {
+			// The final output node isn't evaluated in the loop
+			if (!value_stack.empty()) {
+				float left = value_stack.top();
+				value_stack.pop(); // stack should be empty now
+				pNode->params[Output::DISPLAY_L] = left;
+				float right = value_stack.top();
+				pNode->params[Output::DISPLAY_R] = right;
+				value_stack.pop(); // stack should be empty now
+				return std::make_tuple(left, right);
+			}
+		}
 		break;
 		default:
 			break;
 		}
 	}
 
-	// The final output node isn't evaluated in the loop
-	if (!value_stack.empty()) {
-		float right = value_stack.top();
-		value_stack.pop(); // stack should be empty now
-		float left = value_stack.top();
-		value_stack.pop(); // stack should be empty now
-        return std::make_tuple(left, right);
-	}
     return std::make_tuple(0.,0.);
 }
 
@@ -126,8 +133,8 @@ static int paCallbackMethod(const void* inputBuffer, void* outputBuffer,
         float output = 0.f;
         auto lr = evaluate(*(data->graph));
             // write interleaved output -- L/R
-		*out++ = std::get<1>(lr);
 		*out++ = std::get<0>(lr);
+		*out++ = std::get<1>(lr);
     }
 
     return paContinue;

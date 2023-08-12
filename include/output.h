@@ -14,6 +14,8 @@ public:
 		NODE_ID,
 		INPUT_L_ID,
 		INPUT_R_ID,
+		DISPLAY_L,
+		DISPLAY_R,
 		NUM_PARAMS
 	};
 
