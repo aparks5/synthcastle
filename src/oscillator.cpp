@@ -21,6 +21,12 @@ void Oscillator::display()
 	ImGui::TextUnformatted("Oscillator");
 	ImNodes::EndNodeTitleBar();
 
+	ImNodes::BeginInputAttribute(params[OscillatorParams::FREQ_ID]);
+	ImGui::PushItemWidth(120.0f);
+	ImGui::DragFloat("Frequency", &params[OscillatorParams::FREQ], 1.f, 0.00, 2000.);
+	ImGui::PopItemWidth();
+	ImNodes::EndInputAttribute();
+
 	ImNodes::BeginInputAttribute(params[OscillatorParams::MODFREQ_ID]);
 	ImGui::TextUnformatted("FreqMod");
 	ImNodes::EndInputAttribute();
@@ -28,10 +34,6 @@ void Oscillator::display()
 	ImNodes::BeginInputAttribute(params[OscillatorParams::MODDEPTH_ID]);
 	ImGui::TextUnformatted("FreqModDepth");
 	ImNodes::EndInputAttribute();
-
-	ImGui::PushItemWidth(120.0f);
-	ImGui::DragFloat("Frequency", &params[OscillatorParams::FREQ], 1.f, 0.02, 500.);
-	ImGui::PopItemWidth();
 
 	static int selected = -1;
 

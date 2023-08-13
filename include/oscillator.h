@@ -10,6 +10,8 @@ public:
 	float process() override;
 
 	enum OscillatorParams {
+		NODE_ID,
+		FREQ_ID,
 		FREQ,
 		OUTPUT_ID,
 		MODFREQ_ID,
@@ -17,7 +19,6 @@ public:
 		MODDEPTH_ID,
 		MODDEPTH,
 		WAVEFORM,
-		NODE_ID,
 		NUM_PARAMS
 	};
 

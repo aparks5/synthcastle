@@ -3,7 +3,7 @@
 #include "gain.h"
 #include "signal_flow_editor.h"
 #include "output.h"
-
+#include "util.h"
 #include "portaudio.h"
 #include "portaudiohandler.h"
 #include "windows.h"
@@ -48,9 +48,24 @@ std::tuple<float,float> evaluate(const NodeGraph& graph)
 		const auto& pNode = graph.node(id);
 
 		switch (pNode->type) {
+        case NodeType::MIDI_IN:
+        {
+            value_stack.push(pNode->process());
+        }
+        break;
 		case NodeType::OSCILLATOR:
 		{
 			pNode->update();
+			auto freq = value_stack.top();
+			value_stack.pop();
+			if (freq != INVALID_PARAM_VALUE) {
+                // scale midi as float to hz
+                float target = 0;
+                if ((freq * 128) > 15) {
+                    target = midiNoteToFreq((int)(freq * 128.));
+                }
+                pNode->params[Oscillator::FREQ] = target;
+			}
 			auto mod = value_stack.top();
 			value_stack.pop();
 			if (mod != INVALID_PARAM_VALUE) {
@@ -100,10 +115,16 @@ std::tuple<float,float> evaluate(const NodeGraph& graph)
 				float left = value_stack.top();
 				value_stack.pop(); // stack should be empty now
 				pNode->params[Output::DISPLAY_L] = left;
-				float right = value_stack.top();
-				pNode->params[Output::DISPLAY_R] = right;
-				value_stack.pop(); // stack should be empty now
-				return std::make_tuple(left, right);
+                if (value_stack.empty()) {
+                    return std::make_tuple(left, 0.);
+                }
+
+                if (!value_stack.empty()) {
+                    float right = value_stack.top();
+                    pNode->params[Output::DISPLAY_R] = right;
+                    value_stack.pop(); // stack should be empty now
+					return std::make_tuple(left, right);
+                }
 			}
 		}
 		break;

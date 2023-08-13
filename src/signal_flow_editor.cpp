@@ -1,6 +1,7 @@
 #include "signal_flow_editor.h"
 
 #include "gain.h"
+#include "midi.h"
 #include "constant.h"
 #include "oscillator.h"
 #include "output.h"
@@ -49,6 +50,7 @@ void SignalFlowEditor::show()
     ImGui::TextUnformatted("C -- add const node");
     ImGui::TextUnformatted("G -- add gain node");
     ImGui::TextUnformatted("S -- add sound output node");
+	ImGui::TextUnformatted("M -- add midi input node");
 
     ImNodes::BeginNodeEditor();
 
@@ -57,15 +59,19 @@ void SignalFlowEditor::show()
         if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_A)) {
 				auto oscNode = std::make_shared<Sine>();
 				auto oscMod = std::make_shared<Value>(INVALID_PARAM_VALUE);
+				auto freq = std::make_shared<Value>(INVALID_PARAM_VALUE);
 				auto depthMod = std::make_shared<Value>(0.f);
 				auto depthModId = m_graph.insert_node(depthMod);
 				auto oscModId = m_graph.insert_node(oscMod);
+				auto freqId = m_graph.insert_node(freq);
 				auto id = m_graph.insert_node(oscNode);
 				oscNode->params[Oscillator::MODDEPTH_ID] = depthModId;
 				oscNode->params[Oscillator::MODFREQ_ID] = oscModId;
+				oscNode->params[Oscillator::FREQ_ID] = freqId;
 				oscNode->params[Oscillator::NODE_ID] = id;
 				m_graph.insert_edge(id, depthModId);
 				m_graph.insert_edge(id, oscModId);
+				m_graph.insert_edge(id, freqId);
 				m_nodes.push_back(oscNode);
                 const ImVec2 click_pos = ImGui::GetMousePosOnOpeningCurrentPopup();
 				ImNodes::SetNodeScreenSpacePos(id, click_pos);
@@ -77,6 +83,14 @@ void SignalFlowEditor::show()
 			m_nodes.push_back(kNode);
 			const ImVec2 click_pos = ImGui::GetMousePosOnOpeningCurrentPopup();
 			ImNodes::SetNodeScreenSpacePos(kId, click_pos);
+		}
+		else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_M)) {
+			auto node = std::make_shared<MIDI>();
+			auto id = m_graph.insert_node(node);
+			node->params[MIDI::NODE_ID] = id;
+			m_nodes.push_back(node);
+			const ImVec2 click_pos = ImGui::GetMousePosOnOpeningCurrentPopup();
+			ImNodes::SetNodeScreenSpacePos(id, click_pos);
 		}
 		else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_G)) {
 			auto gainNode = std::make_shared<Gain>();

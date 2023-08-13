@@ -23,8 +23,6 @@ void Output::display()
 	ImGui::ProgressBar(params[Output::DISPLAY_L], ImVec2(0.0f, 0.0f), " ");
 	ImNodes::EndInputAttribute();
 
-
-
 	ImNodes::BeginInputAttribute(params[Output::INPUT_R_ID]);
 	ImGui::TextUnformatted("Right Out");
 	ImGui::ProgressBar(params[Output::DISPLAY_R], ImVec2(0.0f, 0.0f), " ");

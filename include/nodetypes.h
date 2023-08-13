@@ -8,6 +8,7 @@ enum NodeType
 	GAIN,
 	FILTER,
 	DELAY,
+	MIDI_IN,
 	OUTPUT,
 	NUM_NODE_TYPES
 };
