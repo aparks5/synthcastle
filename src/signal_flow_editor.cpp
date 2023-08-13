@@ -57,7 +57,7 @@ void SignalFlowEditor::show()
     if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
         ImNodes::IsEditorHovered()) {
         if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_A)) {
-				auto oscNode = std::make_shared<Sine>();
+				auto oscNode = std::make_shared<Oscillator>();
 				auto oscMod = std::make_shared<Value>(INVALID_PARAM_VALUE);
 				auto freq = std::make_shared<Value>(INVALID_PARAM_VALUE);
 				auto depthMod = std::make_shared<Value>(0.f);

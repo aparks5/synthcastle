@@ -6,38 +6,23 @@
 #include <iostream>
 #include "util.h"
 
-Sine::Sine()
-	: Oscillator()
-{
-	// initialize look-up table
-	for (auto i = 0; i < TABLE_SIZE; i++) {
-		m_sine[i] = static_cast<float>(std::sin((i * 1.0f / TABLE_SIZE) * M_PI * 2.0f));
-	}
-}
-
 Sine::Sine(int sampleRate)
-	: Oscillator()
+	: WaveForm(sampleRate)
 {
-	m_sampleRate = sampleRate;
 	// initialize look-up table
 	for (auto i = 0; i < TABLE_SIZE; i++) {
 		m_sine[i] = static_cast<float>(std::sin((i * 1.0f / TABLE_SIZE) * M_PI * 2.0f));
 	}
 }
 
-
-void Sine::update()
+void Sine::update(float freq, float modfreq, float moddepth)
 {
-	float freq = params[Oscillator::FREQ];
-	if (params[Oscillator::MODFREQ] != 0) {
-		float depth = params[Oscillator::MODDEPTH];
-		float modfreq = params[Oscillator::MODFREQ];
-		freq = freq + ((freq * depth) * modfreq);
+	if (modfreq != 0) {
+		freq = freq + ((freq * moddepth) * modfreq);
 	}
 	
 	if (((TABLE_SIZE * freq) / m_sampleRate * 1.0f) != m_step) {
 		m_step = (TABLE_SIZE * freq) / m_sampleRate * 1.0f;
-		//m_out = 0;
 	}
 }
 
@@ -48,7 +33,6 @@ float Sine::process()
 	if (m_out >= TABLE_SIZE) {
 		m_out -= TABLE_SIZE;
 	}
-
 
 	float integerIdx = 0;
 	float fractionalIdx = modff(m_out, &integerIdx);

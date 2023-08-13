@@ -7,22 +7,20 @@
 #include <iostream>
 
 
-Triangle::Triangle()
-	: Oscillator()
-	, m_bRising(true)
-{
-}
-
 Triangle::Triangle(int sampleRate)
-	: Oscillator()
+	: WaveForm(sampleRate)
 	, m_bRising(true)
 {
 	m_sampleRate = sampleRate;
 }
 
-void Triangle::update()
+void Triangle::update(float freq, float modfreq, float moddepth) 
 {
-	auto samplesPerCycle = 1. * m_sampleRate / params[Oscillator::FREQ];
+	if (modfreq != 0) {
+		freq = freq + ((freq * moddepth) * modfreq);
+	}
+	
+	auto samplesPerCycle = 1. * m_sampleRate / freq;
 	m_step = 4.0f / samplesPerCycle;
 }
 

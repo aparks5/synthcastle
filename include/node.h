@@ -34,12 +34,6 @@ public:
 	// some nodes are output only e.g. oscillators/lfos
 	virtual float process() { return 0; }
 	virtual void display() {};
-	virtual void update() {}; // update should only
-	virtual void link(const float* src, const float* dest) {};
-	// be called if a param changed in a node
-	// we can tell if a node changed if the new value
-	// of the UI is not equal to the nodes current value
-	// otherwise we will end up performing an insane
-	// amount of update functions every frame
+	virtual void update() {};
 
 };

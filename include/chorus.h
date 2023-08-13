@@ -8,8 +8,8 @@ class Chorus : public Module
 {
 public:
 
-	Chorus(float sampleRate, float rate, float depth, float feedbackRatio);
-	void rate(float freq) { lfo.params[Oscillator::FREQ] = freq; }
+	Chorus(float sampleRate, float depth, float feedbackRatio);
+	void rate(float freq) { lfo.update(freq, 0, m_depth); }
 	void depth(float gain) { m_depth = gain; }
 	void reset();
 	void update();

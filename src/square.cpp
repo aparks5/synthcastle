@@ -6,20 +6,18 @@
 
 #include <iostream>
 
-Square::Square()
-	: Oscillator()
-{
-}
-
 Square::Square(int sampleRate)
-	: Oscillator()
+	: WaveForm(sampleRate)
 {
-	m_sampleRate = sampleRate;
 }
 
-void Square::update()
+void Square::update(float freq, float modfreq, float moddepth)
 {
-	auto samplesPerCycle = m_sampleRate / params[Oscillator::FREQ];
+	if (modfreq != 0) {
+		freq = freq + ((freq * moddepth) * modfreq);
+	}
+
+	auto samplesPerCycle = m_sampleRate / freq;
 	m_step = 2.0f / samplesPerCycle;
 }
 

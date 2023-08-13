@@ -27,8 +27,8 @@ void PitchShift::update(float semitones)
 
 	temp = temp / (m_windowTime * 0.001); // window
 	// todo: saw should handle negative frequencies
-	m_saw.params[Oscillator::FREQ] = temp;
-	m_env.params[Oscillator::FREQ] = temp / 2;
+	//m_saw.params[Oscillator::FREQ] = temp;
+	//m_env.params[Oscillator::FREQ] = temp / 2;
 }
 
 float PitchShift::operator()(float in) {

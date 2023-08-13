@@ -2,17 +2,14 @@
 #ifndef SQUARE_H_ 
 #define SQUARE_H_
 
-#include "oscillator.h"
+#include "waveform.h"
 
-class Square : public Oscillator
+class Square : public WaveForm 
 {
 public:
-    Square();
     Square(int sampleRate);
     float process() override;
-    void update() override;
-
-
+	void update(float freq, float modfreq, float moddepth) override;
 };
 
 #endif // SQUARE_H_

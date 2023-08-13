@@ -4,7 +4,7 @@
 
 Synth::Synth(size_t fs)
 	: Module(fs)
-	, chorus(fs, 0.2, 0.8, 0.0)
+	, chorus(fs, 0.8, 0.0)
 	, delay(fs)
 	, delay2(fs, 1.f)
 	, delay3(fs, 1.f)

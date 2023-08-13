@@ -2,16 +2,14 @@
 #ifndef TRIANGLE_H_ 
 #define TRIANGLE_H_ 
 
-#include "oscillator.h"
+#include "waveform.h"
 
-class Triangle : public Oscillator
+class Triangle : public WaveForm 
 {
 public:
-    Triangle();
     Triangle(int sampleRate);
     float process() override;
-    float process(float in) override { return 0.f; }
-    void update() override;
+	void update(float freq, float modfreq, float moddepth) override;
 
 private:
     bool m_bRising;

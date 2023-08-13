@@ -14,7 +14,7 @@ Pan::Pan(size_t fs)
 	, m_rightGain(0.5)
 
 {
-	m_panLFO.params[Oscillator::FREQ] = 1.f;
+	m_panLFO.update(1.f, 0, 0);
 }
 
 float Pan::operator()(float in)

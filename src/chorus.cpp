@@ -1,13 +1,13 @@
 #include "chorus.h"
 
-Chorus::Chorus(float sampleRate, float rate, float depth, float feedbackRatio)
+Chorus::Chorus(float sampleRate, float depth, float feedbackRatio)
 	: Module(sampleRate)
 	, delay(sampleRate, 1.f)
 	, lfo(sampleRate)
 	, m_depth(depth)
 	, m_feedbackRatio(feedbackRatio)
 {
-	lfo.params[Oscillator::FREQ] = rate;
+	//lfo.params[Oscillator::FREQ] = rate;
 	delay.update(10, m_feedbackRatio);
 }
 

@@ -3,15 +3,29 @@
 
 Oscillator::Oscillator()
     : Node(NodeType::OSCILLATOR, 0., NUM_PARAMS) 
-	, m_step(0.)
 	, m_sampleRate(44100)
-	, m_out(0.)
 {
+	// todo: assert waveform enum and order of adding is correct
+	{
+		m_waveforms.push_back(std::make_shared<Saw>(m_sampleRate));
+		m_waveforms.push_back(std::make_shared<Sine>(m_sampleRate));
+		m_waveforms.push_back(std::make_shared<Square>(m_sampleRate));
+		m_waveforms.push_back(std::make_shared<Triangle>(m_sampleRate));
+	}
+}
+
+void Oscillator::update()
+{
+	for (auto& wave : m_waveforms) {
+		wave->update(params[OscillatorParams::FREQ],
+			params[OscillatorParams::MODFREQ],
+			params[OscillatorParams::MODDEPTH]);
+	}
 }
 
 float Oscillator::process()
 {
-    return 0;
+	return m_waveforms[(size_t)(params[OscillatorParams::WAVEFORM])]->process();
 }
 
 void Oscillator::display()
@@ -40,7 +54,7 @@ void Oscillator::display()
 	// Simplified one-liner Combo() API, using values packed in a single constant string
 	ImGui::PushItemWidth(120.0f);
 	static int waveform = 0;
-	ImGui::Combo("Waveform", &waveform, "Saw\0Sine\0Square\0");
+	ImGui::Combo("Waveform", &waveform, "Saw\0Sine\0Square\0Triangle\0");
 	params[Oscillator::WAVEFORM] = waveform;
 
 	ImNodes::BeginOutputAttribute(params[OscillatorParams::NODE_ID]);
