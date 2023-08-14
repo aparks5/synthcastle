@@ -27,8 +27,8 @@ PlateReverb::PlateReverb(size_t fs)
 
 
 	auto modfb = m_params.decayDiffusion1;
-	m_diffusionLFO1.update(0.1f, 0, 0);
-	m_diffusionLFO2.update(0.1f, 0, 0);
+	m_diffusionLFO1.update(0.1f);
+	m_diffusionLFO2.update(0.1f);
 
 	m_modulatedDiffusor.push_back(std::make_unique<Allpass>(fs, kModulationDiffusionMs[0], modfb));
 	m_modulatedDiffusor.push_back(std::make_unique<Allpass>(fs, kModulationDiffusionMs[1], modfb));

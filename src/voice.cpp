@@ -25,7 +25,7 @@ Voice::Voice(size_t fs)
 	m_moogFilter.freq(1000.f);
 	m_filtFreq = 1000.f;
 	m_moogFilter.q(3.f);
-	m_lfo.update(1.f, 0, 0);
+	m_lfo.update(1.f);
 }
 
 void Voice::update(VoiceParams params)

@@ -1,6 +1,7 @@
 #include "signal_flow_editor.h"
 
 #include "gain.h"
+#include "quadmixer.h"
 #include "midi.h"
 #include "constant.h"
 #include "oscillator.h"
@@ -51,6 +52,7 @@ void SignalFlowEditor::show()
     ImGui::TextUnformatted("G -- add gain node");
     ImGui::TextUnformatted("S -- add sound output node");
 	ImGui::TextUnformatted("M -- add midi input node");
+	ImGui::TextUnformatted("X -- add quad mixer node");
 
     ImNodes::BeginNodeEditor();
 
@@ -109,6 +111,32 @@ void SignalFlowEditor::show()
 			const ImVec2 click_pos = ImGui::GetMousePosOnOpeningCurrentPopup();
 			ImNodes::SetNodeScreenSpacePos(gainId, click_pos);
 		}
+		else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_X)) {
+			auto mix = std::make_shared<QuadMixer>();
+			auto a = std::make_shared<Value>(0.f);
+			auto b = std::make_shared<Value>(0.f);
+			auto c = std::make_shared<Value>(0.f);
+			auto d = std::make_shared<Value>(0.f);
+			auto aId = m_graph.insert_node(a);
+			auto bId = m_graph.insert_node(b);
+			auto cId = m_graph.insert_node(c);
+			auto dId = m_graph.insert_node(d);
+			auto mixId = m_graph.insert_node(mix);
+			m_graph.insert_edge(mixId, dId);
+			m_graph.insert_edge(mixId, cId);
+			m_graph.insert_edge(mixId, bId);
+			m_graph.insert_edge(mixId, aId);
+			mix->params[QuadMixer::NODE_ID] = mixId;
+			mix->params[QuadMixer::INPUT_A_ID] = aId;
+			mix->params[QuadMixer::INPUT_B_ID] = bId;
+			mix->params[QuadMixer::INPUT_C_ID] = cId;
+			mix->params[QuadMixer::INPUT_D_ID] = dId;
+			m_nodes.push_back(mix);
+			const ImVec2 click_pos = ImGui::GetMousePosOnOpeningCurrentPopup();
+			ImNodes::SetNodeScreenSpacePos(mixId, click_pos);
+		}
+
+
 		else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_S)) {
 			auto outputNode = std::make_shared<Output>();
 			auto leftNode = std::make_shared<Value>(0.f);

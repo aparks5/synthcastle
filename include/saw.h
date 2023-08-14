@@ -9,7 +9,7 @@ class Saw : public WaveForm
 public:
     Saw(int sampleRate);
     float process() override;
-	void update(float freq, float modfreq, float moddepth) override;
+    void update(float freq);
 };
 
 #endif // SAW_H_

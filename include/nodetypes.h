@@ -2,13 +2,14 @@
 
 enum NodeType
 {
-	VALUE, // used to route inputs to node params
 	CONSTANT, // for a single unchanging value 
-	OSCILLATOR,
-	GAIN,
-	FILTER,
 	DELAY,
+	FILTER,
+	GAIN,
 	MIDI_IN,
+	OSCILLATOR,
 	OUTPUT,
+	QUAD_MIXER,
+	VALUE, // used to route inputs to node params
 	NUM_NODE_TYPES
 };

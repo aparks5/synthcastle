@@ -7,6 +7,7 @@
 #include "portaudio.h"
 #include "portaudiohandler.h"
 #include "windows.h"
+#include "quadmixer.h"
 
 #include <imgui.h>
 #include <imgui_impl_sdl2.h>
@@ -48,6 +49,23 @@ std::tuple<float,float> evaluate(const NodeGraph& graph)
 		const auto& pNode = graph.node(id);
 
 		switch (pNode->type) {
+        case NodeType::QUAD_MIXER:
+        {
+            auto d = value_stack.top();
+            value_stack.pop();
+            auto c = value_stack.top();
+            value_stack.pop();
+            auto b = value_stack.top();
+            value_stack.pop();
+            auto a = value_stack.top();
+            value_stack.pop();
+            pNode->params[QuadMixer::INPUT_A] = a;
+            pNode->params[QuadMixer::INPUT_B] = b;
+            pNode->params[QuadMixer::INPUT_C] = c;
+            pNode->params[QuadMixer::INPUT_D] = d;
+            value_stack.push(pNode->process());
+        }
+        break;
         case NodeType::MIDI_IN:
         {
             value_stack.push(pNode->process());

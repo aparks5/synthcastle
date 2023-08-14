@@ -11,7 +11,7 @@ class Sine : public WaveForm
 public:
     Sine(int sampleRate);
     float process() override;
-	void update(float freq, float modfreq, float moddepth) override;
+	void update(float freq) override;
 
 private:
 	float m_sine[TABLE_SIZE];

@@ -11,12 +11,8 @@ Square::Square(int sampleRate)
 {
 }
 
-void Square::update(float freq, float modfreq, float moddepth)
+void Square::update(float freq)
 {
-	if (modfreq != 0) {
-		freq = freq + ((freq * moddepth) * modfreq);
-	}
-
 	auto samplesPerCycle = m_sampleRate / freq;
 	m_step = 2.0f / samplesPerCycle;
 }

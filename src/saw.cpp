@@ -6,12 +6,8 @@ Saw::Saw(int sampleRate)
 {
 }
 
-void Saw::update(float freq, float modfreq, float moddepth)
+void Saw::update(float freq)
 {
-	if (modfreq != 0) {
-		freq = freq + ((freq * moddepth) * modfreq);
-	}
-
 	auto samplesPerCycle = m_sampleRate * 1.0f / freq;
 	m_step = 2.0f / samplesPerCycle;
 }

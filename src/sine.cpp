@@ -15,12 +15,9 @@ Sine::Sine(int sampleRate)
 	}
 }
 
-void Sine::update(float freq, float modfreq, float moddepth)
+void Sine::update(float freq)
 {
-	if (modfreq != 0) {
-		freq = freq + ((freq * moddepth) * modfreq);
-	}
-	
+
 	if (((TABLE_SIZE * freq) / m_sampleRate * 1.0f) != m_step) {
 		m_step = (TABLE_SIZE * freq) / m_sampleRate * 1.0f;
 	}

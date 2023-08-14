@@ -9,7 +9,7 @@ class Triangle : public WaveForm
 public:
     Triangle(int sampleRate);
     float process() override;
-	void update(float freq, float modfreq, float moddepth) override;
+    void update(float freq) override;
 
 private:
     bool m_bRising;

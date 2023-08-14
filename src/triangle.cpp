@@ -14,12 +14,8 @@ Triangle::Triangle(int sampleRate)
 	m_sampleRate = sampleRate;
 }
 
-void Triangle::update(float freq, float modfreq, float moddepth) 
+void Triangle::update(float freq)
 {
-	if (modfreq != 0) {
-		freq = freq + ((freq * moddepth) * modfreq);
-	}
-	
 	auto samplesPerCycle = 1. * m_sampleRate / freq;
 	m_step = 4.0f / samplesPerCycle;
 }

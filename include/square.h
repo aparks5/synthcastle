@@ -9,7 +9,7 @@ class Square : public WaveForm
 public:
     Square(int sampleRate);
     float process() override;
-	void update(float freq, float modfreq, float moddepth) override;
+    void update(float freq);
 };
 
 #endif // SQUARE_H_

@@ -1,4 +1,5 @@
 #include "oscillator.h"
+#include "util.h"
 #include "imnodes.h"
 
 Oscillator::Oscillator()
@@ -16,10 +17,22 @@ Oscillator::Oscillator()
 
 void Oscillator::update()
 {
+	auto modfreq = params[Oscillator::MODFREQ];
+	auto moddepth = params[Oscillator::MODDEPTH];
+	auto freq = params[Oscillator::FREQ];
+	auto coarse = params[Oscillator::TUNING_COARSE];
+	auto fine = params[Oscillator::TUNING_FINE];
+
+
+	freq = freq * semitoneToRatio(coarse) * semitoneToRatio(fine);
+
+	if (modfreq != 0) {
+		freq = freq + ((freq * moddepth) * modfreq);
+	}
+	
+	// push mod freq, depth, tuning to freq calculations here, they are waveform-agnostic
 	for (auto& wave : m_waveforms) {
-		wave->update(params[OscillatorParams::FREQ],
-			params[OscillatorParams::MODFREQ],
-			params[OscillatorParams::MODDEPTH]);
+		wave->update(freq);
 	}
 }
 
@@ -49,11 +62,19 @@ void Oscillator::display()
 	ImGui::TextUnformatted("FreqModDepth");
 	ImNodes::EndInputAttribute();
 
-	static int selected = -1;
+	ImGui::PushItemWidth(120.0f);
+	ImGui::DragFloat("Coarse Tuning", &params[OscillatorParams::TUNING_COARSE], 1.f, -36.00, 36.);
+	ImGui::PopItemWidth();
+
+	ImGui::PushItemWidth(120.0f);
+	ImGui::DragFloat("Fine Tuning", &params[OscillatorParams::TUNING_FINE], 1.f, 0.00, 1.);
+	ImGui::PopItemWidth();
+
+	int selected = -1;
 
 	// Simplified one-liner Combo() API, using values packed in a single constant string
 	ImGui::PushItemWidth(120.0f);
-	static int waveform = 0;
+	int waveform = params[Oscillator::WAVEFORM];
 	ImGui::Combo("Waveform", &waveform, "Saw\0Sine\0Square\0Triangle\0");
 	params[Oscillator::WAVEFORM] = waveform;
 
