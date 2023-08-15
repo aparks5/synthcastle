@@ -41,6 +41,11 @@ private:
 	std::shared_ptr<RtMidiIn> midiin;
 	std::vector<std::string> ports;
 	static void midiCallback(double deltatime, std::vector<unsigned char>* message, void* userData);
+	std::vector<float> m_voices;
+	size_t m_currentVoice;
+	size_t m_cycle;
+	size_t m_numVoices;
+
 };
 
 

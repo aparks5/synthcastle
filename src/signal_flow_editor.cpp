@@ -1,12 +1,14 @@
 #include "signal_flow_editor.h"
 
 #include "gain.h"
+#include "fourvoice.h"
 #include "quadmixer.h"
 #include "midi.h"
 #include "constant.h"
 #include "oscillator.h"
 #include "output.h"
 #include "value.h"
+#include "relay.h"
 #include "nodegraph.h"
 #include <stack>
 #include <SDL_scancode.h>
@@ -18,6 +20,7 @@ SignalFlowEditor::SignalFlowEditor()
 	, m_graph()
 	, m_nodes()
 	, m_links()
+	, m_voiceCount(0)
 	, m_currentId(0)
 	, m_rootNodeId(-1)
 {
@@ -53,6 +56,7 @@ void SignalFlowEditor::show()
     ImGui::TextUnformatted("S -- add sound output node");
 	ImGui::TextUnformatted("M -- add midi input node");
 	ImGui::TextUnformatted("X -- add quad mixer node");
+	ImGui::TextUnformatted("V -- add four-voice node");
 
     ImNodes::BeginNodeEditor();
 
@@ -78,6 +82,18 @@ void SignalFlowEditor::show()
                 const ImVec2 click_pos = ImGui::GetMousePosOnOpeningCurrentPopup();
 				ImNodes::SetNodeScreenSpacePos(id, click_pos);
         }
+		else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_V)) {
+			auto node = std::make_shared<FourVoice>(m_voiceCount++);
+			auto input = std::make_shared<Value>(0.f);
+			auto inputId = m_graph.insert_node(input);
+			auto id = m_graph.insert_node(node);
+			node->params[FourVoice::INPUT_ID] = inputId;
+			node->params[FourVoice::NODE_ID] = id;
+			m_graph.insert_edge(id, inputId);
+			m_nodes.push_back(node);
+			const ImVec2 click_pos = ImGui::GetMousePosOnOpeningCurrentPopup();
+			ImNodes::SetNodeScreenSpacePos(id, click_pos);
+		}
 		else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_C)) {
 			auto kNode = std::make_shared<Constant>();
 			auto kId = m_graph.insert_node(kNode);

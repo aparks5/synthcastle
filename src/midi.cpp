@@ -6,7 +6,16 @@
 MIDI::MIDI()
 	: Node(NodeType::MIDI_IN, 0.f, NUM_PARAMS)
 	, midiin(std::make_shared<RtMidiIn>())
+	, m_currentVoice(0)
+	, m_cycle(0)
+	, m_numVoices(4)
 {
+	// todo: MIDI should be able to change number of voices
+	// depending on number of voice objects in the graph
+	for (int idx = 0; idx < m_numVoices; idx++) {
+		m_voices.push_back(0.);
+	}
+
 	midiin->setCallback(&MIDI::midiCallback, &midiUserData);
 
 	// populate the MIDI port list at initialization
@@ -100,9 +109,39 @@ void MIDI::display()
 
 float MIDI::process()
 {
+
 	params[MidiParams::NOTE] = midiUserData.note;
-	// should return 0 to 1 (0 freq should output 0)
-	return (1.f * params[MidiParams::NOTE]) / 128.f;
+
+	float freq = params[MidiParams::NOTE] / 128.f;
+	// next problem, which voice changed to 0?
+	// note off should be for one voice only,
+	// but which voice?
+	//
+	if (freq == 0) {
+		for (auto& v : m_voices) {
+			v = 0;
+		}
+	}
+
+	// something changed, find another voice
+    if (freq != m_voices[m_currentVoice]) {
+		m_currentVoice++;
+			m_voices[m_currentVoice] = freq;
+	}
+
+	if (m_currentVoice >= m_numVoices) {
+			m_currentVoice = 0;
+	}
+
+
+	// N calls to process will return N voices
+	// this module should push N values to the stack
+	float val = m_voices[m_cycle];
+	m_cycle++;
+	if (m_cycle >= m_numVoices) {
+		m_cycle = 0;
+	}
+	return m_voices[m_cycle];
 
 }
 

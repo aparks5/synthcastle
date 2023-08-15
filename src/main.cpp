@@ -1,5 +1,6 @@
 #include "node_editor.h"
 #include "oscillator.h"
+#include "fourvoice.h"
 #include "gain.h"
 #include "signal_flow_editor.h"
 #include "output.h"
@@ -32,6 +33,9 @@ struct AudioData
     const NodeGraph* graph;
 };
 
+int activeVoices = 0;
+int lastActiveVoice = 0;
+float voices[4] = { 0,0,0,0 };
 std::tuple<float,float> evaluate(const NodeGraph& graph)
 {
     int root_node = graph.m_root;
@@ -41,6 +45,8 @@ std::tuple<float,float> evaluate(const NodeGraph& graph)
 	std::stack<int> postorder;
 	dfs_traverse(graph, root_node, [&postorder](const int node_id) -> void { postorder.push(node_id); });
 
+    int voiceCount = 0;
+
 	std::stack<float> value_stack;
 	while (!postorder.empty())
 	{
@@ -49,6 +55,15 @@ std::tuple<float,float> evaluate(const NodeGraph& graph)
 		const auto& pNode = graph.node(id);
 
 		switch (pNode->type) {
+        case NodeType::FOUR_VOICE:
+        {
+            auto in = value_stack.top();
+            value_stack.pop();
+            // MIDI block should push all the voices
+            // to the stack
+            value_stack.push(in);
+		}
+        break;
         case NodeType::QUAD_MIXER:
         {
             auto d = value_stack.top();
@@ -68,6 +83,7 @@ std::tuple<float,float> evaluate(const NodeGraph& graph)
         break;
         case NodeType::MIDI_IN:
         {
+            // push all voices to stack
             value_stack.push(pNode->process());
         }
         break;

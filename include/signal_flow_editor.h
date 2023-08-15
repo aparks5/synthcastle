@@ -33,6 +33,7 @@ private:
 	NodeGraph m_graph;
 	std::vector<std::shared_ptr<Node>> m_nodes; // need pointers to call process() and display()
 	std::vector<Link> m_links;
+	int m_voiceCount;
 	int m_currentId;
 	int m_rootNodeId;
 	float evaluate(const NodeGraph& graph, const int root_node);
