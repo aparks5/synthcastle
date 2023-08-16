@@ -12,6 +12,7 @@ Oscillator::Oscillator()
 		m_waveforms.push_back(std::make_shared<Sine>(m_sampleRate));
 		m_waveforms.push_back(std::make_shared<Square>(m_sampleRate));
 		m_waveforms.push_back(std::make_shared<Triangle>(m_sampleRate));
+		m_waveforms.push_back(std::make_shared<SampleAndHold>(m_sampleRate));
 	}
 }
 
@@ -75,7 +76,7 @@ void Oscillator::display()
 	// Simplified one-liner Combo() API, using values packed in a single constant string
 	ImGui::PushItemWidth(120.0f);
 	int waveform = params[Oscillator::WAVEFORM];
-	ImGui::Combo("Waveform", &waveform, "Saw\0Sine\0Square\0Triangle\0");
+	ImGui::Combo("Waveform", &waveform, "Saw\0Sine\0Square\0Triangle\0S&H\0");
 	params[Oscillator::WAVEFORM] = waveform;
 
 	ImNodes::BeginOutputAttribute(params[OscillatorParams::NODE_ID]);

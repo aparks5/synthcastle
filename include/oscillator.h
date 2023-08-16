@@ -6,6 +6,7 @@
 #include "sine.h"
 #include "square.h"
 #include "triangle.h"
+#include "sampleandhold.h"
 
 #include <memory>
 
@@ -38,6 +39,7 @@ public:
 		SINE,
 		SQUARE,
 		TRIANGLE,
+		SAMPLE_AND_HOLD,
 		NUM_WAVEFORMS
 	}; // todo: noise, sample and hold
 
