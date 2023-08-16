@@ -1,6 +1,7 @@
 #include "signal_flow_editor.h"
 
 #include "gain.h"
+#include "filter.h"
 #include "fourvoice.h"
 #include "quadmixer.h"
 #include "midi.h"
@@ -33,6 +34,8 @@ SignalFlowEditor::SignalFlowEditor()
 
     ImNodesStyle& style = ImNodes::GetStyle();
     style.Flags |= ImNodesStyleFlags_GridLinesPrimary | ImNodesStyleFlags_GridSnapping;
+	 
+	//load();
 }
 
 SignalFlowEditor::~SignalFlowEditor()
@@ -45,6 +48,78 @@ const NodeGraph* SignalFlowEditor::graph() const {
 	return &m_graph;
 }
 
+void SignalFlowEditor::load()
+{
+	// Load the internal imnodes state
+	ImNodes::LoadCurrentEditorStateFromIniFile("save_load.ini");
+
+	// Load our editor state into memory
+	std::fstream fin("save_load.bytes", std::ios_base::in | std::ios_base::binary);
+
+	if (!fin.is_open()) {
+		return;
+	}
+
+	// copy nodes into memory
+	size_t num_nodes;
+	fin.read(reinterpret_cast<char*>(&num_nodes), static_cast<std::streamsize>(sizeof(size_t)));
+	m_nodes.resize(num_nodes);
+	fin.read(
+		reinterpret_cast<char*>(m_nodes.data()),
+		static_cast<std::streamsize>(sizeof(Node) * num_nodes));
+
+	// copy links into memory
+	size_t num_links;
+	fin.read(reinterpret_cast<char*>(&num_links), static_cast<std::streamsize>(sizeof(size_t)));
+	m_links.resize(num_links);
+	fin.read(
+		reinterpret_cast<char*>(m_links.data()),
+		static_cast<std::streamsize>(sizeof(Link) * num_links));
+
+	// copy current_id into memory
+	fin.read(reinterpret_cast<char*>(&m_currentId), static_cast<std::streamsize>(sizeof(int)));
+}
+
+
+void SignalFlowEditor::save()
+{
+	// Save the internal imnodes state
+	ImNodes::SaveCurrentEditorStateToIniFile("save_load.ini");
+
+	// Dump our editor state as bytes into a file
+
+	std::fstream fout(
+		"save_load.bytes", std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
+
+	// copy the node vector to file
+	const size_t num_nodes = m_nodes.size();
+	fout.write(
+		reinterpret_cast<const char*>(&num_nodes),
+		static_cast<std::streamsize>(sizeof(size_t)));
+	fout.write(
+		reinterpret_cast<const char*>(m_nodes.data()),
+		static_cast<std::streamsize>(sizeof(Node) * num_nodes));
+
+	// copy the link vector to file
+	const size_t num_links = m_links.size();
+	fout.write(
+		reinterpret_cast<const char*>(&num_links),
+		static_cast<std::streamsize>(sizeof(size_t)));
+	fout.write(
+		reinterpret_cast<const char*>(m_links.data()),
+		static_cast<std::streamsize>(sizeof(Link) * num_links));
+
+	// copy the current_id to file
+	fout.write(
+		reinterpret_cast<const char*>(&m_currentId), 
+		static_cast<std::streamsize>(sizeof(int)));
+}
+
+void SignalFlowEditor::shutdown()
+{
+	//save();
+}
+
 void SignalFlowEditor::show()
 {
 	ImNodes::EditorContextSet(m_pContext);
@@ -52,6 +127,7 @@ void SignalFlowEditor::show()
     ImGui::Begin("signal_flow_editor");
     ImGui::TextUnformatted("A -- add osc node");
     ImGui::TextUnformatted("C -- add const node");
+    ImGui::TextUnformatted("F -- add filter node");
     ImGui::TextUnformatted("G -- add gain node");
     ImGui::TextUnformatted("S -- add sound output node");
 	ImGui::TextUnformatted("M -- add midi input node");
@@ -101,6 +177,26 @@ void SignalFlowEditor::show()
 			m_nodes.push_back(kNode);
 			const ImVec2 click_pos = ImGui::GetMousePosOnOpeningCurrentPopup();
 			ImNodes::SetNodeScreenSpacePos(kId, click_pos);
+		}
+		else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_F)) {
+			auto node = std::make_shared<Filter>();
+			auto in = std::make_shared<Value>(0.f);
+			auto mod = std::make_shared<Value>(0.f);
+			auto depth = std::make_shared<Value>(0.f);
+			auto dId = m_graph.insert_node(depth);
+			auto mId = m_graph.insert_node(mod);
+			auto inId = m_graph.insert_node(in);
+			auto id = m_graph.insert_node(node);
+			node->params[Filter::NODE_ID] = id;
+			node->params[Filter::INPUT_ID] = inId;
+			node->params[Filter::FREQMOD_ID] = mId;
+			node->params[Filter::MODDEPTH_ID] = dId;
+			m_graph.insert_edge(id, dId);
+			m_graph.insert_edge(id, mId);
+			m_graph.insert_edge(id, inId);
+			m_nodes.push_back(node);
+			const ImVec2 click_pos = ImGui::GetMousePosOnOpeningCurrentPopup();
+			ImNodes::SetNodeScreenSpacePos(id, click_pos);
 		}
 		else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_M)) {
 			auto node = std::make_shared<MIDI>();

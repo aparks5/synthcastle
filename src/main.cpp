@@ -1,6 +1,7 @@
 #include "node_editor.h"
 #include "oscillator.h"
 #include "fourvoice.h"
+#include "filter.h"
 #include "gain.h"
 #include "signal_flow_editor.h"
 #include "output.h"
@@ -33,9 +34,6 @@ struct AudioData
     const NodeGraph* graph;
 };
 
-int activeVoices = 0;
-int lastActiveVoice = 0;
-float voices[4] = { 0,0,0,0 };
 std::tuple<float,float> evaluate(const NodeGraph& graph)
 {
     int root_node = graph.m_root;
@@ -63,6 +61,21 @@ std::tuple<float,float> evaluate(const NodeGraph& graph)
             // to the stack
             value_stack.push(in);
 		}
+        break;
+        case NodeType::FILTER:
+        {
+            auto in = value_stack.top();
+            value_stack.pop();
+            auto mod = value_stack.top();
+            value_stack.pop();
+            auto depth = value_stack.top();
+            value_stack.pop();
+
+            pNode->params[Filter::FREQMOD] = mod;
+            pNode->params[Filter::MODDEPTH] = depth;
+            //printf("depth %f, \t mod %f, \t in %f\n", depth, mod, in);
+            value_stack.push(pNode->process(in));
+        }
         break;
         case NodeType::QUAD_MIXER:
         {
@@ -379,6 +392,7 @@ int main(int, char**)
     ImGui_ImplSDL2_Shutdown();
     ImNodes::DestroyContext();
     ImGui::DestroyContext();
+    signalFlowEditor.shutdown();
 
     SDL_GL_DeleteContext(glContext);
     SDL_DestroyWindow(window);

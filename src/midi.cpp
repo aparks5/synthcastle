@@ -126,12 +126,12 @@ float MIDI::process()
 	// something changed, find another voice
     if (freq != m_voices[m_currentVoice]) {
 		m_currentVoice++;
-			m_voices[m_currentVoice] = freq;
+		if (m_currentVoice >= m_numVoices) {
+			m_currentVoice = 0;
+		}
+		m_voices[m_currentVoice] = freq;
 	}
 
-	if (m_currentVoice >= m_numVoices) {
-			m_currentVoice = 0;
-	}
 
 
 	// N calls to process will return N voices

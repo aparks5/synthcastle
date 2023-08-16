@@ -23,11 +23,14 @@ public:
 	};
 
 	void show();
+	void shutdown();
 	float output();
 	int root() { return m_rootNodeId; }
 	const NodeGraph* graph() const; // returns a reference, not thread safe
 	
 private:
+	void save();
+	void load();
 	std::mutex m_mut;
 	ImNodesEditorContext* m_pContext;
 	NodeGraph m_graph;
