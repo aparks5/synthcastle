@@ -30,6 +30,7 @@ public:
 	{
 		NODE_ID,
 		NUM_PORTS,
+		NUM_VOICES,
         SELECTED_PORT,
 	    NOTE,
 		VELOCITY,
@@ -45,6 +46,8 @@ private:
 	size_t m_currentVoice;
 	size_t m_cycle;
 	size_t m_numVoices;
+	// to throttle updates that would resize the number of voices
+	size_t m_cachedNumVoices;
 
 };
 

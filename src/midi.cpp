@@ -8,14 +8,8 @@ MIDI::MIDI()
 	, midiin(std::make_shared<RtMidiIn>())
 	, m_currentVoice(0)
 	, m_cycle(0)
-	, m_numVoices(4)
+	, m_cachedNumVoices(0)
 {
-	// todo: MIDI should be able to change number of voices
-	// depending on number of voice objects in the graph
-	for (int idx = 0; idx < m_numVoices; idx++) {
-		m_voices.push_back(0.);
-	}
-
 	midiin->setCallback(&MIDI::midiCallback, &midiUserData);
 
 	// populate the MIDI port list at initialization
@@ -93,6 +87,14 @@ void MIDI::display()
 	ImGui::PopItemWidth();
 
 	ImGui::PushItemWidth(120.0f);
+	int voices = (int)params[MIDI::NUM_VOICES];
+	ImGui::InputInt("Voices", &voices);
+	// todo: notify controller that number of voices has changed
+	if (voices != (int)params[MIDI::NUM_VOICES]) {
+		params[MIDI::NUM_VOICES] = voices;
+	}
+
+	ImGui::PushItemWidth(120.0f);
 	ImGui::Spacing();
 	ImGui::Text("Note: %d", midiUserData.note);
 	ImGui::Text("Velocity: %d", midiUserData.velocity);
@@ -109,6 +111,13 @@ void MIDI::display()
 
 float MIDI::process()
 {
+	// todo: move this to an update function
+	if (m_cachedNumVoices != params[MidiParams::NUM_VOICES]) {
+		m_cachedNumVoices = params[MidiParams::NUM_VOICES];
+		m_voices.resize(params[MidiParams::NUM_VOICES]);
+		m_currentVoice = 0;
+		m_cycle = 0;
+	}
 
 	params[MidiParams::NOTE] = midiUserData.note;
 
@@ -126,10 +135,11 @@ float MIDI::process()
 	// something changed, find another voice
     if (freq != m_voices[m_currentVoice]) {
 		m_currentVoice++;
-		if (m_currentVoice >= m_numVoices) {
+		if (m_currentVoice >= m_voices.size()) {
 			m_currentVoice = 0;
 		}
 		m_voices[m_currentVoice] = freq;
+		
 	}
 
 
@@ -138,7 +148,7 @@ float MIDI::process()
 	// this module should push N values to the stack
 	float val = m_voices[m_cycle];
 	m_cycle++;
-	if (m_cycle >= m_numVoices) {
+	if (m_cycle >= m_voices.size()) {
 		m_cycle = 0;
 	}
 	return m_voices[m_cycle];

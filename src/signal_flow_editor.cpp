@@ -125,14 +125,7 @@ void SignalFlowEditor::show()
 	ImNodes::EditorContextSet(m_pContext);
 
     ImGui::Begin("signal_flow_editor");
-    ImGui::TextUnformatted("A -- add osc node");
-    ImGui::TextUnformatted("C -- add const node");
-    ImGui::TextUnformatted("F -- add filter node");
-    ImGui::TextUnformatted("G -- add gain node");
-    ImGui::TextUnformatted("S -- add sound output node");
-	ImGui::TextUnformatted("M -- add midi input node");
-	ImGui::TextUnformatted("X -- add quad mixer node");
-	ImGui::TextUnformatted("V -- add four-voice node");
+	ImGui::TextUnformatted("Keys: a=osc/c=const/f=filt/g=gain/s=output/m=midi/x=mix/v=voice");
 
     ImNodes::BeginNodeEditor();
 
