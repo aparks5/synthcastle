@@ -1,6 +1,7 @@
 #pragma once
 
 #include "node.h"
+#include <unordered_map>
 
 class Gain : public Node
 {
@@ -20,12 +21,18 @@ public:
 		NUM_PARAMS
 	};
 
+	int lookupParam(std::string str) override;
+
 	void setGainf(float gain) { m_gain = gain; };
 	void setGaindB(float gaindB);
 
 	virtual void display() override;
 
 private:
+	std::unordered_map<std::string, int> m_lookup = {
+			{"gain", GAIN},
+			{"gainmod", GAINMOD},
+	};
 	float m_gain;
 	int floatTodB(float f) const;
 	float dBtoFloat(int db) const;

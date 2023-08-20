@@ -1,6 +1,7 @@
 #pragma once
 #include "nodetypes.h"
 #include <vector>
+#include <string>
 
 class Node
 {
@@ -35,5 +36,6 @@ public:
 	virtual float process() { return 0; }
 	virtual void display() {};
 	virtual void update() {};
+	virtual int lookupParam(std::string str) { return -1; }
 
 };

@@ -102,6 +102,11 @@ void MIDI::display()
 
 	ImGui::Spacing();
 	// display note and velocity
+
+	ImNodes::BeginOutputAttribute(params[MidiParams::EXTRA_OUT_ID]);
+	ImGui::TextUnformatted("Extra Out");
+	ImNodes::EndOutputAttribute();
+
 	ImNodes::BeginOutputAttribute(params[MidiParams::NODE_ID]);
 	ImGui::TextUnformatted("CV Out");
 	ImNodes::EndOutputAttribute();

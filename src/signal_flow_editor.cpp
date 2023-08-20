@@ -193,9 +193,14 @@ void SignalFlowEditor::show()
 		}
 		else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_M)) {
 			auto node = std::make_shared<MIDI>();
+			auto extra = std::make_shared<Relay>();
 			auto id = m_graph.insert_node(node);
+			auto extraId = m_graph.insert_node(extra);
+			m_graph.insert_edge(extraId, id);
 			node->params[MIDI::NODE_ID] = id;
+			node->params[MIDI::EXTRA_OUT_ID] = extraId;
 			m_nodes.push_back(node);
+			// outputs have to be inserted after the process node
 			const ImVec2 click_pos = ImGui::GetMousePosOnOpeningCurrentPopup();
 			ImNodes::SetNodeScreenSpacePos(id, click_pos);
 		}

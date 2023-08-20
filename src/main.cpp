@@ -1,3 +1,7 @@
+#include "model.h"
+#include "view.h"
+#include "controller.h"
+
 #include "node_editor.h"
 #include "oscillator.h"
 #include "fourvoice.h"
@@ -31,7 +35,7 @@ struct AudioData
 {
     std::vector<std::vector<float>> output;
     float sampleRate;
-    const NodeGraph* graph;
+    // const NodeGraph* graph;
 };
 
 std::tuple<float,float> evaluate(const NodeGraph& graph)
@@ -199,7 +203,7 @@ static int paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 
     for (size_t sampIdx = 0; sampIdx < framesPerBuffer; sampIdx++) {
         float output = 0.f;
-        auto lr = evaluate(*(data->graph));
+        auto lr = std::pair{0, 0}; // eventually: controller->evaluate());
             // write interleaved output -- L/R
 		*out++ = std::get<0>(lr);
 		*out++ = std::get<1>(lr);
@@ -256,148 +260,66 @@ const char* initSDL()
 
 int main(int, char**)
 {
-	PaStream* stream;
-	PortAudioHandler paInit;
 
-    const char* glsl_version = initSDL();
-
-    SDL_WindowFlags window_flags =
-        (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-    auto window = SDL_CreateWindow(
-        "Dear ImGui SDL2+OpenGL3 example",
-        SDL_WINDOWPOS_CENTERED,
-        SDL_WINDOWPOS_CENTERED,
-        1280,
-        720,
-        window_flags);
-    auto glContext = SDL_GL_CreateContext(window);
-    SDL_GL_MakeCurrent(window, glContext);
-    SDL_GL_SetSwapInterval(1); // Enable vsync
-
-    // Setup Dear ImGui context
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    auto io = ImGui::GetIO();
-
-    ImNodes::CreateContext();
-    SignalFlowEditor signalFlowEditor;
-
-    // Setup Dear ImGui style
-    ImGui::StyleColorsDark();
-    // ImGui::StyleColorsClassic();
-    ImNodes::StyleColorsDark();
-
-    // Setup Platform/Renderer backends
-    ImGui_ImplSDL2_InitForOpenGL(window, glContext);
-    ImGui_ImplOpenGL3_Init(glsl_version);
-
-    // Set up audio output
-    size_t bufSize = 8192;
-    AudioData audioData; // poll the editor if there is an output node to fill the buffer in audioData
-    audioData.graph = signalFlowEditor.graph();
-
-    PaStreamParameters outputParameters;
-
-    int index = Pa_GetDefaultOutputDevice();
-    outputParameters.device = index;
-    if (outputParameters.device == paNoDevice) {
-        return false;
-    }
-
-    const PaDeviceInfo* pInfo = Pa_GetDeviceInfo(index);
-    if (pInfo != 0)
+	// TODO: MOVE to portaudio class
     {
-        printf("Output device name: '%s'\r", pInfo->name);
-    }
+        PaStream* stream;
+        PortAudioHandler paInit;
 
-    outputParameters.channelCount = 2;       /* stereo output */
-    outputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
-    outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
-    outputParameters.hostApiSpecificStreamInfo = NULL;
+        // Set up audio output
+        size_t bufSize = 8192;
+        AudioData audioData; // poll the editor if there is an output node to fill the buffer in audioData
+        // audioData.graph = signalFlowEditor.graph();
 
-    PaError err = Pa_OpenStream(
-        &stream,
-        NULL, /* no input */
-        &outputParameters,
-        44100,
-        1024,
-        paClipOff,      /* we won't output out of range samples so don't bother clipping them */
-        &paCallbackMethod,
-        &audioData            /* Using 'this' for userData so we can cast to MixerStream* in paCallback method */
-    );
+        PaStreamParameters outputParameters;
 
-    if (err != paNoError)
-    {
-        printf("Failed to open stream to device !!!");
-    }
-
-    err = Pa_StartStream(stream);
-    if (err != paNoError)
-    {
-        printf("Failed to start stream!!!");
-    }
-
-//    err = Pa_SetStreamFinishedCallback(stream, &paStreamFinishedMethod);
-
-    if (err != paNoError)
-    {
-        Pa_CloseStream(stream);
-        stream = 0;
-    }
-
-   ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
-    // Main loop
-    bool done = false;
-
-    while (!done)
-    {
-
-        SDL_Event event;
-        while (SDL_PollEvent(&event))
-        {
-            ImGui_ImplSDL2_ProcessEvent(&event);
-            if (event.type == SDL_QUIT)
-                done = true;
-            if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE &&
-                event.window.windowID == SDL_GetWindowID(window))
-                done = true;
+        int index = Pa_GetDefaultOutputDevice();
+        outputParameters.device = index;
+        if (outputParameters.device == paNoDevice) {
+            return false;
         }
 
-        // Start the Dear ImGui frame
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplSDL2_NewFrame();
-        ImGui::NewFrame();
+        const PaDeviceInfo* pInfo = Pa_GetDeviceInfo(index);
+        if (pInfo != 0)
+        {
+            printf("Output device name: '%s'\r", pInfo->name);
+        }
 
-        ImGui::ShowDemoWindow(nullptr);
-        signalFlowEditor.show();
-        audioData.graph = signalFlowEditor.graph();
+        outputParameters.channelCount = 2;       /* stereo output */
+        outputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
+        outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
+        outputParameters.hostApiSpecificStreamInfo = NULL;
 
-        // Rendering
-        ImGui::Render();
-        auto& io = ImGui::GetIO();
-        glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-        glClearColor(
-            clear_color.x * clear_color.w,
-            clear_color.y * clear_color.w,
-            clear_color.z * clear_color.w,
-            clear_color.w);
-        glClear(GL_COLOR_BUFFER_BIT);
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        SDL_GL_SwapWindow(window);
+        PaError err = Pa_OpenStream(
+            &stream,
+            NULL, /* no input */
+            &outputParameters,
+            44100,
+            1024,
+            paClipOff,      /* we won't output out of range samples so don't bother clipping them */
+            &paCallbackMethod,
+            &audioData            /* Using 'this' for userData so we can cast to MixerStream* in paCallback method */
+        );
+
+        if (err != paNoError) {
+            printf("Failed to open stream to device !!!");
+        }
+        err = Pa_StartStream(stream);
+        if (err != paNoError) {
+            printf("Failed to start stream!!!");
+        }
+        if (err != paNoError) {
+            Pa_CloseStream(stream);
+            stream = 0;
+        }
     }
 
-    // Cleanup
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplSDL2_Shutdown();
-    ImNodes::DestroyContext();
-    ImGui::DestroyContext();
-    signalFlowEditor.shutdown();
+    auto model = std::make_shared<Model>();
+    auto view = std::make_shared<View>();
+    auto controller = std::make_shared<Controller>(view, model);
+    view->addListener(controller);
+    view->run();
 
-    SDL_GL_DeleteContext(glContext);
-    SDL_DestroyWindow(window);
-    SDL_CloseAudio();
-    SDL_Quit();
 
     return 0;
 }

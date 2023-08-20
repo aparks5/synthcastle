@@ -8,6 +8,10 @@ Gain::Gain()
 	params[Gain::GAIN] = 1.f;
 }
 
+int Gain::lookupParam(std::string str) {
+	return m_lookup[str];
+}
+
 void Gain::display()
 {
 	ImNodes::BeginNode(params[GainParams::NODE_ID]);

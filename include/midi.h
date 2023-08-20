@@ -29,6 +29,7 @@ public:
 	enum MidiParams
 	{
 		NODE_ID,
+		EXTRA_OUT_ID,
 		NUM_PORTS,
 		NUM_VOICES,
         SELECTED_PORT,
