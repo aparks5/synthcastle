@@ -29,6 +29,36 @@ public:
 	int create() override;
 };
 
+class ConstantNodeCreator : public NodeCreationCommand
+{
+public:
+	ConstantNodeCreator(NodeGraph& g, ViewBag& v)
+		: NodeCreationCommand(g, v)
+	{}
+	virtual ~ConstantNodeCreator() {};
+	int create() override;
+};
+
+class OutputNodeCreator : public NodeCreationCommand
+{
+public:
+	OutputNodeCreator(NodeGraph& g, ViewBag& v)
+		: NodeCreationCommand(g, v)
+	{}
+	virtual ~OutputNodeCreator() {};
+	int create() override;
+};
+
+class OscillatorNodeCreator : public NodeCreationCommand
+{
+public:
+	OscillatorNodeCreator(NodeGraph& g, ViewBag& v)
+		: NodeCreationCommand(g, v)
+	{}
+	virtual ~OscillatorNodeCreator() {};
+	int create() override;
+};
+
 class Model
 {
 public:

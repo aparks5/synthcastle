@@ -1,12 +1,20 @@
 #include "model.h"
 #include "util.h"
 
+#include "constant.h"
+#include "output.h"
 #include "gain.h"
+#include "oscillator.h"
 #include "value.h"
+
+#define INVALID_PARAM_VALUE (-128)
 
 Model::Model()
 {
 	m_creators[NodeType::GAIN] = std::make_shared<GainNodeCreator>(m_graph, m_cache);
+	m_creators[NodeType::OSCILLATOR] = std::make_shared<OscillatorNodeCreator>(m_graph, m_cache);
+	m_creators[NodeType::CONSTANT] = std::make_shared<ConstantNodeCreator>(m_graph, m_cache);
+	m_creators[NodeType::OUTPUT] = std::make_shared<OutputNodeCreator>(m_graph, m_cache);
 }
 
 void Model::link(int from, int to)
@@ -39,6 +47,76 @@ int Model::create(NodeType type)
 	return command->create();
 }
 
+int ConstantNodeCreator::create()
+{
+	auto k = std::make_shared<Constant>();
+	auto id = m_g.insert_node(k);
+	k->params[Constant::NODE_ID] = id;
+	cacheType(id, NodeType::CONSTANT);
+	cacheParam(id, "value", 0.f);
+	return id;
+}
+
+int OscillatorNodeCreator::create()
+{
+	auto oscNode = std::make_shared<Oscillator>();
+	auto oscMod = std::make_shared<Value>(INVALID_PARAM_VALUE);
+	auto freq = std::make_shared<Value>(INVALID_PARAM_VALUE);
+	auto depthMod = std::make_shared<Value>(0.f);
+	auto depthModId = m_g.insert_node(depthMod);
+	auto oscModId = m_g.insert_node(oscMod);
+	auto freqId = m_g.insert_node(freq);
+	auto id = m_g.insert_node(oscNode);
+	oscNode->params[Oscillator::MODDEPTH_ID] = depthModId;
+	oscNode->params[Oscillator::MODFREQ_ID] = oscModId;
+	oscNode->params[Oscillator::FREQ_ID] = freqId;
+	oscNode->params[Oscillator::NODE_ID] = id;
+	m_g.insert_edge(id, depthModId);
+	m_g.insert_edge(id, oscModId);
+	m_g.insert_edge(id, freqId);
+	// todo: refactor assignment and caching should happen in one call
+	cacheType(id, NodeType::OSCILLATOR);
+	cacheType(oscModId, NodeType::VALUE);
+	cacheType(freqId, NodeType::VALUE);
+	cacheType(depthModId, NodeType::VALUE);
+	cacheParam(id, "moddepth_id", depthModId);
+	cacheParam(id, "modfreq_id", oscModId);
+	cacheParam(id, "freq_id", freqId);
+	cacheParam(id, "node_id", id);
+	cacheParam(id, "freq", 0.f);
+	cacheParam(id, "modfreq", 0.f);
+	cacheParam(id, "moddepth", 0.f);
+	cacheParam(id, "tuning_coarse", 0.f);
+	cacheParam(id, "tuning_fine", 0.f);
+	cacheParam(id, "waveform", 0.f);
+
+	return id;
+}
+
+int OutputNodeCreator::create()
+{
+	auto outputNode = std::make_shared<Output>();
+	auto leftNode = std::make_shared<Value>(0.f);
+	auto rightNode = std::make_shared<Value>(0.f);
+	auto rightNodeId = m_g.insert_node(rightNode);
+	auto leftNodeId = m_g.insert_node(leftNode);
+	auto outputId = m_g.insert_node(outputNode);
+	m_g.insert_edge(outputId, rightNodeId);
+	m_g.insert_edge(outputId, leftNodeId);
+	outputNode->params[Output::NODE_ID] = outputId;
+	outputNode->params[Output::INPUT_R_ID] = rightNodeId;
+	outputNode->params[Output::INPUT_L_ID] = leftNodeId;
+	cacheType(outputId, NodeType::OUTPUT);
+	cacheType(leftNodeId, NodeType::VALUE);
+	cacheType(rightNodeId, NodeType::VALUE);
+	cacheParam(outputId, "left_id", leftNodeId);
+	cacheParam(outputId, "right_id", rightNodeId);
+	cacheParam(outputId, "display_left", 0.f);
+	cacheParam(outputId, "display_right", 0.f);
+
+	return outputId;
+}
+
 int GainNodeCreator::create()
 {
 	auto gainNode = std::make_shared<Gain>();
@@ -52,9 +130,9 @@ int GainNodeCreator::create()
 	gainNode->params[Gain::GAINMOD_ID] = gainModId;
 	m_g.insert_edge(gainId, gainModId);
 	m_g.insert_edge(gainId, gainInId);
+	cacheType(gainId, NodeType::GAIN);
 	cacheType(gainInId, NodeType::VALUE);
 	cacheType(gainModId, NodeType::VALUE);
-	cacheType(gainId, NodeType::GAIN);
 	cacheParam(gainId, "input_id", gainInId);
 	cacheParam(gainId, "gainmod_id", gainModId);
 	cacheParam(gainId, "gain", 0.f);

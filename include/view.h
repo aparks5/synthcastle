@@ -28,6 +28,11 @@ public:
 	}
 protected:
 	std::shared_ptr<ViewListener> m_listener;
+	void update(int id, const NodeSnapshot& snap, std::string param, float newval) {
+		if (newval != snap.params.at(param)) {
+			m_listener->queueUpdate(id, param, newval);
+		}
+	}
 };
 
 class View
@@ -55,9 +60,31 @@ private:
 class GainDisplayCommand : public NodeDisplayCommand
 {
 public:
-	GainDisplayCommand()
-	{}
+	GainDisplayCommand() {}
 	void display(int id, const NodeSnapshot& snapshot) override;
 };
+
+class ConstantDisplayCommand : public NodeDisplayCommand
+{
+public:
+	ConstantDisplayCommand() {}
+	void display(int id, const NodeSnapshot& snapshot) override;
+};
+
+class OscillatorDisplayCommand : public NodeDisplayCommand
+{
+public:
+	OscillatorDisplayCommand() {}
+	void display(int id, const NodeSnapshot& snapshot) override;
+};
+
+class OutputDisplayCommand : public NodeDisplayCommand
+{
+public:
+	OutputDisplayCommand() {}
+	void display(int id, const NodeSnapshot& snapshot) override;
+};
+
+
 
 

@@ -32,4 +32,12 @@ private:
 	std::queue<UpdateEvent> m_updates;
 	std::queue<std::string> m_creationQueue;
 	std::queue<LinkEvent> m_linkQueue;
+
+	std::unordered_map<std::string, NodeType> m_nodeTypeMap =
+	{
+		{"gain", NodeType::GAIN},
+		{"oscillator", NodeType::OSCILLATOR},
+		{"constant", NodeType::CONSTANT},
+		{"output", NodeType::OUTPUT}
+	};
 };

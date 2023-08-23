@@ -42,9 +42,12 @@ int Controller::createNode(std::string nodeType)
 {
 	// queue creation and linking
 	// todo, use map to avoid long if statements
-	if (nodeType == "gain") {
-		return m_model->create(NodeType::GAIN);
+	// use dictionary
+	if (m_nodeTypeMap.find(nodeType) != m_nodeTypeMap.end()) {
+		return m_model->create(m_nodeTypeMap[nodeType]);
 	}
+
+	return -1;
 }
 
 void Controller::createLink(int from, int to)
@@ -54,10 +57,10 @@ void Controller::createLink(int from, int to)
 
 void Controller::update()
 {
-	m_bUpdated = ((!m_creationQueue.empty()) &&
-				  (!m_updates.empty()) &&
-				  (!m_linkQueue.empty()));
-	
+	//m_bUpdated = ((!m_creationQueue.empty()) &&
+	//			  (!m_updates.empty()) &&
+	//			  (!m_linkQueue.empty()));
+	//
 	while (!m_linkQueue.empty()) {
 		auto link = m_linkQueue.front();
 		m_linkQueue.pop();

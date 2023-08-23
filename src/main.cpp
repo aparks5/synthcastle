@@ -320,6 +320,5 @@ int main(int, char**)
     view->addListener(controller);
     view->run();
 
-
     return 0;
 }
