@@ -25,9 +25,6 @@ public:
 
 	NodeType type;
 	float value;
-	// subclasses should initialize this 
-	// based on NUM_PARAMS at end of params enum
-	// per class
 	std::vector<float> params;
 
 	virtual ~Node() {};

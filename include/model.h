@@ -15,6 +15,8 @@ public:
 protected:
 	NodeGraph& m_g;
 	ViewBag& m_v;
+	void cacheParam(int id, std::string param, float value);
+	void cacheType(int id, NodeType t);
 };
 
 class GainNodeCreator : public NodeCreationCommand

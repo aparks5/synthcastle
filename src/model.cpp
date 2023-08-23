@@ -44,7 +44,6 @@ int GainNodeCreator::create()
 	auto gainNode = std::make_shared<Gain>();
 	auto gainIn = std::make_shared<Value>(0.f);
 	auto gainMod = std::make_shared<Value>(1.f);
-	// you need to assign this gain id for linking
 	auto gainModId = m_g.insert_node(gainMod);
 	auto gainInId = m_g.insert_node(gainIn);
 	auto gainId = m_g.insert_node(gainNode);
@@ -53,19 +52,32 @@ int GainNodeCreator::create()
 	gainNode->params[Gain::GAINMOD_ID] = gainModId;
 	m_g.insert_edge(gainId, gainModId);
 	m_g.insert_edge(gainId, gainInId);
-	NodeSnapshot snap;
-	m_v.map[gainInId] = snap;
-	m_v.map[gainInId].nodeType = NodeType::VALUE;
-	m_v.map[gainInId].edges[0] = EdgeSnapshot(gainId, gainInId);
-	m_v.map[gainModId] = snap;
-	m_v.map[gainModId].nodeType = NodeType::VALUE;
-	m_v.map[gainId] = snap;
-	m_v.map[gainId].nodeType = NodeType::GAIN;
-	m_v.map[gainId].params["input_id"] = gainInId;
-	m_v.map[gainId].params["gainmod_id"] = gainModId;
-	m_v.map[gainId].edges[0] = EdgeSnapshot(gainId, gainModId);
-	m_v.map[gainId].edges[1] = EdgeSnapshot(gainId, gainInId);
-	m_v.map[gainId].params["gain"] = 0.f;
+	cacheType(gainInId, NodeType::VALUE);
+	cacheType(gainModId, NodeType::VALUE);
+	cacheType(gainId, NodeType::GAIN);
+	cacheParam(gainId, "input_id", gainInId);
+	cacheParam(gainId, "gainmod_id", gainModId);
+	cacheParam(gainId, "gain", 0.f);
 
 	return gainId;
+}
+
+void NodeCreationCommand::cacheType(int id, NodeType t)
+{
+	if (m_v.map.find(id) == m_v.map.end()) {
+		NodeSnapshot snap;
+		m_v.map[id] = snap;
+	}
+
+	m_v.map[id].nodeType = t;
+}
+
+void NodeCreationCommand::cacheParam(int id, std::string param, float value) {
+	if (m_v.map.find(id) == m_v.map.end()) {
+		NodeSnapshot snap;
+		m_v.map[id] = snap;
+	}
+
+	m_v.map[id].params[param] = value;
+
 }

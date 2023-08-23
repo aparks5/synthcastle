@@ -26,8 +26,6 @@ public:
 	void setGainf(float gain) { m_gain = gain; };
 	void setGaindB(float gaindB);
 
-	virtual void display() override;
-
 private:
 	std::unordered_map<std::string, int> m_lookup = {
 			{"gain", GAIN},
