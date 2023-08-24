@@ -17,6 +17,157 @@ Model::Model()
 	m_creators[NodeType::OUTPUT] = std::make_shared<OutputNodeCreator>(m_graph, m_cache);
 }
 
+std::tuple<float,float> Model::evaluate()
+{
+	if (m_graph.getRoot() == -1) {
+		return {0, 0};
+	}
+
+	std::stack<int> postorder;
+	dfs_traverse(m_graph, [&postorder](const int node_id) -> void { postorder.push(node_id); });
+
+    int voiceCount = 0;
+
+	std::stack<float> value_stack;
+	while (!postorder.empty())
+	{
+		const int id = postorder.top();
+		postorder.pop();
+		const auto& pNode = m_graph.node(id);
+
+		switch (pNode->type) {
+  //      case NodeType::FOUR_VOICE:
+  //      {
+  //          auto in = value_stack.top();
+  //          value_stack.pop();
+  //          // MIDI block should push all the voices
+  //          // to the stack
+  //          value_stack.push(in);
+		//}
+  //      break;
+        //case NodeType::FILTER:
+        //{
+        //    auto in = value_stack.top();
+        //    value_stack.pop();
+        //    auto mod = value_stack.top();
+        //    value_stack.pop();
+        //    auto depth = value_stack.top();
+        //    value_stack.pop();
+
+        //    pNode->params[Filter::FREQMOD] = mod;
+        //    pNode->params[Filter::MODDEPTH] = depth;
+        //    //printf("depth %f, \t mod %f, \t in %f\n", depth, mod, in);
+        //    value_stack.push(pNode->process(in));
+        //}
+        //break;
+        //case NodeType::QUAD_MIXER:
+        //{
+        //    auto d = value_stack.top();
+        //    value_stack.pop();
+        //    auto c = value_stack.top();
+        //    value_stack.pop();
+        //    auto b = value_stack.top();
+        //    value_stack.pop();
+        //    auto a = value_stack.top();
+        //    value_stack.pop();
+        //    pNode->params[QuadMixer::INPUT_A] = a;
+        //    pNode->params[QuadMixer::INPUT_B] = b;
+        //    pNode->params[QuadMixer::INPUT_C] = c;
+        //    pNode->params[QuadMixer::INPUT_D] = d;
+        //    value_stack.push(pNode->process());
+        //}
+        //break;
+        //case NodeType::MIDI_IN:
+        //{
+        //    // push all voices to stack
+        //    value_stack.push(pNode->process());
+        //}
+        //break;
+		case NodeType::OSCILLATOR:
+		{
+			pNode->update();
+			auto freq = value_stack.top();
+			value_stack.pop();
+			if (freq != INVALID_PARAM_VALUE) {
+                // scale midi as float to hz
+                float target = 0;
+                if ((freq * 128) > 15) {
+                    target = midiNoteToFreq((int)(freq * 128.));
+                }
+                pNode->params[Oscillator::FREQ] = target;
+			}
+			auto mod = value_stack.top();
+			value_stack.pop();
+			if (mod != INVALID_PARAM_VALUE) {
+				pNode->params[Oscillator::MODFREQ] = mod;
+			}
+			auto depth = value_stack.top();
+			value_stack.pop();
+			if (depth != INVALID_PARAM_VALUE) {
+				pNode->params[Oscillator::MODDEPTH] = depth;
+			}
+
+			auto temp = pNode->process();
+			value_stack.push(temp);
+		}
+		break;
+        case NodeType::CONSTANT:
+        {
+            auto val = pNode->process();
+            value_stack.push(val);
+        }
+        break;
+		case NodeType::GAIN:
+		{
+			auto in = value_stack.top();
+			value_stack.pop();
+			auto mod = value_stack.top();
+			value_stack.pop();
+			pNode->params[Gain::GAINMOD] = abs(mod);
+			auto val = pNode->process(in);
+			value_stack.push(val);
+		}
+		break;
+		case NodeType::VALUE:
+		{
+             //if the edge does not have an edge connecting to another node, then just use the value
+            // at this node. it means the node's input pin has not been connected to anything and
+            // the value comes from the node's ui.
+			if (m_graph.num_edges_from_node(id) == 0ull) {
+				value_stack.push(pNode->value);
+			}
+		}
+        break;
+        case NodeType::OUTPUT:
+        {
+			// The final output node isn't evaluated in the loop
+			if (!value_stack.empty()) {
+				float left = value_stack.top();
+				value_stack.pop(); // stack should be empty now
+				pNode->params[Output::DISPLAY_L] = left;
+                if (value_stack.empty()) {
+                    return std::make_tuple(left, 0.);
+                }
+
+                if (!value_stack.empty()) {
+                    float right = value_stack.top();
+                    pNode->params[Output::DISPLAY_R] = right;
+                    value_stack.pop(); // stack should be empty now
+					return std::make_tuple(left, right);
+                }
+			}
+		}
+		break;
+		default:
+			break;
+		}
+	}
+
+    return std::make_tuple(0.,0.);
+}
+
+
+
 void Model::link(int from, int to)
 {
 	if (m_cache.map.find(from) != m_cache.map.end()) {
@@ -52,6 +203,7 @@ int ConstantNodeCreator::create()
 	auto k = std::make_shared<Constant>();
 	auto id = m_g.insert_node(k);
 	k->params[Constant::NODE_ID] = id;
+	k->params[Constant::VALUE] = 0.f;
 	cacheType(id, NodeType::CONSTANT);
 	cacheParam(id, "value", 0.f);
 	return id;
@@ -101,6 +253,7 @@ int OutputNodeCreator::create()
 	auto rightNodeId = m_g.insert_node(rightNode);
 	auto leftNodeId = m_g.insert_node(leftNode);
 	auto outputId = m_g.insert_node(outputNode);
+	m_g.setRoot(outputId);
 	m_g.insert_edge(outputId, rightNodeId);
 	m_g.insert_edge(outputId, leftNodeId);
 	outputNode->params[Output::NODE_ID] = outputId;

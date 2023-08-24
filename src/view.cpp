@@ -314,22 +314,24 @@ void GainDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
 void ConstantDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 {
+	ImGui::PushItemWidth(120.0f);
 	ImNodes::BeginNode(id);
 	ImNodes::BeginNodeTitleBar();
 	ImGui::TextUnformatted("Constant");
 	ImNodes::EndNodeTitleBar();
 
-	ImGui::PushItemWidth(120.0f);
     auto v = snapshot.params.at("value");
 	ImGui::DragFloat("Value", &v, 0.5f, 0, 1.);
     update(id, snapshot, "value", v);
-	ImGui::PopItemWidth();
 
 	ImNodes::BeginOutputAttribute(id);
+    const float text_width = ImGui::CalcTextSize("Out").x;
+    ImGui::Indent(120.f + ImGui::CalcTextSize("Out").x - text_width);
 	ImGui::TextUnformatted("Out");
 	ImNodes::EndOutputAttribute();
 
 	ImNodes::EndNode();
+	ImGui::PopItemWidth();
 }
 
 void OscillatorDisplayCommand::display(int id, const NodeSnapshot& snapshot)
@@ -353,7 +355,7 @@ void OscillatorDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     ImGui::TextUnformatted("FreqMod");
     ImNodes::EndInputAttribute();
 
-    ImNodes::BeginInputAttribute(params["modfreq_depth"]);
+    ImNodes::BeginInputAttribute(params["moddepth_id"]);
     ImGui::TextUnformatted("FreqModDepth");
     ImNodes::EndInputAttribute();
 

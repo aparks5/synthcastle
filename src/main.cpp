@@ -35,157 +35,8 @@ struct AudioData
 {
     std::vector<std::vector<float>> output;
     float sampleRate;
-    // const NodeGraph* graph;
+    std::shared_ptr<Controller> controller;
 };
-
-std::tuple<float,float> evaluate(const NodeGraph& graph)
-{
-    int root_node = graph.m_root;
-    if (root_node == -1) {
-        return std::make_tuple(0.,0.);
-    }
-	std::stack<int> postorder;
-	dfs_traverse(graph, root_node, [&postorder](const int node_id) -> void { postorder.push(node_id); });
-
-    int voiceCount = 0;
-
-	std::stack<float> value_stack;
-	while (!postorder.empty())
-	{
-		const int id = postorder.top();
-		postorder.pop();
-		const auto& pNode = graph.node(id);
-
-		switch (pNode->type) {
-        case NodeType::FOUR_VOICE:
-        {
-            auto in = value_stack.top();
-            value_stack.pop();
-            // MIDI block should push all the voices
-            // to the stack
-            value_stack.push(in);
-		}
-        break;
-        case NodeType::FILTER:
-        {
-            auto in = value_stack.top();
-            value_stack.pop();
-            auto mod = value_stack.top();
-            value_stack.pop();
-            auto depth = value_stack.top();
-            value_stack.pop();
-
-            pNode->params[Filter::FREQMOD] = mod;
-            pNode->params[Filter::MODDEPTH] = depth;
-            //printf("depth %f, \t mod %f, \t in %f\n", depth, mod, in);
-            value_stack.push(pNode->process(in));
-        }
-        break;
-        case NodeType::QUAD_MIXER:
-        {
-            auto d = value_stack.top();
-            value_stack.pop();
-            auto c = value_stack.top();
-            value_stack.pop();
-            auto b = value_stack.top();
-            value_stack.pop();
-            auto a = value_stack.top();
-            value_stack.pop();
-            pNode->params[QuadMixer::INPUT_A] = a;
-            pNode->params[QuadMixer::INPUT_B] = b;
-            pNode->params[QuadMixer::INPUT_C] = c;
-            pNode->params[QuadMixer::INPUT_D] = d;
-            value_stack.push(pNode->process());
-        }
-        break;
-        case NodeType::MIDI_IN:
-        {
-            // push all voices to stack
-            value_stack.push(pNode->process());
-        }
-        break;
-		case NodeType::OSCILLATOR:
-		{
-			pNode->update();
-			auto freq = value_stack.top();
-			value_stack.pop();
-			if (freq != INVALID_PARAM_VALUE) {
-                // scale midi as float to hz
-                float target = 0;
-                if ((freq * 128) > 15) {
-                    target = midiNoteToFreq((int)(freq * 128.));
-                }
-                pNode->params[Oscillator::FREQ] = target;
-			}
-			auto mod = value_stack.top();
-			value_stack.pop();
-			if (mod != INVALID_PARAM_VALUE) {
-				pNode->params[Oscillator::MODFREQ] = mod;
-			}
-			auto depth = value_stack.top();
-			value_stack.pop();
-			if (depth != INVALID_PARAM_VALUE) {
-				pNode->params[Oscillator::MODDEPTH] = depth;
-			}
-
-			auto temp = pNode->process();
-			value_stack.push(temp);
-		}
-		break;
-        case NodeType::CONSTANT:
-        {
-            auto val = pNode->process();
-            value_stack.push(val);
-        }
-        break;
-		case NodeType::GAIN:
-		{
-			auto in = value_stack.top();
-			value_stack.pop();
-			auto mod = value_stack.top();
-			value_stack.pop();
-			pNode->params[Gain::GAINMOD] = abs(mod);
-			auto val = pNode->process(in);
-			value_stack.push(val);
-		}
-		break;
-		case NodeType::VALUE:
-		{
-             //if the edge does not have an edge connecting to another node, then just use the value
-            // at this node. it means the node's input pin has not been connected to anything and
-            // the value comes from the node's ui.
-			if (graph.num_edges_from_node(id) == 0ull) {
-				value_stack.push(pNode->value);
-			}
-		}
-        break;
-        case NodeType::OUTPUT:
-        {
-			// The final output node isn't evaluated in the loop
-			if (!value_stack.empty()) {
-				float left = value_stack.top();
-				value_stack.pop(); // stack should be empty now
-				pNode->params[Output::DISPLAY_L] = left;
-                if (value_stack.empty()) {
-                    return std::make_tuple(left, 0.);
-                }
-
-                if (!value_stack.empty()) {
-                    float right = value_stack.top();
-                    pNode->params[Output::DISPLAY_R] = right;
-                    value_stack.pop(); // stack should be empty now
-					return std::make_tuple(left, right);
-                }
-			}
-		}
-		break;
-		default:
-			break;
-		}
-	}
-
-    return std::make_tuple(0.,0.);
-}
 
 static int paCallbackMethod(const void* inputBuffer, void* outputBuffer,
     unsigned long framesPerBuffer,
@@ -203,7 +54,7 @@ static int paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 
     for (size_t sampIdx = 0; sampIdx < framesPerBuffer; sampIdx++) {
         float output = 0.f;
-        auto lr = std::pair{0, 0}; // eventually: controller->evaluate());
+        auto lr = data->controller->evaluate();
             // write interleaved output -- L/R
 		*out++ = std::get<0>(lr);
 		*out++ = std::get<1>(lr);
@@ -260,6 +111,11 @@ const char* initSDL()
 
 int main(int, char**)
 {
+    auto model = std::make_shared<Model>();
+    auto view = std::make_shared<View>();
+    auto controller = std::make_shared<Controller>(view, model);
+    view->addListener(controller);
+
 
 	// TODO: MOVE to portaudio class
     {
@@ -269,7 +125,7 @@ int main(int, char**)
         // Set up audio output
         size_t bufSize = 8192;
         AudioData audioData; // poll the editor if there is an output node to fill the buffer in audioData
-        // audioData.graph = signalFlowEditor.graph();
+        audioData.controller = controller;
 
         PaStreamParameters outputParameters;
 
@@ -314,10 +170,6 @@ int main(int, char**)
         }
     }
 
-    auto model = std::make_shared<Model>();
-    auto view = std::make_shared<View>();
-    auto controller = std::make_shared<Controller>(view, model);
-    view->addListener(controller);
     view->run();
 
     return 0;

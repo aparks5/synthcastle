@@ -14,6 +14,7 @@ public:
 	Controller(std::shared_ptr<View> view, std::shared_ptr<Model> model);
 	virtual ~Controller() {}
 	void notify(EventType event, const void* data) override;
+	std::tuple<float, float> evaluate();
 	void queueCreation(std::string nodeType) override;
 	void queueLink(int from, int to) override;
 	void queueUpdate(int id, std::string param, float val) override;

@@ -1,25 +1,5 @@
 #include "nodegraph.h"
 
-NodeGraph::NodeGraph(const NodeGraph& g)
-{
-	std::scoped_lock lock(m_mut);
-	// copy constructor because we have lots of pointers
-	m_root = g.m_root;
-    auto vertices = g.nodes_;
-	current_id_ = 0;
-	for (size_t idx = 0; idx < vertices.size(); idx++) {
-		if (vertices.find(vertices.sorted_ids_[idx]) != vertices.end()) {
-			current_id_ = vertices.sorted_ids_[idx];
-			auto temp = std::make_shared<Node>(*vertices.elements_[idx]);
-			insert_node(temp);
-		}
-	}
-
-	edges_ = g.edges_;
-	current_id_ = g.current_id_;
-}
-
-
 std::shared_ptr<Node>& NodeGraph::node(const int id)
 {
 	return const_cast<std::shared_ptr<Node>&>(static_cast<const NodeGraph*>(this)->node(id));

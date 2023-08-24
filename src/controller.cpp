@@ -8,6 +8,11 @@ Controller::Controller(std::shared_ptr<View> view, std::shared_ptr<Model> model)
 
 }
 
+std::tuple<float, float> Controller::evaluate()
+{
+	return m_model->evaluate();
+}
+
 ViewBag Controller::snapshot()
 {
 	// return a cached viewbag if the model hasn't been updated
@@ -57,10 +62,10 @@ void Controller::createLink(int from, int to)
 
 void Controller::update()
 {
-	//m_bUpdated = ((!m_creationQueue.empty()) &&
-	//			  (!m_updates.empty()) &&
-	//			  (!m_linkQueue.empty()));
-	//
+	m_bUpdated = ((!m_creationQueue.empty()) &&
+				  (!m_updates.empty()) &&
+				  (!m_linkQueue.empty()));
+	
 	while (!m_linkQueue.empty()) {
 		auto link = m_linkQueue.front();
 		m_linkQueue.pop();

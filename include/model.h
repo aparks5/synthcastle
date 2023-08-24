@@ -17,6 +17,7 @@ protected:
 	ViewBag& m_v;
 	void cacheParam(int id, std::string param, float value);
 	void cacheType(int id, NodeType t);
+	std::pair<float,float> evaluate();
 };
 
 class GainNodeCreator : public NodeCreationCommand
@@ -67,6 +68,7 @@ public:
 	int update(UpdateEvent update);
 	int create(NodeType type);
 	void link(int from, int to);
+	std::tuple<float, float> evaluate();
 	const ViewBag refresh() { return m_cache; }
 
 private:

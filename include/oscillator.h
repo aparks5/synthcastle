@@ -50,7 +50,6 @@ public:
 		{"waveform", WAVEFORM}
 	};
 
-
 	enum WaveForms {
 		SAW,
 		SINE,
