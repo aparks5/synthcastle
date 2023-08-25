@@ -54,11 +54,14 @@ static int paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 
     for (size_t sampIdx = 0; sampIdx < framesPerBuffer; sampIdx++) {
         float output = 0.f;
-        auto lr = data->controller->evaluate();
+        std::tuple<float,float> lr = data->controller->evaluate();
             // write interleaved output -- L/R
 		*out++ = std::get<0>(lr);
 		*out++ = std::get<1>(lr);
     }
+
+    // perform all queued updates to modify the graph safely
+    data->controller->update();
 
     return paContinue;
 }
@@ -116,61 +119,57 @@ int main(int, char**)
     auto controller = std::make_shared<Controller>(view, model);
     view->addListener(controller);
 
+	PaStream* stream;
+	PortAudioHandler paInit;
 
-	// TODO: MOVE to portaudio class
-    {
-        PaStream* stream;
-        PortAudioHandler paInit;
+	// Set up audio output
+	size_t bufSize = 8192;
+	AudioData audioData; // poll the editor if there is an output node to fill the buffer in audioData
+	audioData.controller = controller;
 
-        // Set up audio output
-        size_t bufSize = 8192;
-        AudioData audioData; // poll the editor if there is an output node to fill the buffer in audioData
-        audioData.controller = controller;
+	PaStreamParameters outputParameters;
 
-        PaStreamParameters outputParameters;
+	int index = Pa_GetDefaultOutputDevice();
+	outputParameters.device = index;
+	if (outputParameters.device == paNoDevice) {
+		return false;
+	}
 
-        int index = Pa_GetDefaultOutputDevice();
-        outputParameters.device = index;
-        if (outputParameters.device == paNoDevice) {
-            return false;
-        }
+	const PaDeviceInfo* pInfo = Pa_GetDeviceInfo(index);
+	if (pInfo != 0)
+	{
+		printf("Output device name: '%s'\r", pInfo->name);
+	}
 
-        const PaDeviceInfo* pInfo = Pa_GetDeviceInfo(index);
-        if (pInfo != 0)
-        {
-            printf("Output device name: '%s'\r", pInfo->name);
-        }
+	outputParameters.channelCount = 2;       /* stereo output */
+	outputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
+	outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
+	outputParameters.hostApiSpecificStreamInfo = NULL;
 
-        outputParameters.channelCount = 2;       /* stereo output */
-        outputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
-        outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
-        outputParameters.hostApiSpecificStreamInfo = NULL;
+	PaError err = Pa_OpenStream(
+		&stream,
+		NULL, /* no input */
+		&outputParameters,
+		44100,
+		1024,
+		paClipOff,      /* we won't output out of range samples so don't bother clipping them */
+		&paCallbackMethod,
+		&audioData            /* Using 'this' for userData so we can cast to MixerStream* in paCallback method */
+	);
 
-        PaError err = Pa_OpenStream(
-            &stream,
-            NULL, /* no input */
-            &outputParameters,
-            44100,
-            1024,
-            paClipOff,      /* we won't output out of range samples so don't bother clipping them */
-            &paCallbackMethod,
-            &audioData            /* Using 'this' for userData so we can cast to MixerStream* in paCallback method */
-        );
+	if (err != paNoError) {
+		printf("Failed to open stream to device !!!");
+	}
+	err = Pa_StartStream(stream);
+	if (err != paNoError) {
+		printf("Failed to start stream!!!");
+	}
+	if (err != paNoError) {
+		Pa_CloseStream(stream);
+		stream = 0;
+	}
 
-        if (err != paNoError) {
-            printf("Failed to open stream to device !!!");
-        }
-        err = Pa_StartStream(stream);
-        if (err != paNoError) {
-            printf("Failed to start stream!!!");
-        }
-        if (err != paNoError) {
-            Pa_CloseStream(stream);
-            stream = 0;
-        }
-    }
+	view->run();
 
-    view->run();
-
-    return 0;
+	return 0;
 }
