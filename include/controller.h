@@ -1,7 +1,6 @@
 #pragma once
 
 #include "model.h"
-#include "view.h"
 #include "viewlistener.h"
 #include "events.h"
 
@@ -11,7 +10,7 @@
 class Controller : public ViewListener
 {
 public:
-	Controller(std::shared_ptr<View> view, std::shared_ptr<Model> model);
+	Controller(std::shared_ptr<Model> model);
 	virtual ~Controller() {}
 	void notify(EventType event, const void* data) override;
 	std::tuple<float, float> evaluate();
@@ -26,7 +25,7 @@ public:
 	// because this is not part of the ViewListener interface
 
 private:
-	std::shared_ptr<View> m_view;
+	std::mutex m_mut;
 	std::shared_ptr<Model> m_model;
 	ViewBag m_cache;
 	bool m_bUpdated;

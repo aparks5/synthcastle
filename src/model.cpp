@@ -26,8 +26,6 @@ std::tuple<float,float> Model::evaluate()
 	std::stack<int> postorder;
 	dfs_traverse(m_graph, [&postorder](const int node_id) -> void { postorder.push(node_id); });
 
-    int voiceCount = 0;
-
 	std::stack<float> value_stack;
 	while (!postorder.empty())
 	{
@@ -36,15 +34,6 @@ std::tuple<float,float> Model::evaluate()
 		const auto& pNode = m_graph.node(id);
 
 		switch (pNode->type) {
-  //      case NodeType::FOUR_VOICE:
-  //      {
-  //          auto in = value_stack.top();
-  //          value_stack.pop();
-  //          // MIDI block should push all the voices
-  //          // to the stack
-  //          value_stack.push(in);
-		//}
-  //      break;
         //case NodeType::FILTER:
         //{
         //    auto in = value_stack.top();
@@ -140,10 +129,9 @@ std::tuple<float,float> Model::evaluate()
         break;
         case NodeType::OUTPUT:
         {
-			// The final output node isn't evaluated in the loop
 			if (!value_stack.empty()) {
 				float left = value_stack.top();
-				value_stack.pop(); // stack should be empty now
+				value_stack.pop(); 
 				pNode->params[Output::DISPLAY_L] = left;
                 if (value_stack.empty()) {
                     return std::make_tuple(left, 0.);
@@ -152,7 +140,7 @@ std::tuple<float,float> Model::evaluate()
                 if (!value_stack.empty()) {
                     float right = value_stack.top();
                     pNode->params[Output::DISPLAY_R] = right;
-                    value_stack.pop(); // stack should be empty now
+                    value_stack.pop(); 
 					return std::make_tuple(left, right);
                 }
 			}

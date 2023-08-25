@@ -1,8 +1,7 @@
 #include "controller.h"
 
-Controller::Controller(std::shared_ptr<View> view, std::shared_ptr<Model> model)
-	: m_view(view)
-	, m_model(model)
+Controller::Controller(std::shared_ptr<Model> model)
+	: m_model(model)
 	, m_bUpdated(true)
 {
 
@@ -62,6 +61,8 @@ void Controller::createLink(int from, int to)
 
 void Controller::update()
 {
+	std::scoped_lock lock{m_mut};
+
 	m_bUpdated = ((!m_creationQueue.empty()) &&
 				  (!m_updates.empty()) &&
 				  (!m_linkQueue.empty()));

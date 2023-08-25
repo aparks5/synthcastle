@@ -116,58 +116,58 @@ int main(int, char**)
 {
     auto model = std::make_shared<Model>();
     auto view = std::make_shared<View>();
-    auto controller = std::make_shared<Controller>(view, model);
+    auto controller = std::make_shared<Controller>(model);
     view->addListener(controller);
 
-	PaStream* stream;
-	PortAudioHandler paInit;
-
-	// Set up audio output
-	size_t bufSize = 8192;
 	AudioData audioData; // poll the editor if there is an output node to fill the buffer in audioData
 	audioData.controller = controller;
 
-	PaStreamParameters outputParameters;
+        PaStream* stream;
+        PortAudioHandler paInit;
 
-	int index = Pa_GetDefaultOutputDevice();
-	outputParameters.device = index;
-	if (outputParameters.device == paNoDevice) {
-		return false;
-	}
+        // Set up audio output
+        size_t bufSize = 8192;
+        PaStreamParameters outputParameters;
 
-	const PaDeviceInfo* pInfo = Pa_GetDeviceInfo(index);
-	if (pInfo != 0)
-	{
-		printf("Output device name: '%s'\r", pInfo->name);
-	}
+        int index = Pa_GetDefaultOutputDevice();
+        outputParameters.device = index;
+        if (outputParameters.device == paNoDevice) {
+            return false;
+        }
 
-	outputParameters.channelCount = 2;       /* stereo output */
-	outputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
-	outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
-	outputParameters.hostApiSpecificStreamInfo = NULL;
+        const PaDeviceInfo* pInfo = Pa_GetDeviceInfo(index);
+        if (pInfo != 0)
+        {
+            printf("Output device name: '%s'\r", pInfo->name);
+        }
 
-	PaError err = Pa_OpenStream(
-		&stream,
-		NULL, /* no input */
-		&outputParameters,
-		44100,
-		1024,
-		paClipOff,      /* we won't output out of range samples so don't bother clipping them */
-		&paCallbackMethod,
-		&audioData            /* Using 'this' for userData so we can cast to MixerStream* in paCallback method */
-	);
+        outputParameters.channelCount = 2;       /* stereo output */
+        outputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
+        outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
+        outputParameters.hostApiSpecificStreamInfo = NULL;
 
-	if (err != paNoError) {
-		printf("Failed to open stream to device !!!");
-	}
-	err = Pa_StartStream(stream);
-	if (err != paNoError) {
-		printf("Failed to start stream!!!");
-	}
-	if (err != paNoError) {
-		Pa_CloseStream(stream);
-		stream = 0;
-	}
+        PaError err = Pa_OpenStream(
+            &stream,
+            NULL, /* no input */
+            &outputParameters,
+            44100,
+            1024,
+            paClipOff,      /* we won't output out of range samples so don't bother clipping them */
+            &paCallbackMethod,
+            &audioData            /* Using 'this' for userData so we can cast to MixerStream* in paCallback method */
+        );
+
+        if (err != paNoError) {
+            printf("Failed to open stream to device !!!");
+        }
+        err = Pa_StartStream(stream);
+        if (err != paNoError) {
+            printf("Failed to start stream!!!");
+        }
+        if (err != paNoError) {
+            Pa_CloseStream(stream);
+            stream = 0;
+        }
 
 	view->run();
 

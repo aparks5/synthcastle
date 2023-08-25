@@ -62,7 +62,6 @@ View::~View()
     ImGui_ImplSDL2_Shutdown();
     ImNodes::DestroyContext();
     ImGui::DestroyContext();
-    //signalFlowEditor.shutdown();
     SDL_GL_DeleteContext(m_glContext);
     SDL_DestroyWindow(m_window);
     SDL_Quit();
