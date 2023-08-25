@@ -4,7 +4,6 @@ Controller::Controller(std::shared_ptr<Model> model)
 	: m_model(model)
 	, m_bUpdated(true)
 {
-
 }
 
 std::tuple<float, float> Controller::evaluate()
@@ -44,14 +43,7 @@ void Controller::queueUpdate(int id, std::string param, float val)
 
 int Controller::createNode(std::string nodeType)
 {
-	// queue creation and linking
-	// todo, use map to avoid long if statements
-	// use dictionary
-	if (m_nodeTypeMap.find(nodeType) != m_nodeTypeMap.end()) {
-		return m_model->create(m_nodeTypeMap[nodeType]);
-	}
-
-	return -1;
+	return m_model->create(nodeType);
 }
 
 void Controller::createLink(int from, int to)
@@ -81,6 +73,7 @@ void Controller::update()
 
 	while (!m_updates.empty()) {
 		auto update = m_updates.front();
+		// updating
 		m_model->update(update);
 		m_updates.pop();
 	}

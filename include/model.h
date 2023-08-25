@@ -70,19 +70,54 @@ public:
 	int create() override;
 };
 
+class EnvelopeNodeCreator : public NodeCreationCommand
+{
+public:
+	EnvelopeNodeCreator(NodeGraph& g, ViewBag& v)
+		: NodeCreationCommand(g, v)
+	{}
+	virtual ~EnvelopeNodeCreator() {};
+	int create() override;
+};
+
+class TrigNodeCreator : public NodeCreationCommand
+{
+public:
+	TrigNodeCreator(NodeGraph& g, ViewBag& v)
+		: NodeCreationCommand(g, v)
+	{}
+	virtual ~TrigNodeCreator() {};
+	int create() override;
+};
+
+
 class Model
 {
 public:
 	Model();
 	virtual ~Model() {}
 	int update(UpdateEvent update);
-	int create(NodeType type);
+	int create(std::string str);
 	void link(int from, int to);
 	std::tuple<float, float> evaluate();
 	const ViewBag refresh() { return m_cache; }
+
 
 private:
 	std::unordered_map<NodeType, std::shared_ptr<NodeCreationCommand>> m_creators;
 	NodeGraph m_graph;
 	ViewBag m_cache;
+
+	// unnecessary, every node type should have a unique name
+	std::unordered_map<std::string, NodeType> m_nodeTypeMap =
+	{
+		{"gain", NodeType::GAIN},
+		{"oscillator", NodeType::OSCILLATOR},
+		{"constant", NodeType::CONSTANT},
+		{"output", NodeType::OUTPUT},
+		{"filter", NodeType::FILTER},
+		{"envelope", NodeType::ENVELOPE},
+		{"trig", NodeType::TRIG}
+	};
+
 };

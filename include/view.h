@@ -71,6 +71,13 @@ public:
 	void display(int id, const NodeSnapshot& snapshot) override;
 };
 
+class TrigDisplayCommand : public NodeDisplayCommand
+{
+public:
+	TrigDisplayCommand() {}
+	void display(int id, const NodeSnapshot& snapshot) override;
+};
+
 class OscillatorDisplayCommand : public NodeDisplayCommand
 {
 public:
@@ -89,6 +96,13 @@ class FilterDisplayCommand : public NodeDisplayCommand
 {
 public:
 	FilterDisplayCommand() {}
+	void display(int id, const NodeSnapshot& snapshot) override;
+};
+
+class EnvelopeDisplayCommand : public NodeDisplayCommand
+{
+public:
+	EnvelopeDisplayCommand() {}
 	void display(int id, const NodeSnapshot& snapshot) override;
 };
 

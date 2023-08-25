@@ -21,7 +21,6 @@ Voice::Voice(size_t fs)
 	, m_env1out(0.f)
 {
 	EnvelopeParams env(3, 250, 0, 0);
-	m_env.setParams(env);
 	m_moogFilter.freq(1000.f);
 	m_filtFreq = 1000.f;
 	m_moogFilter.q(3.f);
@@ -32,7 +31,6 @@ void Voice::update(VoiceParams params)
 {
 
 	m_params = params;
-	m_env.setParams(m_params.envParams);
 	m_moogFilter.q(m_params.filtQ);
 	m_moogFilter.freq(m_params.filtFreq);
 // todo	m_lfo.params[0] = m_params.filtLFOFreq;
@@ -77,9 +75,7 @@ float Voice::operator()()
 	m_moogFilter.apply(&output, 1);
 
 	// VCA 
-	m_env1out = m_env.apply(1);
-	m_gain.setGainf(m_env1out);
-	output = m_gain.process(output);
+	output = m_env.process(output);
 	Gain gain;
 
 	// OUTPUTGAIN
@@ -163,8 +159,6 @@ void Voice::noteOn(int noteVal)
 	m_params.midiNote = noteVal;
 	updateFreq(midiNoteToFreq(noteVal));
 	m_params.bIsActive = true;
-	m_env.noteOn();
-	m_env.reset();
 }
 
 void Voice::noteOff(int noteVal)
@@ -172,7 +166,6 @@ void Voice::noteOff(int noteVal)
 	if (midiNote() == noteVal) {
 		m_params.bIsActive = false;
 		m_params.midiNote = 0;
-		m_env.noteOff();
 	}
 }
 

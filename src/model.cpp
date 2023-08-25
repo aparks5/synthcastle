@@ -2,10 +2,12 @@
 #include "util.h"
 
 #include "constant.h"
-#include "output.h"
+#include "envelope.h"
 #include "filter.h"
 #include "gain.h"
 #include "oscillator.h"
+#include "output.h"
+#include "trig.h"
 #include "value.h"
 
 #define INVALID_PARAM_VALUE (-128)
@@ -17,6 +19,8 @@ Model::Model()
 	m_creators[NodeType::CONSTANT] = std::make_shared<ConstantNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::OUTPUT] = std::make_shared<OutputNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::FILTER] = std::make_shared<FilterNodeCreator>(m_graph, m_cache);
+	m_creators[NodeType::ENVELOPE] = std::make_shared<EnvelopeNodeCreator>(m_graph, m_cache);
+	m_creators[NodeType::TRIG] = std::make_shared<TrigNodeCreator>(m_graph, m_cache);
 }
 
 std::tuple<float,float> Model::evaluate()
@@ -47,6 +51,17 @@ std::tuple<float,float> Model::evaluate()
 
             pNode->params[Filter::FREQMOD] = mod;
             pNode->params[Filter::MODDEPTH] = depth;
+            value_stack.push(pNode->process(in));
+        }
+        break;
+        case NodeType::ENVELOPE:
+        {
+			// pop off the stack in input order
+            auto in = value_stack.top();
+            value_stack.pop();
+            auto trig = value_stack.top();
+            value_stack.pop();
+            pNode->params[Envelope::TRIG] = trig;
             value_stack.push(pNode->process(in));
         }
         break;
@@ -102,6 +117,12 @@ std::tuple<float,float> Model::evaluate()
 		}
 		break;
         case NodeType::CONSTANT:
+        {
+            auto val = pNode->process();
+            value_stack.push(val);
+        }
+        break;
+        case NodeType::TRIG:
         {
             auto val = pNode->process();
             value_stack.push(val);
@@ -181,10 +202,15 @@ int Model::update(UpdateEvent update)
 	return 0;
 }
 
-int Model::create(NodeType type)
+int Model::create(std::string str)
 {
-	auto command = m_creators[type];
-	return command->create();
+	if (m_nodeTypeMap.find(str) != m_nodeTypeMap.end()) {
+		NodeType type = m_nodeTypeMap[str];
+		auto command = m_creators[type];
+		return command->create();
+	}
+
+	return -1;
 }
 
 int ConstantNodeCreator::create()
@@ -195,6 +221,17 @@ int ConstantNodeCreator::create()
 	k->params[Constant::VALUE] = 0.f;
 	cacheType(id, NodeType::CONSTANT);
 	cacheParam(id, "value", 0.f);
+	return id;
+}
+
+int TrigNodeCreator::create()
+{
+	auto k = std::make_shared<Trig>();
+	auto id = m_g.insert_node(k);
+	k->params[Trig::NODE_ID] = id;
+	k->params[Trig::TRIG] = 0.f;
+	cacheType(id, NodeType::TRIG);
+	cacheParam(id, "trig", 0.f);
 	return id;
 }
 
@@ -282,6 +319,39 @@ int GainNodeCreator::create()
 	return gainId;
 }
 
+int EnvelopeNodeCreator::create()
+{
+	auto node = std::make_shared<Envelope>();
+	// all inputs are Value nodes
+	auto in = std::make_shared<Value>();
+	auto trig = std::make_shared<Value>();
+	// insert input params in reverse order
+	auto trig_id = m_g.insert_node(trig);
+	auto in_id = m_g.insert_node(in);
+	auto id = m_g.insert_node(node);
+	// assign input ids in order
+	node->params[Envelope::NODE_ID] = id;
+	node->params[Envelope::INPUT_ID] = in_id;
+	node->params[Envelope::TRIG_ID] = trig_id;
+	// insert input edges in reverse order
+	m_g.insert_edge(id, trig_id);
+	m_g.insert_edge(id, in_id);
+	// update cache
+	cacheType(id, NodeType::ENVELOPE);
+	cacheType(trig_id, NodeType::VALUE);
+	cacheType(in_id, NodeType::VALUE);
+	cacheParam(id, "node_id", id);
+	cacheParam(id, "input_id", in_id);
+	cacheParam(id, "trig_id", trig_id);
+	cacheParam(id, "attack_ms", 0.f);
+	cacheParam(id, "decay_ms", 0.f);
+	cacheParam(id, "sustain_db", 0.f);
+	cacheParam(id, "release_ms", 0.f);
+	cacheParam(id, "trigger", 0.f);
+	return id;
+
+}
+
 int FilterNodeCreator::create()
 {
 	auto node = std::make_shared<Filter>();
@@ -303,9 +373,9 @@ int FilterNodeCreator::create()
 	cacheType(inId, NodeType::VALUE);
 	cacheType(dId, NodeType::VALUE);
 	cacheType(mId, NodeType::VALUE);
+	cacheParam(id, "input_id", inId);
 	cacheParam(id, "freqmod_id", mId);
 	cacheParam(id, "moddepth_id", dId);
-	cacheParam(id, "input_id", inId);
 	cacheParam(id, "freqmod", 0.f);
 	cacheParam(id, "freq", 0.f);
 	cacheParam(id, "q", 0.f);

@@ -32,20 +32,45 @@ enum class EnvelopeStage
 	OFF
 };
 
-class Envelope
+class Envelope : public Node
 {
 public:
 	Envelope();
-	void setParams(EnvelopeParams params);
-	float apply(size_t numSamples);
+
+	enum EnvParams {
+		NODE_ID,
+		INPUT_ID,
+		TRIG_ID,
+		TRIG,
+		ATTACK_MS,
+		DECAY_MS,
+		SUSTAIN_DB,
+		RELEASE_MS,
+		NUM_PARAMS,
+	};
+
+	float process(float in) override;
 	void reset();
 	void noteOn() { m_bNoteOn = true; m_stage = EnvelopeStage::ATTACK; }
 	void noteOff() { m_bNoteOn = false; m_stage = EnvelopeStage::RELEASE; }
+	int lookupParam(std::string str) override;
 
 private:
+	std::unordered_map<std::string, int> m_lookup =
+	{
+		{"node_id", NODE_ID},
+		{"input_id", INPUT_ID},
+		{"trigger_id", TRIG_ID},
+		{"trigger", TRIG},
+		{"attack_ms", ATTACK_MS},
+		{"decay_ms", DECAY_MS},
+		{"sustain_db", SUSTAIN_DB},
+		{"release_ms", RELEASE_MS}
+	};
 	EnvelopeParams m_params;
 	EnvelopeStage m_stage;
 	float m_gain;
 	bool m_bNoteOn;
+	bool m_bTriggered;
 };
 #endif // ENVELOPE_H_

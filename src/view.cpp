@@ -23,6 +23,8 @@ View::View()
     m_displays[NodeType::CONSTANT] = std::make_shared<ConstantDisplayCommand>();
     m_displays[NodeType::OUTPUT] = std::make_shared<OutputDisplayCommand>();
     m_displays[NodeType::FILTER] = std::make_shared<FilterDisplayCommand>();
+    m_displays[NodeType::ENVELOPE] = std::make_shared<EnvelopeDisplayCommand>();
+    m_displays[NodeType::TRIG] = std::make_shared<TrigDisplayCommand>();
     const char* glsl_version = initSDL();
     SDL_GL_MakeCurrent(m_window, m_glContext);
     SDL_GL_SetSwapInterval(1); // Enable vsync
@@ -155,7 +157,7 @@ void View::display()
     ImNodes::EditorContextSet(m_pEditorContext);
 
     ImGui::Begin("signal_flow_editor");
-    ImGui::TextUnformatted("Keys: a=osc/c=const/f=filt/g=gain/s=output/m=midi/x=mix/v=voice");
+    ImGui::TextUnformatted("Keys: a=osc/c=const/e=envelope/f=filt/g=gain/s=output/t=trigger/m=midi/x=mix/v=voice");
 
     ImNodes::BeginNodeEditor();
 
@@ -171,6 +173,14 @@ void View::display()
         }
         else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_C)) {
 			m_listener->queueCreation("constant");
+            bKeyReleased = true;
+        }
+        else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_T)) {
+			m_listener->queueCreation("trig");
+            bKeyReleased = true;
+        }
+        else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_E)) {
+			m_listener->queueCreation("envelope");
             bKeyReleased = true;
         }
         else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_F)) {
@@ -336,6 +346,74 @@ void ConstantDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImNodes::EndNode();
 	ImGui::PopItemWidth();
 }
+
+void TrigDisplayCommand::display(int id, const NodeSnapshot& snapshot)
+{
+	ImGui::PushItemWidth(60.0f);
+	ImNodes::BeginNode(id);
+	ImNodes::BeginNodeTitleBar();
+	ImGui::TextUnformatted("Trig");
+	ImNodes::EndNodeTitleBar();
+
+	int clicked = 0;
+    if (ImGui::SmallButton("Trig!")) {
+		clicked = 1;
+    }
+    update(id, snapshot, "trig", clicked);
+
+	ImNodes::BeginOutputAttribute(id);
+    const float text_width = ImGui::CalcTextSize("Out").x;
+    ImGui::Indent(60.f + ImGui::CalcTextSize("Out").x - text_width);
+	ImGui::TextUnformatted("Out");
+	ImNodes::EndOutputAttribute();
+
+	ImNodes::EndNode();
+	ImGui::PopItemWidth();
+}
+
+void EnvelopeDisplayCommand::display(int id, const NodeSnapshot& snapshot)
+{
+	ImGui::PushItemWidth(120.0f);
+	ImNodes::BeginNode(id);
+	ImNodes::BeginNodeTitleBar();
+	ImGui::TextUnformatted("Envelope");
+	ImNodes::EndNodeTitleBar();
+
+	ImNodes::BeginInputAttribute(snapshot.params.at("input_id"));
+	ImGui::TextUnformatted("In");
+	ImNodes::EndInputAttribute();
+
+	ImNodes::BeginInputAttribute(snapshot.params.at("trig_id"));
+	ImGui::TextUnformatted("Trig");
+	ImNodes::EndInputAttribute();
+
+    auto a = snapshot.params.at("attack_ms");
+	ImGui::DragFloat("Attack Time (ms)", &a, 0.2f, 0., 1000.);
+    update(id, snapshot, "attack_ms", a);
+
+    auto d = snapshot.params.at("decay_ms");
+	ImGui::DragFloat("Decay Time (ms)", &d, 0.2f, 0, 1000.);
+    update(id, snapshot, "decay_ms", d);
+
+    auto s = snapshot.params.at("sustain_db");
+	ImGui::DragFloat("Sustain Level (dB)", &s, 1.f, -100, 0.);
+    update(id, snapshot, "sustain_db", s);
+
+    auto r = snapshot.params.at("release_ms");
+    ImGui::DragFloat("Release Time (ms)", &r, 1.f, 0., 1000.);
+    update(id, snapshot, "release_ms", r);
+
+	ImNodes::BeginOutputAttribute(id);
+    const float text_width = ImGui::CalcTextSize("Out").x;
+    ImGui::Indent(120.f + ImGui::CalcTextSize("Out").x - text_width);
+	ImGui::TextUnformatted("Out");
+	ImNodes::EndOutputAttribute();
+
+	ImNodes::EndNode();
+	ImGui::PopItemWidth();
+}
+
+
 
 void OscillatorDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 {
