@@ -38,6 +38,7 @@ private:
 		{"gain", NodeType::GAIN},
 		{"oscillator", NodeType::OSCILLATOR},
 		{"constant", NodeType::CONSTANT},
-		{"output", NodeType::OUTPUT}
+		{"output", NodeType::OUTPUT},
+		{"filter", NodeType::FILTER}
 	};
 };

@@ -3,6 +3,7 @@
 
 #include "constant.h"
 #include "output.h"
+#include "filter.h"
 #include "gain.h"
 #include "oscillator.h"
 #include "value.h"
@@ -15,6 +16,7 @@ Model::Model()
 	m_creators[NodeType::OSCILLATOR] = std::make_shared<OscillatorNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::CONSTANT] = std::make_shared<ConstantNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::OUTPUT] = std::make_shared<OutputNodeCreator>(m_graph, m_cache);
+	m_creators[NodeType::FILTER] = std::make_shared<FilterNodeCreator>(m_graph, m_cache);
 }
 
 std::tuple<float,float> Model::evaluate()
@@ -34,21 +36,20 @@ std::tuple<float,float> Model::evaluate()
 		const auto& pNode = m_graph.node(id);
 
 		switch (pNode->type) {
-        //case NodeType::FILTER:
-        //{
-        //    auto in = value_stack.top();
-        //    value_stack.pop();
-        //    auto mod = value_stack.top();
-        //    value_stack.pop();
-        //    auto depth = value_stack.top();
-        //    value_stack.pop();
+        case NodeType::FILTER:
+        {
+            auto in = value_stack.top();
+            value_stack.pop();
+            auto mod = value_stack.top();
+            value_stack.pop();
+            auto depth = value_stack.top();
+            value_stack.pop();
 
-        //    pNode->params[Filter::FREQMOD] = mod;
-        //    pNode->params[Filter::MODDEPTH] = depth;
-        //    //printf("depth %f, \t mod %f, \t in %f\n", depth, mod, in);
-        //    value_stack.push(pNode->process(in));
-        //}
-        //break;
+            pNode->params[Filter::FREQMOD] = mod;
+            pNode->params[Filter::MODDEPTH] = depth;
+            value_stack.push(pNode->process(in));
+        }
+        break;
         //case NodeType::QUAD_MIXER:
         //{
         //    auto d = value_stack.top();
@@ -279,6 +280,38 @@ int GainNodeCreator::create()
 	cacheParam(gainId, "gain", 0.f);
 
 	return gainId;
+}
+
+int FilterNodeCreator::create()
+{
+	auto node = std::make_shared<Filter>();
+	auto in = std::make_shared<Value>(0.f);
+	auto mod = std::make_shared<Value>(0.f);
+	auto depth = std::make_shared<Value>(0.f);
+	auto dId = m_g.insert_node(depth);
+	auto mId = m_g.insert_node(mod);
+	auto inId = m_g.insert_node(in);
+	auto id = m_g.insert_node(node);
+	node->params[Filter::NODE_ID] = id;
+	node->params[Filter::INPUT_ID] = inId;
+	node->params[Filter::FREQMOD_ID] = mId;
+	node->params[Filter::MODDEPTH_ID] = dId;
+	m_g.insert_edge(id, dId);
+	m_g.insert_edge(id, mId);
+	m_g.insert_edge(id, inId);
+	cacheType(id, NodeType::FILTER);
+	cacheType(inId, NodeType::VALUE);
+	cacheType(dId, NodeType::VALUE);
+	cacheType(mId, NodeType::VALUE);
+	cacheParam(id, "freqmod_id", mId);
+	cacheParam(id, "moddepth_id", dId);
+	cacheParam(id, "input_id", inId);
+	cacheParam(id, "freqmod", 0.f);
+	cacheParam(id, "freq", 0.f);
+	cacheParam(id, "q", 0.f);
+	cacheParam(id, "moddepth", 0.f);
+
+	return id;
 }
 
 void NodeCreationCommand::cacheType(int id, NodeType t)

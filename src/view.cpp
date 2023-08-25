@@ -22,6 +22,7 @@ View::View()
     m_displays[NodeType::OSCILLATOR] = std::make_shared<OscillatorDisplayCommand>();
     m_displays[NodeType::CONSTANT] = std::make_shared<ConstantDisplayCommand>();
     m_displays[NodeType::OUTPUT] = std::make_shared<OutputDisplayCommand>();
+    m_displays[NodeType::FILTER] = std::make_shared<FilterDisplayCommand>();
     const char* glsl_version = initSDL();
     SDL_GL_MakeCurrent(m_window, m_glContext);
     SDL_GL_SetSwapInterval(1); // Enable vsync
@@ -173,6 +174,9 @@ void View::display()
             bKeyReleased = true;
         }
         else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_F)) {
+			m_listener->queueCreation("filter");
+            bKeyReleased = true;
+
         }
         else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_M)) {
         }
@@ -386,3 +390,45 @@ void OscillatorDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
     ImNodes::EndNode();
 }
+
+void FilterDisplayCommand::display(int id, const NodeSnapshot& snapshot)
+{
+    auto params = snapshot.params;
+    ImNodes::BeginNode(id);
+	ImNodes::BeginNodeTitleBar();
+	ImGui::TextUnformatted("Lowpass Filter");
+	ImNodes::EndNodeTitleBar();
+
+    ImNodes::BeginInputAttribute(params["input_id"]);
+	ImGui::TextUnformatted("In");
+	ImNodes::EndInputAttribute();
+
+	ImNodes::BeginInputAttribute(params["freqmod"]);
+	ImGui::TextUnformatted("Mod");
+	ImNodes::EndInputAttribute();
+
+	ImNodes::BeginInputAttribute(params["moddepth"]);
+	ImGui::TextUnformatted("Depth");
+	ImNodes::EndInputAttribute();
+
+	ImGui::PushItemWidth(120.0f);
+    auto f = params["freq"];
+	ImGui::DragFloat("Freq", &f, 0., 5000.);
+    update(id, snapshot, "freq", f);
+	ImGui::PopItemWidth();
+
+	ImGui::PushItemWidth(120.0f);
+    auto q = params["q"];
+	ImGui::DragFloat("Q", &q, 0., 10.);
+    update(id, snapshot, "q", q);
+	ImGui::PopItemWidth();
+
+	ImNodes::BeginOutputAttribute(id);
+	const float text_width = ImGui::CalcTextSize("Out").x;
+	ImGui::Indent(120.f + ImGui::CalcTextSize("Out").x - text_width);
+	ImGui::TextUnformatted("Out");
+	ImNodes::EndOutputAttribute();
+
+	ImNodes::EndNode();
+}
+

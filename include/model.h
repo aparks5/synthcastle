@@ -60,6 +60,16 @@ public:
 	int create() override;
 };
 
+class FilterNodeCreator : public NodeCreationCommand
+{
+public:
+	FilterNodeCreator(NodeGraph& g, ViewBag& v)
+		: NodeCreationCommand(g, v)
+	{}
+	virtual ~FilterNodeCreator() {};
+	int create() override;
+};
+
 class Model
 {
 public:

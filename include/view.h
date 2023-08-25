@@ -85,6 +85,18 @@ public:
 	void display(int id, const NodeSnapshot& snapshot) override;
 };
 
+class FilterDisplayCommand : public NodeDisplayCommand
+{
+public:
+	FilterDisplayCommand() {}
+	void display(int id, const NodeSnapshot& snapshot) override;
+};
+
+
+
+
+
+
 
 
 
