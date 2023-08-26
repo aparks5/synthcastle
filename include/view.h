@@ -85,6 +85,13 @@ public:
 	void display(int id, const NodeSnapshot& snapshot) override;
 };
 
+class SeqDisplayCommand : public NodeDisplayCommand
+{
+public:
+	SeqDisplayCommand() {}
+	void display(int id, const NodeSnapshot& snapshot) override;
+};
+
 class OutputDisplayCommand : public NodeDisplayCommand
 {
 public:

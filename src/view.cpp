@@ -24,6 +24,7 @@ View::View()
     m_displays[NodeType::OUTPUT] = std::make_shared<OutputDisplayCommand>();
     m_displays[NodeType::FILTER] = std::make_shared<FilterDisplayCommand>();
     m_displays[NodeType::ENVELOPE] = std::make_shared<EnvelopeDisplayCommand>();
+    m_displays[NodeType::SEQ] = std::make_shared<SeqDisplayCommand>();
     m_displays[NodeType::TRIG] = std::make_shared<TrigDisplayCommand>();
     const char* glsl_version = initSDL();
     SDL_GL_MakeCurrent(m_window, m_glContext);
@@ -196,8 +197,11 @@ void View::display()
         }
         else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_X)) {
         }
-        else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_S)) {
+        else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_O)) {
             m_listener->queueCreation("output");
+        }
+        else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_S)) {
+            m_listener->queueCreation("seq");
             bKeyReleased = true;
         }
 
@@ -347,28 +351,86 @@ void ConstantDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImGui::PopItemWidth();
 }
 
-void TrigDisplayCommand::display(int id, const NodeSnapshot& snapshot)
+void SeqDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 {
-	ImGui::PushItemWidth(60.0f);
+	ImGui::PushItemWidth(120.0f);
 	ImNodes::BeginNode(id);
 	ImNodes::BeginNodeTitleBar();
-	ImGui::TextUnformatted("Trig");
+	ImGui::TextUnformatted("8-step Sequencer");
 	ImNodes::EndNodeTitleBar();
 
-	int clicked = 0;
-    if (ImGui::SmallButton("Trig!")) {
-		clicked = 1;
-    }
-    update(id, snapshot, "trig", clicked);
+	ImNodes::BeginInputAttribute(snapshot.params.at("trigin_id"));
+	ImGui::TextUnformatted("Trig In");
+	ImNodes::EndInputAttribute();
+
+    auto s1 = snapshot.params.at("s1");
+	ImGui::DragFloat("1", &s1, 0.5f, 0, 1.);
+    update(id, snapshot, "s1", s1);
+
+    auto s2 = snapshot.params.at("s2");
+	ImGui::DragFloat("2", &s2, 0.1f, 0, 1.);
+    update(id, snapshot, "s2", s2);
+
+    auto s3 = snapshot.params.at("s3");
+	ImGui::DragFloat("3", &s3, 0.1f, 0, 1.);
+    update(id, snapshot, "s3", s3);
+
+    auto s4 = snapshot.params.at("s4");
+	ImGui::DragFloat("4", &s4, 0.1f, 0, 1.);
+    update(id, snapshot, "s4", s4);
+
+    auto s5 = snapshot.params.at("s5");
+	ImGui::DragFloat("5", &s5, 0.1f, 0, 1.);
+    update(id, snapshot, "s5", s5);
+
+    auto s6 = snapshot.params.at("s6");
+	ImGui::DragFloat("6", &s6, 0.1f, 0, 1.);
+    update(id, snapshot, "s6", s6);
+
+    auto s7 = snapshot.params.at("s7");
+	ImGui::DragFloat("7", &s7, 0.1f, 0, 1.);
+    update(id, snapshot, "s7", s7);
+
+    auto s8 = snapshot.params.at("s8");
+	ImGui::DragFloat("8", &s8, 0.1f, 0, 1.);
+    update(id, snapshot, "s8", s8);
 
 	ImNodes::BeginOutputAttribute(id);
     const float text_width = ImGui::CalcTextSize("Out").x;
-    ImGui::Indent(60.f + ImGui::CalcTextSize("Out").x - text_width);
+    ImGui::Indent(120.f + ImGui::CalcTextSize("Out").x - text_width);
 	ImGui::TextUnformatted("Out");
 	ImNodes::EndOutputAttribute();
 
 	ImNodes::EndNode();
 	ImGui::PopItemWidth();
+}
+
+void TrigDisplayCommand::display(int id, const NodeSnapshot& snapshot)
+{
+    ImGui::PushItemWidth(60.0f);
+    ImNodes::BeginNode(id);
+    ImNodes::BeginNodeTitleBar();
+    ImGui::TextUnformatted("Trig");
+    ImNodes::EndNodeTitleBar();
+
+    int clicked = 0;
+    if (ImGui::SmallButton("Trig!")) {
+        clicked = 1;
+    }
+    update(id, snapshot, "trig", clicked);
+
+    auto v = snapshot.params.at("bpm");
+    ImGui::DragFloat("BPM", &v, 0.5f, 0, 300.);
+    update(id, snapshot, "bpm", v);
+
+    ImNodes::BeginOutputAttribute(id);
+    const float text_width = ImGui::CalcTextSize("Out").x;
+    ImGui::Indent(60.f + ImGui::CalcTextSize("Out").x - text_width);
+    ImGui::TextUnformatted("Out");
+    ImNodes::EndOutputAttribute();
+
+    ImNodes::EndNode();
+    ImGui::PopItemWidth();
 }
 
 void EnvelopeDisplayCommand::display(int id, const NodeSnapshot& snapshot)

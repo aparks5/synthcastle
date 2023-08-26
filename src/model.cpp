@@ -7,6 +7,7 @@
 #include "gain.h"
 #include "oscillator.h"
 #include "output.h"
+#include "seq.h"
 #include "trig.h"
 #include "value.h"
 
@@ -20,6 +21,7 @@ Model::Model()
 	m_creators[NodeType::OUTPUT] = std::make_shared<OutputNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::FILTER] = std::make_shared<FilterNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::ENVELOPE] = std::make_shared<EnvelopeNodeCreator>(m_graph, m_cache);
+	m_creators[NodeType::SEQ] = std::make_shared<SeqNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::TRIG] = std::make_shared<TrigNodeCreator>(m_graph, m_cache);
 }
 
@@ -63,6 +65,15 @@ std::tuple<float,float> Model::evaluate()
             value_stack.pop();
             pNode->params[Envelope::TRIG] = trig;
             value_stack.push(pNode->process(in));
+        }
+        break;
+        case NodeType::SEQ:
+        {
+			// pop off the stack in input order
+            auto trig = value_stack.top();
+            value_stack.pop();
+            pNode->params[Seq::TRIGIN] = trig;
+            value_stack.push(pNode->process());
         }
         break;
         //case NodeType::QUAD_MIXER:
@@ -232,8 +243,36 @@ int TrigNodeCreator::create()
 	k->params[Trig::TRIG] = 0.f;
 	cacheType(id, NodeType::TRIG);
 	cacheParam(id, "trig", 0.f);
+	cacheParam(id, "bpm", 0.f);
 	return id;
 }
+
+int SeqNodeCreator::create()
+{
+	auto k = std::make_shared<Seq>();
+	auto t = std::make_shared<Value>();
+	auto tid = m_g.insert_node(t);
+	auto id = m_g.insert_node(k);
+	m_g.insert_edge(id, tid);
+	k->params[Seq::NODE_ID] = id;
+	k->params[Seq::TRIGIN_ID] = tid;
+	k->params[Seq::TRIGIN] = 0.f;
+	cacheType(id, NodeType::SEQ);
+	cacheType(tid, NodeType::VALUE);
+	cacheParam(id, "trigin_id", tid);
+	cacheParam(id, "trigin", 0.f);
+	cacheParam(id, "s1", 0.f);
+	cacheParam(id, "s2", 0.f);
+	cacheParam(id, "s3", 0.f);
+	cacheParam(id, "s4", 0.f);
+	cacheParam(id, "s5", 0.f);
+	cacheParam(id, "s6", 0.f);
+	cacheParam(id, "s7", 0.f);
+	cacheParam(id, "s8", 0.f);
+	return id;
+}
+
+
 
 int OscillatorNodeCreator::create()
 {

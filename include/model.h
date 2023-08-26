@@ -90,6 +90,15 @@ public:
 	int create() override;
 };
 
+class SeqNodeCreator : public NodeCreationCommand
+{
+public:
+	SeqNodeCreator(NodeGraph& g, ViewBag& v)
+		: NodeCreationCommand(g, v)
+	{}
+	virtual ~SeqNodeCreator() {};
+	int create() override;
+};
 
 class Model
 {
@@ -101,7 +110,6 @@ public:
 	void link(int from, int to);
 	std::tuple<float, float> evaluate();
 	const ViewBag refresh() { return m_cache; }
-
 
 private:
 	std::unordered_map<NodeType, std::shared_ptr<NodeCreationCommand>> m_creators;
@@ -117,7 +125,8 @@ private:
 		{"output", NodeType::OUTPUT},
 		{"filter", NodeType::FILTER},
 		{"envelope", NodeType::ENVELOPE},
-		{"trig", NodeType::TRIG}
+		{"trig", NodeType::TRIG},
+		{"seq", NodeType::SEQ}
 	};
 
 };
