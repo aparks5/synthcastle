@@ -122,6 +122,7 @@ public:
 	const ViewBag refresh() { return m_cache; }
 
 private:
+	std::mutex m_mut;
 	std::unordered_map<NodeType, std::shared_ptr<NodeCreationCommand>> m_creators;
 	NodeGraph m_graph;
 	ViewBag m_cache;

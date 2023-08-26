@@ -8,6 +8,7 @@
 #include "oscillator.h"
 #include "output.h"
 #include "quadmixer.h"
+#include "relay.h"
 #include "seq.h"
 #include "trig.h"
 #include "value.h"
@@ -29,6 +30,7 @@ Model::Model()
 
 std::tuple<float,float> Model::evaluate()
 {
+	std::lock_guard<std::mutex> lok(m_mut);
 	if (m_graph.getRoot() == -1) {
 		return {0, 0};
 	}
@@ -193,6 +195,8 @@ std::tuple<float,float> Model::evaluate()
 
 void Model::link(int from, int to)
 {
+
+	std::lock_guard<std::mutex> lok(m_mut);
 	if (m_cache.map.find(from) != m_cache.map.end()) {
 		m_cache.map[from].edges[from] = EdgeSnapshot(from, to);
 	}
@@ -201,6 +205,8 @@ void Model::link(int from, int to)
 
 int Model::update(UpdateEvent update)
 {
+	std::lock_guard<std::mutex> lok(m_mut);
+
 	auto i = update.nodeId;
 	auto p = update.parameter;
 	auto v = update.value;
@@ -217,6 +223,7 @@ int Model::update(UpdateEvent update)
 
 int Model::create(std::string str)
 {
+	std::lock_guard<std::mutex> lok(m_mut);
 	if (m_nodeTypeMap.find(str) != m_nodeTypeMap.end()) {
 		NodeType type = m_nodeTypeMap[str];
 		auto command = m_creators[type];
@@ -240,12 +247,31 @@ int ConstantNodeCreator::create()
 int TrigNodeCreator::create()
 {
 	auto k = std::make_shared<Trig>();
+	auto a = std::make_shared<Relay>();
+	auto b = std::make_shared<Relay>();
+	auto c = std::make_shared<Relay>();
+	auto d = std::make_shared<Relay>();
 	auto id = m_g.insert_node(k);
+	auto aid = m_g.insert_node(a);
+	auto bid = m_g.insert_node(b);
+	auto cid = m_g.insert_node(c);
+	auto did = m_g.insert_node(d);
+	m_g.insert_edge(aid, id);
+	m_g.insert_edge(bid, id);
+	m_g.insert_edge(cid, id);
+	m_g.insert_edge(did, id);
 	k->params[Trig::NODE_ID] = id;
-	k->params[Trig::TRIG] = 0.f;
 	cacheType(id, NodeType::TRIG);
-	cacheParam(id, "trig", 0.f);
+	cacheType(aid, NodeType::RELAY);
+	cacheType(bid, NodeType::RELAY);
+	cacheType(cid, NodeType::RELAY);
+	cacheType(did, NodeType::RELAY);
 	cacheParam(id, "bpm", 0.f);
+	cacheParam(id, "trig", 0.f);
+	cacheParam(id, "trig_id", aid);
+	cacheParam(id, "trig2_id", bid);
+	cacheParam(id, "trig3_id", cid);
+	cacheParam(id, "trig4_id", did);
 	return id;
 }
 

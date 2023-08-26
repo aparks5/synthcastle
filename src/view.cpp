@@ -415,9 +415,27 @@ void TrigDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     update(id, snapshot, "bpm", v);
 
     ImNodes::BeginOutputAttribute(id);
-    const float text_width = ImGui::CalcTextSize("Out").x;
-    ImGui::Indent(60.f + ImGui::CalcTextSize("Out").x - text_width);
-    ImGui::TextUnformatted("Out");
+    float text_width = ImGui::CalcTextSize("Trig1").x;
+    ImGui::Indent(60.f + ImGui::CalcTextSize("Trig1").x - text_width);
+    ImGui::TextUnformatted("Trig1");
+    ImNodes::EndOutputAttribute();
+
+    ImNodes::BeginOutputAttribute(snapshot.params.at("trig2_id"));
+    text_width = ImGui::CalcTextSize("Trig2").x;
+    ImGui::Indent(60.f + ImGui::CalcTextSize("Trig2").x - text_width);
+    ImGui::TextUnformatted("Trig2");
+    ImNodes::EndOutputAttribute();
+
+    ImNodes::BeginOutputAttribute(snapshot.params.at("trig3_id"));
+    text_width = ImGui::CalcTextSize("Trig3").x;
+    ImGui::Indent(60.f + ImGui::CalcTextSize("Trig3").x - text_width);
+    ImGui::TextUnformatted("Trig3");
+    ImNodes::EndOutputAttribute();
+
+    ImNodes::BeginOutputAttribute(snapshot.params.at("trig4_id"));
+    text_width = ImGui::CalcTextSize("Trig4").x;
+    ImGui::Indent(60.f + ImGui::CalcTextSize("Trig4").x - text_width);
+    ImGui::TextUnformatted("Trig4");
     ImNodes::EndOutputAttribute();
 
     ImNodes::EndNode();

@@ -53,7 +53,7 @@ void Controller::createLink(int from, int to)
 
 void Controller::update()
 {
-	//std::scoped_lock lock{m_mut};
+	std::scoped_lock lock{m_mut};
 
 	m_bUpdated = ((!m_creationQueue.empty()) &&
 				  (!m_updates.empty()) &&
