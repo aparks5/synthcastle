@@ -363,37 +363,24 @@ void SeqDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImGui::TextUnformatted("Trig In");
 	ImNodes::EndInputAttribute();
 
-    auto s1 = snapshot.params.at("s1");
-	ImGui::DragFloat("1", &s1, 0.5f, 0, 1.);
-    update(id, snapshot, "s1", s1);
-
-    auto s2 = snapshot.params.at("s2");
-	ImGui::DragFloat("2", &s2, 0.1f, 0, 1.);
-    update(id, snapshot, "s2", s2);
-
-    auto s3 = snapshot.params.at("s3");
-	ImGui::DragFloat("3", &s3, 0.1f, 0, 1.);
-    update(id, snapshot, "s3", s3);
-
-    auto s4 = snapshot.params.at("s4");
-	ImGui::DragFloat("4", &s4, 0.1f, 0, 1.);
-    update(id, snapshot, "s4", s4);
-
-    auto s5 = snapshot.params.at("s5");
-	ImGui::DragFloat("5", &s5, 0.1f, 0, 1.);
-    update(id, snapshot, "s5", s5);
-
-    auto s6 = snapshot.params.at("s6");
-	ImGui::DragFloat("6", &s6, 0.1f, 0, 1.);
-    update(id, snapshot, "s6", s6);
-
-    auto s7 = snapshot.params.at("s7");
-	ImGui::DragFloat("7", &s7, 0.1f, 0, 1.);
-    update(id, snapshot, "s7", s7);
-
-    auto s8 = snapshot.params.at("s8");
-	ImGui::DragFloat("8", &s8, 0.1f, 0, 1.);
-    update(id, snapshot, "s8", s8);
+    std::string str[8] = { "s1", "s2","s3","s4","s5","s6","s7","s8"};
+    ImGui::PushID("set1");
+    for (int i = 0; i < 8; i++) {
+        auto val = snapshot.params.at(str[i]);
+        if (i > 0) ImGui::SameLine();
+        ImGui::PushID(i);
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(i / 7.0f, 0.5f, 0.5f));
+        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(i / 7.0f, 0.6f, 0.5f));
+        ImGui::PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(i / 7.0f, 0.7f, 0.5f));
+        ImGui::PushStyleColor(ImGuiCol_SliderGrab, (ImVec4)ImColor::HSV(i / 7.0f, 0.9f, 0.9f));
+        ImGui::VSliderFloat("##v", ImVec2(18, 160), &val, 0.15f, 0.5f, "");
+		update(id, snapshot, str[i], val);
+        if (ImGui::IsItemActive() || ImGui::IsItemHovered())
+            ImGui::SetTooltip("%.3f", val);
+        ImGui::PopStyleColor(4);
+        ImGui::PopID();
+    }
+    ImGui::PopID();
 
 	ImNodes::BeginOutputAttribute(id);
     const float text_width = ImGui::CalcTextSize("Out").x;
