@@ -13,6 +13,7 @@ Oscillator::Oscillator()
 		m_waveforms.push_back(std::make_shared<Square>(m_sampleRate));
 		m_waveforms.push_back(std::make_shared<Triangle>(m_sampleRate));
 		m_waveforms.push_back(std::make_shared<SampleAndHold>(m_sampleRate));
+		m_waveforms.push_back(std::make_shared<Noise>(m_sampleRate));
 	}
 }
 

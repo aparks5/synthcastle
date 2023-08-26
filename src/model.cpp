@@ -7,6 +7,7 @@
 #include "gain.h"
 #include "oscillator.h"
 #include "output.h"
+#include "quadmixer.h"
 #include "seq.h"
 #include "trig.h"
 #include "value.h"
@@ -15,12 +16,13 @@
 
 Model::Model()
 {
+	m_creators[NodeType::CONSTANT] = std::make_shared<ConstantNodeCreator>(m_graph, m_cache);
+	m_creators[NodeType::ENVELOPE] = std::make_shared<EnvelopeNodeCreator>(m_graph, m_cache);
+	m_creators[NodeType::FILTER] = std::make_shared<FilterNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::GAIN] = std::make_shared<GainNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::OSCILLATOR] = std::make_shared<OscillatorNodeCreator>(m_graph, m_cache);
-	m_creators[NodeType::CONSTANT] = std::make_shared<ConstantNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::OUTPUT] = std::make_shared<OutputNodeCreator>(m_graph, m_cache);
-	m_creators[NodeType::FILTER] = std::make_shared<FilterNodeCreator>(m_graph, m_cache);
-	m_creators[NodeType::ENVELOPE] = std::make_shared<EnvelopeNodeCreator>(m_graph, m_cache);
+	m_creators[NodeType::QUAD_MIXER] = std::make_shared<MixerNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::SEQ] = std::make_shared<SeqNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::TRIG] = std::make_shared<TrigNodeCreator>(m_graph, m_cache);
 }
@@ -76,23 +78,23 @@ std::tuple<float,float> Model::evaluate()
             value_stack.push(pNode->process());
         }
         break;
-        //case NodeType::QUAD_MIXER:
-        //{
-        //    auto d = value_stack.top();
-        //    value_stack.pop();
-        //    auto c = value_stack.top();
-        //    value_stack.pop();
-        //    auto b = value_stack.top();
-        //    value_stack.pop();
-        //    auto a = value_stack.top();
-        //    value_stack.pop();
-        //    pNode->params[QuadMixer::INPUT_A] = a;
-        //    pNode->params[QuadMixer::INPUT_B] = b;
-        //    pNode->params[QuadMixer::INPUT_C] = c;
-        //    pNode->params[QuadMixer::INPUT_D] = d;
-        //    value_stack.push(pNode->process());
-        //}
-        //break;
+        case NodeType::QUAD_MIXER:
+        {
+            auto d = value_stack.top();
+            value_stack.pop();
+            auto c = value_stack.top();
+            value_stack.pop();
+            auto b = value_stack.top();
+            value_stack.pop();
+            auto a = value_stack.top();
+            value_stack.pop();
+            pNode->params[QuadMixer::INPUT_A] = a;
+            pNode->params[QuadMixer::INPUT_B] = b;
+            pNode->params[QuadMixer::INPUT_C] = c;
+            pNode->params[QuadMixer::INPUT_D] = d;
+            value_stack.push(pNode->process());
+        }
+        break;
         //case NodeType::MIDI_IN:
         //{
         //    // push all voices to stack
@@ -245,6 +247,44 @@ int TrigNodeCreator::create()
 	cacheParam(id, "trig", 0.f);
 	cacheParam(id, "bpm", 0.f);
 	return id;
+}
+
+int MixerNodeCreator::create()
+{
+	auto mix = std::make_shared<QuadMixer>();
+	auto a = std::make_shared<Value>(0.f);
+	auto b = std::make_shared<Value>(0.f);
+	auto c = std::make_shared<Value>(0.f);
+	auto d = std::make_shared<Value>(0.f);
+	auto aId = m_g.insert_node(a);
+	auto bId = m_g.insert_node(b);
+	auto cId = m_g.insert_node(c);
+	auto dId = m_g.insert_node(d);
+	auto mixId = m_g.insert_node(mix);
+	m_g.insert_edge(mixId, dId);
+	m_g.insert_edge(mixId, cId);
+	m_g.insert_edge(mixId, bId);
+	m_g.insert_edge(mixId, aId);
+	mix->params[QuadMixer::NODE_ID] = mixId;
+	mix->params[QuadMixer::INPUT_A_ID] = aId;
+	mix->params[QuadMixer::INPUT_B_ID] = bId;
+	mix->params[QuadMixer::INPUT_C_ID] = cId;
+	mix->params[QuadMixer::INPUT_D_ID] = dId;
+	cacheType(mixId, NodeType::QUAD_MIXER);
+	cacheType(aId, NodeType::VALUE);
+	cacheType(bId, NodeType::VALUE);
+	cacheType(cId, NodeType::VALUE);
+	cacheType(dId, NodeType::VALUE);
+	cacheParam(mixId, "node_id", mixId);
+	cacheParam(mixId, "inputa_id", aId);
+	cacheParam(mixId, "inputb_id", bId);
+	cacheParam(mixId, "inputc_id", cId);
+	cacheParam(mixId, "inputd_id", dId);
+	cacheParam(mixId, "inputa", 0.f);
+	cacheParam(mixId, "inputb", 0.f);
+	cacheParam(mixId, "inputc", 0.f);
+	cacheParam(mixId, "inputd", 0.f);
+	return mixId;
 }
 
 int SeqNodeCreator::create()

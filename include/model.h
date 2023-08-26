@@ -80,6 +80,16 @@ public:
 	int create() override;
 };
 
+class MixerNodeCreator : public NodeCreationCommand
+{
+public:
+	MixerNodeCreator(NodeGraph& g, ViewBag& v)
+		: NodeCreationCommand(g, v)
+	{}
+	virtual ~MixerNodeCreator() {};
+	int create() override;
+};
+
 class TrigNodeCreator : public NodeCreationCommand
 {
 public:
@@ -124,6 +134,7 @@ private:
 		{"constant", NodeType::CONSTANT},
 		{"output", NodeType::OUTPUT},
 		{"filter", NodeType::FILTER},
+		{"mixer", NodeType::QUAD_MIXER},
 		{"envelope", NodeType::ENVELOPE},
 		{"trig", NodeType::TRIG},
 		{"seq", NodeType::SEQ}

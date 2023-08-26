@@ -71,6 +71,13 @@ public:
 	void display(int id, const NodeSnapshot& snapshot) override;
 };
 
+class MixerDisplayCommand : public NodeDisplayCommand
+{
+public:
+	MixerDisplayCommand() {}
+	void display(int id, const NodeSnapshot& snapshot) override;
+};
+
 class TrigDisplayCommand : public NodeDisplayCommand
 {
 public:

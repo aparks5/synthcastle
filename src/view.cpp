@@ -26,6 +26,7 @@ View::View()
     m_displays[NodeType::ENVELOPE] = std::make_shared<EnvelopeDisplayCommand>();
     m_displays[NodeType::SEQ] = std::make_shared<SeqDisplayCommand>();
     m_displays[NodeType::TRIG] = std::make_shared<TrigDisplayCommand>();
+    m_displays[NodeType::QUAD_MIXER] = std::make_shared<MixerDisplayCommand>();
     const char* glsl_version = initSDL();
     SDL_GL_MakeCurrent(m_window, m_glContext);
     SDL_GL_SetSwapInterval(1); // Enable vsync
@@ -158,7 +159,7 @@ void View::display()
     ImNodes::EditorContextSet(m_pEditorContext);
 
     ImGui::Begin("signal_flow_editor");
-    ImGui::TextUnformatted("Keys: a=osc/c=const/e=envelope/f=filt/g=gain/s=output/t=trigger/m=midi/x=mix/v=voice");
+    ImGui::TextUnformatted("Keys: a=osc/c=const/e=envelope/f=filt/g=gain/m=mixer/o=output/t=trigger");
 
     ImNodes::BeginNodeEditor();
 
@@ -190,6 +191,8 @@ void View::display()
 
         }
         else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_M)) {
+            m_listener->queueCreation("mixer");
+            bKeyReleased = true;
         }
         else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_G)) {
             m_listener->queueCreation("gain");
@@ -199,6 +202,7 @@ void View::display()
         }
         else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_O)) {
             m_listener->queueCreation("output");
+            bKeyReleased = true;
         }
         else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_S)) {
             m_listener->queueCreation("seq");
@@ -373,7 +377,7 @@ void SeqDisplayCommand::display(int id, const NodeSnapshot& snapshot)
         ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(i / 7.0f, 0.6f, 0.5f));
         ImGui::PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(i / 7.0f, 0.7f, 0.5f));
         ImGui::PushStyleColor(ImGuiCol_SliderGrab, (ImVec4)ImColor::HSV(i / 7.0f, 0.9f, 0.9f));
-        ImGui::VSliderFloat("##v", ImVec2(18, 160), &val, 0.15f, 0.5f, "");
+        ImGui::VSliderFloat("##v", ImVec2(18, 160), &val, 0.0f, 0.5f, "");
 		update(id, snapshot, str[i], val);
         if (ImGui::IsItemActive() || ImGui::IsItemHovered())
             ImGui::SetTooltip("%.3f", val);
@@ -506,7 +510,7 @@ void OscillatorDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     // Simplified one-liner Combo() API, using values packed in a single constant string
     ImGui::PushItemWidth(120.0f);
     int w = (int)params["waveform"];
-    ImGui::Combo("Waveform", &w, "Saw\0Sine\0Square\0Triangle\0S&H\0");
+    ImGui::Combo("Waveform", &w, "Saw\0Sine\0Square\0Triangle\0S&H\0Noise\0");
     update(id, snapshot, "waveform", w);
 
     ImNodes::BeginOutputAttribute(id);
@@ -517,6 +521,39 @@ void OscillatorDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
     ImNodes::EndNode();
 }
+
+void MixerDisplayCommand::display(int id, const NodeSnapshot& snapshot)
+{
+
+	auto params = snapshot.params;
+    ImNodes::BeginNode(id);
+    ImNodes::BeginNodeTitleBar();
+    ImGui::TextUnformatted("QuadMix");
+    ImNodes::EndNodeTitleBar();
+
+    ImNodes::BeginInputAttribute(params["inputa_id"]);
+    ImGui::TextUnformatted("A");
+    ImNodes::EndInputAttribute();
+
+    ImNodes::BeginInputAttribute(params["inputb_id"]);
+    ImGui::TextUnformatted("B");
+    ImNodes::EndInputAttribute();
+
+    ImNodes::BeginInputAttribute(params["inputc_id"]);
+    ImGui::TextUnformatted("C");
+    ImNodes::EndInputAttribute();
+
+    ImNodes::BeginInputAttribute(params["inputd_id"]);
+    ImGui::TextUnformatted("D");
+    ImNodes::EndInputAttribute();
+
+    ImNodes::BeginOutputAttribute(id);
+    ImGui::TextUnformatted("Mix");
+    ImNodes::EndOutputAttribute();
+
+    ImNodes::EndNode();
+}
+
 
 void FilterDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 {
@@ -530,11 +567,11 @@ void FilterDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImGui::TextUnformatted("In");
 	ImNodes::EndInputAttribute();
 
-	ImNodes::BeginInputAttribute(params["freqmod"]);
+	ImNodes::BeginInputAttribute(params["freqmod_id"]);
 	ImGui::TextUnformatted("Mod");
 	ImNodes::EndInputAttribute();
 
-	ImNodes::BeginInputAttribute(params["moddepth"]);
+	ImNodes::BeginInputAttribute(params["moddepth_id"]);
 	ImGui::TextUnformatted("Depth");
 	ImNodes::EndInputAttribute();
 

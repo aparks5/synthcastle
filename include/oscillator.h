@@ -7,6 +7,7 @@
 #include "square.h"
 #include "triangle.h"
 #include "sampleandhold.h"
+#include "noise.h"
 
 #include <unordered_map>
 #include <memory>
@@ -56,6 +57,7 @@ public:
 		SQUARE,
 		TRIANGLE,
 		SAMPLE_AND_HOLD,
+		NOISE,
 		NUM_WAVEFORMS
 	};
 
