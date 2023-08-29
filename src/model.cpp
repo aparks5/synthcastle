@@ -28,9 +28,39 @@ Model::Model()
 	m_creators[NodeType::TRIG] = std::make_shared<TrigNodeCreator>(m_graph, m_cache);
 }
 
+const ViewBag Model::refresh()
+{
+
+	std::stack<int> postorder;
+	if (m_graph.getRoot() != -1) {
+		dfs_traverse(m_graph, [&postorder](const int node_id) -> void { postorder.push(node_id); });
+
+		// traverse all nodes and update the cache with all the params
+		// after evaluate() process() can update any number of internal params
+		// we need to refresh the cache with these in order to reflect them
+		// in the UI
+		while (!postorder.empty()) {
+			const int id = postorder.top();
+			postorder.pop();
+			const auto& pNode = m_graph.node(id);
+			auto paramStrings = pNode->paramStrings();
+			for (auto& str : paramStrings) {
+				auto param = pNode->lookupParam(str);
+				auto value = pNode->params[param];
+				if (m_cache.map.find(id) != m_cache.map.end()) {
+					m_cache.map[id].params[str] = value;
+				}
+			}
+		}
+	}
+
+	return m_cache;
+}
+
 std::tuple<float,float> Model::evaluate()
 {
-	std::lock_guard<std::mutex> lok(m_mut);
+
+	std::scoped_lock <std::mutex> lok(m_mut);
 	if (m_graph.getRoot() == -1) {
 		return {0, 0};
 	}
@@ -73,10 +103,15 @@ std::tuple<float,float> Model::evaluate()
         break;
         case NodeType::SEQ:
         {
+			// i should queue this til after eval
 			// pop off the stack in input order
             auto trig = value_stack.top();
             value_stack.pop();
             pNode->params[Seq::TRIGIN] = trig;
+            auto reset = value_stack.top();
+            value_stack.pop();
+            pNode->params[Seq::RESET] = reset;
+
             value_stack.push(pNode->process());
         }
         break;
@@ -247,31 +282,22 @@ int ConstantNodeCreator::create()
 int TrigNodeCreator::create()
 {
 	auto k = std::make_shared<Trig>();
-	auto a = std::make_shared<Relay>();
-	auto b = std::make_shared<Relay>();
-	auto c = std::make_shared<Relay>();
-	auto d = std::make_shared<Relay>();
 	auto id = m_g.insert_node(k);
-	auto aid = m_g.insert_node(a);
-	auto bid = m_g.insert_node(b);
-	auto cid = m_g.insert_node(c);
-	auto did = m_g.insert_node(d);
-	m_g.insert_edge(aid, id);
-	m_g.insert_edge(bid, id);
-	m_g.insert_edge(cid, id);
-	m_g.insert_edge(did, id);
 	k->params[Trig::NODE_ID] = id;
 	cacheType(id, NodeType::TRIG);
-	cacheType(aid, NodeType::RELAY);
-	cacheType(bid, NodeType::RELAY);
-	cacheType(cid, NodeType::RELAY);
-	cacheType(did, NodeType::RELAY);
 	cacheParam(id, "bpm", 0.f);
 	cacheParam(id, "trig", 0.f);
-	cacheParam(id, "trig_id", aid);
-	cacheParam(id, "trig2_id", bid);
-	cacheParam(id, "trig3_id", cid);
-	cacheParam(id, "trig4_id", did);
+	cacheParam(id, "stop", 0.f);
+	cacheParam(id, "numtrigs", k->params[Trig::NUMTRIGS]);
+	for (size_t idx = 2; idx <= k->params[Trig::NUMTRIGS]; idx++) {
+		std::string str = "trig" + std::to_string(idx);
+		str += "_id";
+		auto temp = std::make_shared<Relay>();
+		auto tempId = m_g.insert_node(temp);
+		k->params[Trig::TRIG1_ID + idx - 1] = tempId;
+		m_g.insert_edge(tempId, id);
+		cacheParam(id, str, tempId);
+	}
 	return id;
 }
 
@@ -317,16 +343,24 @@ int SeqNodeCreator::create()
 {
 	auto k = std::make_shared<Seq>();
 	auto t = std::make_shared<Value>();
+	auto reset = std::make_shared<Value>();
 	auto tid = m_g.insert_node(t);
+	auto rid = m_g.insert_node(reset);
 	auto id = m_g.insert_node(k);
+	m_g.insert_edge(id, rid);
 	m_g.insert_edge(id, tid);
 	k->params[Seq::NODE_ID] = id;
 	k->params[Seq::TRIGIN_ID] = tid;
+	k->params[Seq::RESET_ID] = rid;
 	k->params[Seq::TRIGIN] = 0.f;
 	cacheType(id, NodeType::SEQ);
 	cacheType(tid, NodeType::VALUE);
+	cacheType(rid, NodeType::VALUE);
 	cacheParam(id, "trigin_id", tid);
+	cacheParam(id, "reset_id", rid);
 	cacheParam(id, "trigin", 0.f);
+	cacheParam(id, "step", 0.f);
+	cacheParam(id, "reset", 0.f);
 	cacheParam(id, "s1", 0.f);
 	cacheParam(id, "s2", 0.f);
 	cacheParam(id, "s3", 0.f);

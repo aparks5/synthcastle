@@ -34,5 +34,6 @@ public:
 	virtual void display() {};
 	virtual void update() {};
 	virtual int lookupParam(std::string str) { return -1; }
+	virtual std::vector<std::string> paramStrings() { return {}; }
 
 };

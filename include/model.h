@@ -119,7 +119,7 @@ public:
 	int create(std::string str);
 	void link(int from, int to);
 	std::tuple<float, float> evaluate();
-	const ViewBag refresh() { return m_cache; }
+	const ViewBag refresh(); 
 
 private:
 	std::mutex m_mut;
