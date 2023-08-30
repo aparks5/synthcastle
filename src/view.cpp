@@ -138,7 +138,6 @@ void View::run()
         ImGui::NewFrame();
 
         // Display the editor
-        //ImGui::ShowDemoWindow(nullptr);
         display();
 
         // Render the frame
@@ -170,7 +169,6 @@ void View::display()
     style->Colors[ImGuiCol_FrameBgActive] = ImVec4(.32, 0.7, 0., 1.);
     style->Colors[ImGuiCol_FrameBgHovered] = ImVec4(.32, 0.7, 0., 1.);
 
-
     ImNodesStyle& nodestyle = ImNodes::GetStyle();
     nodestyle.PinCircleRadius = 7;
     nodestyle.Colors[ImNodesCol_Pin] = IM_COL32(145, 145, 145, 200);
@@ -181,7 +179,6 @@ void View::display()
     nodestyle.Colors[ImNodesCol_NodeBackground] = IM_COL32(217, 217, 217, 255);
     nodestyle.Colors[ImNodesCol_NodeBackgroundHovered] = IM_COL32(185, 196, 199, 255);
     nodestyle.Colors[ImNodesCol_NodeBackgroundSelected] = IM_COL32(185, 196, 199, 255);
-
 
     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 1, 1, 1));
     ImGui::PushStyleColor(ImGuiCol_WindowBg, (ImVec4)ImColor(0, 0, 0, 1));
@@ -196,7 +193,6 @@ void View::display()
 
     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 0, 0, 1));
     ImNodes::BeginNodeEditor();
-
 
     if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
         ImNodes::IsEditorHovered()) {
@@ -410,7 +406,7 @@ void ConstantDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
 void SeqDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 {
-	ImGui::PushItemWidth(120.0f);
+	ImGui::PushItemWidth(160.0f);
     ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(22,147,165, 255));
     ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(22,147,165, 230));
     ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(22,147,165, 255));
@@ -428,26 +424,54 @@ void SeqDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImGui::TextUnformatted("Reset");
 	ImNodes::EndInputAttribute();
 
+    auto step = snapshot.params.at("step");
+    auto progress = ((1.+step) / 8.);
+
+    // Typically we would use ImVec2(-1.0f,0.0f) or ImVec2(-FLT_MIN,0.0f) to use all available width,
+    // or ImVec2(width,0.0f) for a specified width. ImVec2(0.0f,0.0f) uses ItemWidth.
+    ImGui::ProgressBar(progress, ImVec2(216, 0.0f), "");
+    ImGui::NewLine();
+
     std::string str[8] = { "s1", "s2","s3","s4","s5","s6","s7","s8"};
     ImGui::PushID("set1");
     for (int i = 0; i < 8; i++) {
+		ImGui::SameLine();
         auto val = snapshot.params.at(str[i]);
-        if (i > 0) ImGui::SameLine();
         ImGui::PushID(i);
         ImGui::PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(i / 7.0f, 0.5f, 0.5f));
         ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(i / 7.0f, 0.6f, 0.5f));
         ImGui::PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(i / 7.0f, 0.7f, 0.5f));
         ImGui::PushStyleColor(ImGuiCol_SliderGrab, (ImVec4)ImColor::HSV(i / 7.0f, 0.9f, 0.9f));
-        ImGui::VSliderFloat("##v", ImVec2(18, 160), &val, 0.0f, 0.5f, "");
+        ImGui::VSliderFloat("##v", ImVec2(22, 160), &val, 0.0f, 0.5f, "");
 		update(id, snapshot, str[i], val);
         if (ImGui::IsItemActive() || ImGui::IsItemHovered())
             ImGui::SetTooltip("%.3f", val);
         ImGui::PopStyleColor(4);
         ImGui::PopID();
     }
+
+    ImGui::NewLine();
+
+    for (int i = 0; i < 8; i++) {
+		ImGui::SameLine();
+        auto val = snapshot.params.at(str[i]);
+        ImGui::PushID(i);
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(i / 7.0f, 0.5f, 0.5f));
+        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(i / 7.0f, 0.6f, 0.5f));
+        ImGui::PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(i / 7.0f, 0.7f, 0.5f));
+        ImGui::PushStyleColor(ImGuiCol_SliderGrab, (ImVec4)ImColor::HSV(i / 7.0f, 0.9f, 0.9f));
+        auto bEnableStep = static_cast<bool>(snapshot.params.at("enable_" + str[i]));
+        ImGui::Checkbox("##hidelabel", &bEnableStep);
+		update(id, snapshot, "enable_" + str[i], bEnableStep);
+        ImGui::PopStyleColor(4);
+        ImGui::PopID();
+    }
+
+
+
+
     ImGui::PopID();
 
-    ImGui::Text("Step: %d", static_cast<int>(snapshot.params.at("step")));
 
 	ImNodes::BeginOutputAttribute(id);
     const float text_width = ImGui::CalcTextSize("Out").x;
@@ -476,16 +500,6 @@ void TrigDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     }
     update(id, snapshot, "trig", clicked);
 
-    clicked = 0;
-    if (ImGui::SmallButton("Reset!")) {
-        clicked = 1;
-    }
-    update(id, snapshot, "stop", clicked);
-
-    auto v = snapshot.params.at("bpm");
-    ImGui::DragFloat("BPM", &v, 0.5f, 0, 300.);
-    update(id, snapshot, "bpm", v);
-
 
     // first output is not a relay
     ImNodes::BeginOutputAttribute(id);
@@ -507,7 +521,40 @@ void TrigDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 		ImGui::TextUnformatted(str.c_str());
 		ImNodes::EndOutputAttribute();
     }
-    
+
+    auto v = snapshot.params.at("bpm");
+    ImGui::DragFloat("BPM", &v, 0.5f, 0, 300.);
+    update(id, snapshot, "bpm", v);
+    // update progress animation speed
+    float speed = v / 25;
+
+    auto progress = snapshot.params.at("progress");
+    auto progressDir = snapshot.params.at("progress_dir");
+	progress += progressDir * speed * ImGui::GetIO().DeltaTime;
+
+	if (progress >= +1.1f) { progress = +1.1f; progressDir *= -1.0f; }
+	if (progress <= -0.1f) { progress = -0.1f; progressDir *= -1.0f; }
+
+    update(id, snapshot, "progress", progress);
+    update(id, snapshot, "progress_dir", progressDir);
+
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor(0,0,0));
+    ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(72/255., 245/255., 66/255., progress));
+    ImGui::ProgressBar(1.f, ImVec2(25.f, 0.0f), "");
+    ImGui::PopStyleColor(2);
+
+    clicked = 0;
+    if (ImGui::SmallButton("Stop")) {
+        clicked = 1;
+		update(id, snapshot, "stop", clicked);
+    }
+
+    clicked = 0;
+    if (ImGui::SmallButton("Start")) {
+        clicked = 0;
+		update(id, snapshot, "stop", clicked);
+    }
+
     ImNodes::EndNode();
     ImGui::PopItemWidth();
     ImNodes::PopColorStyle();

@@ -60,7 +60,6 @@ const ViewBag Model::refresh()
 std::tuple<float,float> Model::evaluate()
 {
 
-	std::scoped_lock <std::mutex> lok(m_mut);
 	if (m_graph.getRoot() == -1) {
 		return {0, 0};
 	}
@@ -231,7 +230,6 @@ std::tuple<float,float> Model::evaluate()
 void Model::link(int from, int to)
 {
 
-	std::lock_guard<std::mutex> lok(m_mut);
 	if (m_cache.map.find(from) != m_cache.map.end()) {
 		m_cache.map[from].edges[from] = EdgeSnapshot(from, to);
 	}
@@ -240,8 +238,8 @@ void Model::link(int from, int to)
 
 int Model::update(UpdateEvent update)
 {
-	std::lock_guard<std::mutex> lok(m_mut);
 
+	std::scoped_lock <std::mutex> lok(m_mut);
 	auto i = update.nodeId;
 	auto p = update.parameter;
 	auto v = update.value;
@@ -258,7 +256,6 @@ int Model::update(UpdateEvent update)
 
 int Model::create(std::string str)
 {
-	std::lock_guard<std::mutex> lok(m_mut);
 	if (m_nodeTypeMap.find(str) != m_nodeTypeMap.end()) {
 		NodeType type = m_nodeTypeMap[str];
 		auto command = m_creators[type];
@@ -287,6 +284,9 @@ int TrigNodeCreator::create()
 	cacheType(id, NodeType::TRIG);
 	cacheParam(id, "bpm", 0.f);
 	cacheParam(id, "trig", 0.f);
+	cacheParam(id, "value", 0.f);
+	cacheParam(id, "progress", 0.f);
+	cacheParam(id, "progress_dir", 1.f);
 	cacheParam(id, "stop", 0.f);
 	cacheParam(id, "numtrigs", k->params[Trig::NUMTRIGS]);
 	for (size_t idx = 2; idx <= k->params[Trig::NUMTRIGS]; idx++) {
@@ -356,19 +356,11 @@ int SeqNodeCreator::create()
 	cacheType(id, NodeType::SEQ);
 	cacheType(tid, NodeType::VALUE);
 	cacheType(rid, NodeType::VALUE);
+	for (auto& str : k->paramStrings()) {
+		cacheParam(id, str, 0.f);
+	}
 	cacheParam(id, "trigin_id", tid);
 	cacheParam(id, "reset_id", rid);
-	cacheParam(id, "trigin", 0.f);
-	cacheParam(id, "step", 0.f);
-	cacheParam(id, "reset", 0.f);
-	cacheParam(id, "s1", 0.f);
-	cacheParam(id, "s2", 0.f);
-	cacheParam(id, "s3", 0.f);
-	cacheParam(id, "s4", 0.f);
-	cacheParam(id, "s5", 0.f);
-	cacheParam(id, "s6", 0.f);
-	cacheParam(id, "s7", 0.f);
-	cacheParam(id, "s8", 0.f);
 	return id;
 }
 

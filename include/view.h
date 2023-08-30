@@ -55,6 +55,9 @@ private:
 	ImVec2 m_cachedClickPos;
 	bool m_bSetPosOfLatestNode;
 	size_t m_cachedViewBagSize;
+	float m_progress;
+	float m_progressDir;
+
 };
 
 class GainDisplayCommand : public NodeDisplayCommand
@@ -81,7 +84,8 @@ public:
 class TrigDisplayCommand : public NodeDisplayCommand
 {
 public:
-	TrigDisplayCommand() {}
+	TrigDisplayCommand()
+	{}
 	void display(int id, const NodeSnapshot& snapshot) override;
 };
 
