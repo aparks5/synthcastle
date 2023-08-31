@@ -19,14 +19,15 @@ View::View()
     , m_cachedViewBagSize(0)
 {
     m_displays[NodeType::GAIN] = std::make_shared<GainDisplayCommand>();
-    m_displays[NodeType::OSCILLATOR] = std::make_shared<OscillatorDisplayCommand>();
     m_displays[NodeType::CONSTANT] = std::make_shared<ConstantDisplayCommand>();
-    m_displays[NodeType::OUTPUT] = std::make_shared<OutputDisplayCommand>();
-    m_displays[NodeType::FILTER] = std::make_shared<FilterDisplayCommand>();
+    m_displays[NodeType::DELAY] = std::make_shared<DelayDisplayCommand>();
     m_displays[NodeType::ENVELOPE] = std::make_shared<EnvelopeDisplayCommand>();
+    m_displays[NodeType::FILTER] = std::make_shared<FilterDisplayCommand>();
+    m_displays[NodeType::OUTPUT] = std::make_shared<OutputDisplayCommand>();
+    m_displays[NodeType::OSCILLATOR] = std::make_shared<OscillatorDisplayCommand>();
+    m_displays[NodeType::QUAD_MIXER] = std::make_shared<MixerDisplayCommand>();
     m_displays[NodeType::SEQ] = std::make_shared<SeqDisplayCommand>();
     m_displays[NodeType::TRIG] = std::make_shared<TrigDisplayCommand>();
-    m_displays[NodeType::QUAD_MIXER] = std::make_shared<MixerDisplayCommand>();
     const char* glsl_version = initSDL();
     SDL_GL_MakeCurrent(m_window, m_glContext);
     SDL_GL_SetSwapInterval(1); // Enable vsync
@@ -208,6 +209,10 @@ void View::display()
 			m_listener->queueCreation("constant");
             bKeyReleased = true;
         }
+        else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_D)) {
+			m_listener->queueCreation("delay");
+            bKeyReleased = true;
+        }
         else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_T)) {
 			m_listener->queueCreation("trig");
             bKeyReleased = true;
@@ -340,6 +345,42 @@ void OutputDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     ImGui::PopItemWidth();
 }
 
+void DelayDisplayCommand::display(int id, const NodeSnapshot& snapshot)
+{
+
+    ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(167, 219, 216, 255));
+    ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(167, 219, 216, 255));
+    ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(167, 219, 216, 255));
+
+	ImGui::PushItemWidth(80.0f);
+
+    ImNodes::BeginNode(id);
+    ImNodes::BeginNodeTitleBar();
+    ImGui::TextUnformatted("Delay");
+    ImNodes::EndNodeTitleBar();
+
+	ImNodes::BeginInputAttribute(snapshot.params.at("input_id"));
+	ImGui::TextUnformatted("In");
+	ImNodes::EndInputAttribute();
+
+    auto d = snapshot.params.at("delay_ms");
+    ImGui::DragFloat("Delay Time (ms)", &d, 0.5f, 0, 2999.);
+    update(id, snapshot, "delay_ms", d);
+
+    auto f = snapshot.params.at("feedback_ratio");
+    ImGui::DragFloat("Feedback Ratio", &f, 0.01f, 0., 1.);
+    update(id, snapshot, "feedback_ratio", f);
+
+    ImNodes::BeginOutputAttribute(id);
+	const float text_width = ImGui::CalcTextSize("Out").x;
+	ImGui::Indent(120.f + ImGui::CalcTextSize("Out").x - text_width);
+	ImGui::TextUnformatted("Out");
+	ImNodes::EndOutputAttribute();
+	ImNodes::EndNode();
+    ImGui::PopItemWidth();
+    ImNodes::PopColorStyle();
+}
+
 void GainDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 {
 	auto params = snapshot.params;
@@ -391,7 +432,7 @@ void ConstantDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     ImNodes::PopColorStyle();
 
     auto v = snapshot.params.at("value");
-	ImGui::DragFloat("Value", &v, 0.5f, 0, 1.);
+	ImGui::DragFloat("Value", &v, 0.1f, 0, 1.);
     update(id, snapshot, "value", v);
 
 	ImNodes::BeginOutputAttribute(id);

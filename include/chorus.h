@@ -2,6 +2,7 @@
 #define CHORUS_H_
 
 #include "delay.h"
+#include "module.h"
 #include "sine.h"
 
 class Chorus : public Module

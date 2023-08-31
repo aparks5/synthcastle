@@ -3,7 +3,7 @@
 
 TapeDelay::TapeDelay(size_t sampleRate)
 	: Module(sampleRate)
-	, m_delay(sampleRate, 1.f)
+	, m_delay()
 	, m_delayTimeMs(250.)
 	, m_prevDelayTimeMs(250.)
 	, m_lfo(sampleRate)
@@ -13,7 +13,7 @@ TapeDelay::TapeDelay(size_t sampleRate)
 	, m_slewDelta(0.f)
 	, m_slewTime(m_delayTimeMs)
 {
-	m_delay.update(250, 0.8);
+	//m_delay.update(250, 0.8);
 	m_hp.update(1000);
 	m_lp.update(0.7);
 	m_lfo.update(0.1);
@@ -23,7 +23,7 @@ TapeDelay::TapeDelay(size_t sampleRate)
 void TapeDelay::update(float delayTimeMs)
 {
 	m_delayTimeMs = delayTimeMs;
-	m_delay.update(m_delayTimeMs, 0.8);
+	//m_delay.update(m_delayTimeMs, 0.8);
 }
 
 float TapeDelay::operator()()
@@ -40,11 +40,9 @@ float TapeDelay::operator()(float in)
 	temp = m_lp(temp);
 	// distort
 	temp = tanh(temp);
-	m_delay.write(temp);
 
-	m_delay.update(m_delayTimeMs + (m_lfo.process() * 2.f), 0.8);
-	
+	//m_delay.update(m_delayTimeMs + (m_lfo.process() * 2.f), 0.8);
 
-	return m_delay();
+	return m_delay.process(temp);
 }
 

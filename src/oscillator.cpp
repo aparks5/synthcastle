@@ -31,9 +31,6 @@ void Oscillator::update()
 	auto fine = params[Oscillator::TUNING_FINE];
 
 	freq = freq * semitoneToRatio(coarse) * semitoneToRatio(fine);
-	if (freq < 60) {
-		freq = 0;
-	}
 
 	if (modfreq != 0) {
 		freq = freq + ((freq * moddepth) * modfreq);

@@ -2,6 +2,7 @@
 #include "util.h"
 
 #include "constant.h"
+#include "delay.h"
 #include "envelope.h"
 #include "filter.h"
 #include "gain.h"
@@ -18,6 +19,7 @@
 Model::Model()
 {
 	m_creators[NodeType::CONSTANT] = std::make_shared<ConstantNodeCreator>(m_graph, m_cache);
+	m_creators[NodeType::DELAY] = std::make_shared<DelayNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::ENVELOPE] = std::make_shared<EnvelopeNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::FILTER] = std::make_shared<FilterNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::GAIN] = std::make_shared<GainNodeCreator>(m_graph, m_cache);
@@ -30,7 +32,6 @@ Model::Model()
 
 const ViewBag Model::refresh()
 {
-
 	std::stack<int> postorder;
 	if (m_graph.getRoot() != -1) {
 		dfs_traverse(m_graph, [&postorder](const int node_id) -> void { postorder.push(node_id); });
@@ -75,6 +76,13 @@ std::tuple<float,float> Model::evaluate()
 		const auto& pNode = m_graph.node(id);
 
 		switch (pNode->type) {
+		case NodeType::DELAY:
+		{
+			auto val = value_stack.top();
+			value_stack.pop();
+			value_stack.push(pNode->process(val));
+		}
+		break;
         case NodeType::FILTER:
         {
             auto in = value_stack.top();
@@ -239,7 +247,6 @@ void Model::link(int from, int to)
 int Model::update(UpdateEvent update)
 {
 
-	std::scoped_lock <std::mutex> lok(m_mut);
 	auto i = update.nodeId;
 	auto p = update.parameter;
 	auto v = update.value;
@@ -481,6 +488,26 @@ int EnvelopeNodeCreator::create()
 	cacheParam(id, "trigger", 0.f);
 	return id;
 
+}
+
+int DelayNodeCreator::create()
+{
+	auto node = std::make_shared<Delay>();
+	auto in = std::make_shared<Value>(0.f);
+	auto inid = m_g.insert_node(in);
+	auto id = m_g.insert_node(node);
+	node->params[Delay::NODE_ID] = id;
+	node->params[Delay::INPUT_ID] = inid;
+	m_g.insert_edge(id, inid);
+	// update cache
+	cacheType(id, NodeType::DELAY);
+	cacheType(inid, NodeType::VALUE);
+	for (auto& str : node->paramStrings()) {
+		cacheParam(id, str, 0.f);
+	}
+	cacheParam(id, "input_id", inid);
+
+	return id;
 }
 
 int FilterNodeCreator::create()

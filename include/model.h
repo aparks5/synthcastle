@@ -110,6 +110,16 @@ public:
 	int create() override;
 };
 
+class DelayNodeCreator : public NodeCreationCommand
+{
+public:
+	DelayNodeCreator(NodeGraph& g, ViewBag& v)
+		: NodeCreationCommand(g, v)
+	{}
+	virtual ~DelayNodeCreator() {};
+	int create() override;
+};
+
 class Model
 {
 public:
@@ -131,6 +141,7 @@ private:
 	std::unordered_map<std::string, NodeType> m_nodeTypeMap =
 	{
 		{"gain", NodeType::GAIN},
+		{"delay", NodeType::DELAY},
 		{"oscillator", NodeType::OSCILLATOR},
 		{"constant", NodeType::CONSTANT},
 		{"output", NodeType::OUTPUT},

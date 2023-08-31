@@ -3,11 +3,13 @@
 
 #include <vector>
 
-Delay::Delay(float sampleRate, float maxDelaySeconds)
-	: Module(sampleRate)
+Delay::Delay()
+	: Node(DELAY, 0, NUM_PARAMS)
+	, m_sampleRate(44100)
+	, m_maxDelaySeconds(3.0)
 	, m_delayMs(0)
 	, m_delaySamps(0)
-	, m_maxDelaySamps(maxDelaySeconds*sampleRate)
+	, m_maxDelaySamps(m_maxDelaySeconds*m_sampleRate)
 	, m_writeIdx(0)
 	, m_readIdx(0)
 	, m_feedbackRatio(0.f)
@@ -33,29 +35,17 @@ float Delay::tap(float ms)
 
 }
 
-void Delay::update(float delayMs, float feedbackRatio)
-{
-	m_delayMs = delayMs;
-	m_feedbackRatio = feedbackRatio;
-}
-
 void Delay::reset()
 {
 	std::fill(m_circBuff.begin(), m_circBuff.end(), 0.f);
 }
 
-void Delay::write(float val)
+float Delay::process(float in) 
 {
-	m_circBuff[m_writeIdx] = val + (m_feedbackRatio * m_feedbackOut);
+	m_delayMs = params[DELAY_MS];
+	m_feedbackRatio = params[FEEDBACK_RATIO];
 
-	m_writeIdx++;
-	if (m_writeIdx > m_bufSize) {
-		m_writeIdx = 0;
-	}
-}
-
-float Delay::operator()()
-{
+	// read from buffer
 
 	// find delay index and separate fractional delay for interpolation
 	float fractionalDelay = (m_delayMs / 1000.f * m_sampleRate) - (int)(m_delayMs / 1000.f * m_sampleRate);
@@ -91,5 +81,14 @@ float Delay::operator()()
 
 	float out = linearInterpolate(yn, yn1, fractionalDelay);
 	m_feedbackOut = out;
+
+	// lastly, write to buffer
+	m_circBuff[m_writeIdx] = in + (m_feedbackRatio * m_feedbackOut);
+
+	m_writeIdx++;
+	if (m_writeIdx > m_bufSize) {
+		m_writeIdx = 0;
+	}
+
 	return out;
 }

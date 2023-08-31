@@ -67,6 +67,13 @@ public:
 	void display(int id, const NodeSnapshot& snapshot) override;
 };
 
+class DelayDisplayCommand : public NodeDisplayCommand
+{
+public:
+	DelayDisplayCommand() {}
+	void display(int id, const NodeSnapshot& snapshot) override;
+};
+
 class ConstantDisplayCommand : public NodeDisplayCommand
 {
 public:
