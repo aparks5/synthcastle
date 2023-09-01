@@ -63,6 +63,8 @@ const ViewBag Model::refresh()
 std::tuple<float,float> Model::evaluate()
 {
 	m_mut.try_lock();
+	
+	float clockCache = -1;
 
 	if (m_graph.getRoot() == -1) {
 		return {0, 0};
@@ -196,8 +198,14 @@ std::tuple<float,float> Model::evaluate()
         break;
         case NodeType::TRIG:
         {
-            auto val = pNode->process();
-            value_stack.push(val);
+			if (clockCache == -1) {
+				auto val = pNode->process();
+				clockCache = val;
+				value_stack.push(val);
+			}
+			else {
+				value_stack.push(clockCache);
+			}
         }
         break;
 		case NodeType::GAIN:
@@ -227,6 +235,8 @@ std::tuple<float,float> Model::evaluate()
 				float left = value_stack.top();
 				value_stack.pop(); 
 				pNode->params[Output::DISPLAY_L] = left;
+				// hack for now, mono output, two outputs triggers process() calls twice
+				return std::make_tuple(left, left);
                 if (value_stack.empty()) {
 					m_mut.unlock();
                     return std::make_tuple(left, 0.);
