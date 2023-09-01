@@ -30,6 +30,7 @@ public:
 		INPUT_ID,
 		DELAY_MS,
 		DELAY_MS_ID,
+		DRYWET_RATIO,
 		FEEDBACK_RATIO,
 		FEEDBACK_RATIO_ID,
 		RESET,
@@ -47,9 +48,10 @@ public:
 private:
 	std::unordered_map<std::string, int> m_lookup = {
 		{"node_id", NODE_ID},
-		{"intput_id", INPUT_ID},
+		{"input_id", INPUT_ID},
 		{"delay_ms", DELAY_MS},
 		{"delay_ms_id", DELAY_MS_ID},
+		{"drywet_ratio", DRYWET_RATIO},
 		{"feedback_ratio", FEEDBACK_RATIO},
 		{"feedback_ratio_id", FEEDBACK_RATIO_ID},
 		{"reset", RESET},

@@ -55,6 +55,16 @@ find_package(glfw3 CONFIG REQUIRED)
 find_package(glad CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 
+# ImGuiFileDialog
+add_library(ImGuiFileDialog)
+target_sources(ImGuiFileDialog PRIVATE
+    ${PROJECT_SOURCE_DIR}/include/thirdparty/dirent/dirent.h
+    ${PROJECT_SOURCE_DIR}/include/thirdparty/ImGuiFileDialog.h
+    ${PROJECT_SOURCE_DIR}/include/thirdparty/ImGuiFileDialogConfig.h
+    ${PROJECT_SOURCE_DIR}/src/ImGuiFileDialog.cpp)
+target_include_directories(ImGuiFileDialog PUBLIC ${CMAKE_SOURCE_DIR})
+target_link_libraries(ImGuiFileDialog PUBLIC imgui::imgui)
+
 # Imnodes
 add_library(imnodes)
 target_sources(imnodes PRIVATE

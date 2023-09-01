@@ -10,6 +10,7 @@
 #include "output.h"
 #include "quadmixer.h"
 #include "relay.h"
+#include "sampler.h"
 #include "seq.h"
 #include "trig.h"
 #include "value.h"
@@ -26,6 +27,7 @@ Model::Model()
 	m_creators[NodeType::OSCILLATOR] = std::make_shared<OscillatorNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::OUTPUT] = std::make_shared<OutputNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::QUAD_MIXER] = std::make_shared<MixerNodeCreator>(m_graph, m_cache);
+	m_creators[NodeType::SAMPLER] = std::make_shared<SamplerNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::SEQ] = std::make_shared<SeqNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::TRIG] = std::make_shared<TrigNodeCreator>(m_graph, m_cache);
 }
@@ -60,6 +62,7 @@ const ViewBag Model::refresh()
 
 std::tuple<float,float> Model::evaluate()
 {
+	m_mut.try_lock();
 
 	if (m_graph.getRoot() == -1) {
 		return {0, 0};
@@ -139,6 +142,18 @@ std::tuple<float,float> Model::evaluate()
             value_stack.push(pNode->process());
         }
         break;
+		case NodeType::SAMPLER:
+		{
+			pNode->update();
+			auto val = value_stack.top();
+			value_stack.pop();
+			pNode->params[Sampler::INPUT] = val;
+			auto startstop = value_stack.top();
+			value_stack.pop();
+			pNode->params[Sampler::STARTSTOP] = startstop;
+			value_stack.push(pNode->process());
+		}
+		break;
         //case NodeType::MIDI_IN:
         //{
         //    // push all voices to stack
@@ -213,13 +228,14 @@ std::tuple<float,float> Model::evaluate()
 				value_stack.pop(); 
 				pNode->params[Output::DISPLAY_L] = left;
                 if (value_stack.empty()) {
+					m_mut.unlock();
                     return std::make_tuple(left, 0.);
                 }
-
-                if (!value_stack.empty()) {
+				else {
                     float right = value_stack.top();
                     pNode->params[Output::DISPLAY_R] = right;
                     value_stack.pop(); 
+					m_mut.unlock();
 					return std::make_tuple(left, right);
                 }
 			}
@@ -230,6 +246,7 @@ std::tuple<float,float> Model::evaluate()
 		}
 	}
 
+	m_mut.unlock();
     return std::make_tuple(0.,0.);
 }
 
@@ -246,6 +263,7 @@ void Model::link(int from, int to)
 
 int Model::update(UpdateEvent update)
 {
+	m_mut.try_lock();
 
 	auto i = update.nodeId;
 	auto p = update.parameter;
@@ -258,8 +276,29 @@ int Model::update(UpdateEvent update)
 		node->params[p_idx] = update.value;
 		m_cache.map[i].params[p] = v;
 	}
+
+	m_mut.unlock();
 	return 0;
 }
+
+int Model::update(UpdateStringEvent update)
+{
+	m_mut.try_lock();
+
+	auto i = update.nodeId;
+	auto p = update.parameter;
+	auto v = update.value;
+	auto node = m_graph.node(i);
+	// todo: restrict to valid values for a given param
+	if (node->stringParams.find(p) != node->stringParams.end()) {
+		node->stringParams[p] = v;
+		m_cache.map[i].stringParams[p] = v;
+	}
+
+	m_mut.unlock();
+	return 0;
+}
+
 
 int Model::create(std::string str)
 {
@@ -280,6 +319,33 @@ int ConstantNodeCreator::create()
 	k->params[Constant::VALUE] = 0.f;
 	cacheType(id, NodeType::CONSTANT);
 	cacheParam(id, "value", 0.f);
+	return id;
+}
+
+int SamplerNodeCreator::create()
+{
+	auto k = std::make_shared<Sampler>();
+	auto in = std::make_shared<Value>();
+	auto startstop = std::make_shared<Value>();
+	auto inid = m_g.insert_node(in);
+	auto startid = m_g.insert_node(startstop);
+	auto id = m_g.insert_node(k);
+	k->params[Sampler::NODE_ID] = id;
+	k->params[Sampler::INPUT_ID] = inid;
+	k->params[Sampler::STARTSTOP_ID] = startid;
+	m_g.insert_edge(id, startid);
+	m_g.insert_edge(id, inid);
+	cacheType(id, NodeType::SAMPLER);
+	cacheType(inid, NodeType::VALUE);
+	cacheType(startid, NodeType::VALUE);
+
+	for (auto& str : k->paramStrings()) {
+		cacheParam(id, str, 0.f);
+	}
+	cacheParam(id, "node_id", id);
+	cacheParam(id, "input_id", inid);
+	cacheParam(id, "startstop_id", startid);
+	cacheString(id, "path", "");
 	return id;
 }
 
@@ -368,6 +434,14 @@ int SeqNodeCreator::create()
 	}
 	cacheParam(id, "trigin_id", tid);
 	cacheParam(id, "reset_id", rid);
+	cacheParam(id, "enable_s1", 1.f);
+	cacheParam(id, "enable_s2", 1.f);
+	cacheParam(id, "enable_s3", 1.f);
+	cacheParam(id, "enable_s4", 1.f);
+	cacheParam(id, "enable_s5", 1.f);
+	cacheParam(id, "enable_s6", 1.f);
+	cacheParam(id, "enable_s7", 1.f);
+	cacheParam(id, "enable_s8", 1.f);
 	return id;
 }
 
@@ -559,5 +633,14 @@ void NodeCreationCommand::cacheParam(int id, std::string param, float value) {
 	}
 
 	m_v.map[id].params[param] = value;
+
+}
+
+void NodeCreationCommand::cacheString(int id, std::string param, std::string str) {
+	if (m_v.map.find(id) == m_v.map.end()) {
+		NodeSnapshot snap;
+		m_v.map[id] = snap;
+	}
+	m_v.map[id].stringParams[param] = str;
 
 }

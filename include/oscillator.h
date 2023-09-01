@@ -61,7 +61,7 @@ public:
 		NUM_WAVEFORMS
 	};
 
-	void update(); // update only once per frame
+	void update() override; // update only once per frame
 	// ideally only update if the param changes
 	// do a pub sub and if notify param changed
 	// then call update

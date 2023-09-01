@@ -3,6 +3,8 @@
 #include "view.h"
 #include "viewbag.h"
 
+#include "ImGuiFileDialog.h"
+
 View::View()
 	: m_window(
 		SDL_CreateWindow(
@@ -26,6 +28,7 @@ View::View()
     m_displays[NodeType::OUTPUT] = std::make_shared<OutputDisplayCommand>();
     m_displays[NodeType::OSCILLATOR] = std::make_shared<OscillatorDisplayCommand>();
     m_displays[NodeType::QUAD_MIXER] = std::make_shared<MixerDisplayCommand>();
+    m_displays[NodeType::SAMPLER] = std::make_shared<SamplerDisplayCommand>();
     m_displays[NodeType::SEQ] = std::make_shared<SeqDisplayCommand>();
     m_displays[NodeType::TRIG] = std::make_shared<TrigDisplayCommand>();
     const char* glsl_version = initSDL();
@@ -244,6 +247,11 @@ void View::display()
             m_listener->queueCreation("seq");
             bKeyReleased = true;
         }
+        else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_R)) {
+            m_listener->queueCreation("sampler");
+            bKeyReleased = true;
+        }
+
 
         if (bKeyReleased) {
             m_cachedClickPos = ImGui::GetMousePosOnOpeningCurrentPopup();
@@ -368,8 +376,12 @@ void DelayDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     update(id, snapshot, "delay_ms", d);
 
     auto f = snapshot.params.at("feedback_ratio");
-    ImGui::DragFloat("Feedback Ratio", &f, 0.01f, 0., 1.);
+    ImGui::DragFloat("Feedback Ratio", &f, 0.01f, 0., 0.5);
     update(id, snapshot, "feedback_ratio", f);
+
+    auto w = snapshot.params.at("drywet_ratio");
+    ImGui::DragFloat("Dry/Wet Ratio", &w, 0.01f, 0., 1.);
+    update(id, snapshot, "drywet_ratio", w);
 
     ImNodes::BeginOutputAttribute(id);
 	const float text_width = ImGui::CalcTextSize("Out").x;
@@ -465,6 +477,8 @@ void SeqDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImGui::TextUnformatted("Reset");
 	ImNodes::EndInputAttribute();
 
+
+
     auto step = snapshot.params.at("step");
     auto progress = ((1.+step) / 8.);
 
@@ -508,12 +522,11 @@ void SeqDisplayCommand::display(int id, const NodeSnapshot& snapshot)
         ImGui::PopID();
     }
 
-
-
+    auto g = (snapshot.params.at("gatemode") == 1.f) ? true : false;
+	ImGui::Checkbox("Gate Mode", &g);
+    update(id, snapshot, "gatemode", (float)g);
 
     ImGui::PopID();
-
-
 	ImNodes::BeginOutputAttribute(id);
     const float text_width = ImGui::CalcTextSize("Out").x;
     ImGui::Indent(120.f + ImGui::CalcTextSize("Out").x - text_width);
@@ -743,6 +756,54 @@ void MixerDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     ImNodes::EndNode();
     ImNodes::PopColorStyle();
 }
+
+void SamplerDisplayCommand::display(int id, const NodeSnapshot& snapshot)
+{
+	auto params = snapshot.params;
+    ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(235, 158, 168,255));
+    ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(235, 158, 168,255));
+    ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(235, 158, 168,255));
+
+    ImNodes::BeginNode(id);
+    ImNodes::BeginNodeTitleBar();
+    ImGui::TextUnformatted("Sampler");
+    ImNodes::EndNodeTitleBar();
+
+    ImNodes::BeginInputAttribute(params["input_id"]);
+    ImGui::TextUnformatted("Position");
+    ImNodes::EndInputAttribute();
+
+	ImNodes::BeginInputAttribute(params["startstop_id"]);
+    ImGui::TextUnformatted("Start/Stop");
+    ImNodes::EndInputAttribute();
+
+    auto p = snapshot.stringParams.at("path");
+    std::string filePathName = "";
+    std::string dialName = "nodeid_" + std::to_string((int)(snapshot.params.at("node_id")));
+    if (ImGui::Button("Browse...")) {
+        ImGuiFileDialog::Instance()->OpenDialog(dialName, "Choose File", ".wav,.raw", ".");
+    }
+    if (ImGuiFileDialog::Instance()->Display(dialName, 0, ImVec2(300,300), ImVec2(1000,1000))) {
+        if (ImGuiFileDialog::Instance()->IsOk()) {
+            filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+        }
+        ImGuiFileDialog::Instance()->Close();
+    }
+
+    auto path = filePathName;
+    ImGui::Text("Path: %s", p.c_str());
+    if (path[0] == 'C') {
+        update(id, snapshot, "path", path);
+    }
+
+    ImNodes::BeginOutputAttribute(id);
+    ImGui::TextUnformatted("Out");
+    ImNodes::EndOutputAttribute();
+
+    ImNodes::EndNode();
+    ImNodes::PopColorStyle();
+}
+
 
 void FilterDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 {

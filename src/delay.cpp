@@ -44,6 +44,7 @@ float Delay::process(float in)
 {
 	m_delayMs = params[DELAY_MS];
 	m_feedbackRatio = params[FEEDBACK_RATIO];
+	float drywet = params[DRYWET_RATIO];
 
 	// read from buffer
 
@@ -90,5 +91,5 @@ float Delay::process(float in)
 		m_writeIdx = 0;
 	}
 
-	return out;
+	return (0.707 * ((drywet * in) + ((1 - drywet) * out)));
 }

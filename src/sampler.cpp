@@ -7,38 +7,49 @@
 #include "module.h"
 #include "util.h"
 
-Sampler::Sampler(size_t sampleRate, std::string path)
-	: Module(sampleRate)
+Sampler::Sampler()
+	: Node(NodeType::SAMPLER, 0.f, NUM_PARAMS)
+	, m_sampleRate(44100)
 	, m_pos(0)
 	, m_accum(0)
 	, m_increment(1.)
 	, m_rate(1.)
+	, m_path("")
+	, m_bDone(false)
 {
-	// add loop mode for wavetables
-	audioFile.load(path);
-	m_pos = audioFile.getNumSamplesPerChannel();
-	m_accum = audioFile.getNumSamplesPerChannel();
+	stringParams["path"] = "";
 }
 
-void Sampler::noteOn(size_t noteVal)
+// all node update functions should be called outside of the audio thread
+// and all the relevant data and nodes should
+// be copied before the graph is evaluated
+void Sampler::update()
 {
-	(void)noteVal;
-	m_pos = 0;
-	m_accum = 0;
-	m_rate = midiNoteToFreq(noteVal) / 440.;
+	if (stringParams["path"] != m_path) { // find a way to do
+		// file io for samplers on a separate thread and out of the audio callback
+		m_path = stringParams["path"];
+		audioFile.load(stringParams["path"]);
+		m_pos = audioFile.getNumSamplesPerChannel();
+		m_accum = audioFile.getNumSamplesPerChannel();
+		m_bDone = true;
+	}
 }
 
-void Sampler::noteOff(size_t noteVal)
+float Sampler::process()
 {
-	(void)noteVal;
-}
+	if (params[STARTSTOP] >= 0.4 && m_bDone) {
+		params[STARTSTOP] = 0;
+		m_bDone = false;
+		m_pos = 0;
+		m_accum = 0;
+	}
+	m_rate = 1; // midiNoteToFreq(params[INPUT]) / 440.;
 
-float Sampler::operator()()
-{
 	// playing back at 44.1kHz, advance only 1 sample each time
 	m_accum += m_rate*m_increment;
-		// linearInterpolate()
+	// linearInterpolate()
 	if (m_accum > (audioFile.getNumSamplesPerChannel() - 1)) {
+		m_bDone = true;
 		return 0.f;
 	}
 	else {

@@ -17,6 +17,7 @@ public:
 	void queueCreation(std::string nodeType) override;
 	void queueLink(int from, int to) override;
 	void queueUpdate(int id, std::string param, float val) override;
+	void queueUpdate(int id, std::string param, std::string str) override;
 
 	void createLink(int from, int to);
 	int createNode(std::string nodeTypeString);
@@ -30,6 +31,7 @@ private:
 	ViewBag m_cache;
 	bool m_bUpdated;
 	std::queue<UpdateEvent> m_updates;
+	std::queue<UpdateStringEvent> m_stringUpdates;
 	std::queue<std::string> m_creationQueue;
 	std::queue<LinkEvent> m_linkQueue;
 

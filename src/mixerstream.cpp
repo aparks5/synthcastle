@@ -16,10 +16,10 @@ MixerStream::MixerStream(size_t fs, CallbackData* userData)
 	, m_mixer(fs)
 	, m_synth(fs)
 	, m_synth2(fs)
-	, m_kick(fs, "C:\\drum_samples\\bd01.wav")
-	, m_hat(fs, "C:\\drum_samples\\hh01.wav")
-	, m_clap(fs, "C:\\drum_samples\\cp01.wav")
-	, m_snare(fs, "C:\\drum_samples\\sd01.wav")
+	//, m_kick(fs, "C:\\drum_samples\\bd01.wav")
+	//, m_hat(fs, "C:\\drum_samples\\hh01.wav")
+	//, m_clap(fs, "C:\\drum_samples\\cp01.wav")
+	//, m_snare(fs, "C:\\drum_samples\\sd01.wav")
 	, m_fdn(4)
 	, m_plate(fs)
 	, m_bLoop(false)
@@ -53,16 +53,16 @@ MixerStream::MixerStream(size_t fs, CallbackData* userData)
 
 	m_synth.setName("synth1");
 	m_synth2.setName("synth2");
-	m_kick.setName("kick");
-	m_hat.setName("hat");
-	m_clap.setName("clap");
-	m_snare.setName("snare");
+	//m_kick.setName("kick");
+	//m_hat.setName("hat");
+	//m_clap.setName("clap");
+	//m_snare.setName("snare");
 
-	m_mixer.addInput(&m_synth);
-	m_mixer.addInput(&m_synth2);
-	m_mixer.addInput(&m_kick);
-	m_mixer.addInput(&m_hat);
-	m_mixer.addInput(&m_clap);
+	//m_mixer.addInput(&m_synth);
+	//m_mixer.addInput(&m_synth2);
+	//m_mixer.addInput(&m_kick);
+	//m_mixer.addInput(&m_hat);
+	//m_mixer.addInput(&m_clap);
 
 }
 

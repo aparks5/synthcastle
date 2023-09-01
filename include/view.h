@@ -33,6 +33,13 @@ protected:
 			m_listener->queueUpdate(id, param, newval);
 		}
 	}
+
+	void update(int id, const NodeSnapshot& snap, std::string param, std::string str) {
+		if (str != snap.stringParams.at(param)) {
+			m_listener->queueUpdate(id, param, str);
+		}
+	}
+
 };
 
 class View
@@ -85,6 +92,13 @@ class MixerDisplayCommand : public NodeDisplayCommand
 {
 public:
 	MixerDisplayCommand() {}
+	void display(int id, const NodeSnapshot& snapshot) override;
+};
+
+class SamplerDisplayCommand : public NodeDisplayCommand
+{
+public:
+	SamplerDisplayCommand() {}
 	void display(int id, const NodeSnapshot& snapshot) override;
 };
 

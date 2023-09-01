@@ -20,6 +20,7 @@ struct EdgeSnapshot
 struct NodeSnapshot{
 	NodeType nodeType;
 	std::unordered_map<std::string, float> params;
+	std::unordered_map<std::string, std::string> stringParams;
 	std::unordered_map<int, EdgeSnapshot> edges;
 };
 
@@ -43,7 +44,10 @@ struct ViewBag
 //      "modfreq":0.5,
 //      "coarse":12,
 //      "fine":0.01
-//   }
+//   },
+//  "stringParams": {
+//	    "path": "C:/sample.wav",
+//   },
 //   "edges":
 //   {
 //   "from": "to",

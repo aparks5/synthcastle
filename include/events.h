@@ -23,6 +23,18 @@ struct UpdateEvent {
         , value(v) {}
 };
 
+struct UpdateStringEvent {
+    int nodeId;
+    std::string parameter;
+    std::string value;
+    UpdateStringEvent(int i, std::string p, std::string v)
+        : nodeId(i)
+        , parameter(p)
+        , value(v) {}
+};
+
+
+
 struct LinkEvent {
     int from;
     int to;

@@ -41,6 +41,12 @@ void Controller::queueUpdate(int id, std::string param, float val)
 	m_updates.push(update);
 }
 
+void Controller::queueUpdate(int id, std::string param, std::string str)
+{
+	UpdateStringEvent update(id, param, str);
+	m_stringUpdates.push(update);
+}
+
 int Controller::createNode(std::string nodeType)
 {
 	return m_model->create(nodeType);
@@ -57,6 +63,7 @@ void Controller::update()
 
 	m_bUpdated = ((!m_creationQueue.empty()) &&
 				  (!m_updates.empty()) &&
+				  (!m_stringUpdates.empty()) &&
 				  (!m_linkQueue.empty()));
 	
 	while (!m_linkQueue.empty()) {
@@ -77,4 +84,12 @@ void Controller::update()
 		m_model->update(update);
 		m_updates.pop();
 	}
+
+	while (!m_stringUpdates.empty()) {
+		auto update = m_stringUpdates.front();
+		// updating
+		m_model->update(update);
+		m_stringUpdates.pop();
+	}
+
 }

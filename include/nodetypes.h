@@ -13,6 +13,7 @@ enum NodeType
 	OUTPUT,
 	QUAD_MIXER,
 	RELAY,  // used for routing multi output
+	SAMPLER,
 	SEQ, // 8 step sequencer
 	TRIG, // button press outputs 1 then all 0s
 	VALUE, // used to route inputs to node params

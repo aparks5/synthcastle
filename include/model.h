@@ -4,6 +4,26 @@
 #include "viewbag.h"
 #include "events.h"
 
+struct spin_mutex {
+	void lock() noexcept {
+		while (!try_lock()) {
+			flag.wait(true, std::memory_order_relaxed);
+		}
+	}
+
+	bool try_lock() noexcept {
+		return !flag.test_and_set(std::memory_order_acquire);
+	}
+
+	void unlock() noexcept {
+		flag.clear(std::memory_order_release);
+		flag.notify_one();
+	}
+
+private:
+	std::atomic_flag flag = ATOMIC_FLAG_INIT;
+};
+
 class NodeCreationCommand {
 public:
 	NodeCreationCommand(NodeGraph& g,
@@ -16,6 +36,7 @@ protected:
 	NodeGraph& m_g;
 	ViewBag& m_v;
 	void cacheParam(int id, std::string param, float value);
+	void cacheString(int id, std::string param, std::string str);
 	void cacheType(int id, NodeType t);
 	std::pair<float,float> evaluate();
 };
@@ -27,6 +48,16 @@ public:
 		: NodeCreationCommand(g, v)
 	{}
 	virtual ~GainNodeCreator() {};
+	int create() override;
+};
+
+class SamplerNodeCreator : public NodeCreationCommand
+{
+public:
+	SamplerNodeCreator(NodeGraph& g, ViewBag& v)
+		: NodeCreationCommand(g, v)
+	{}
+	virtual ~SamplerNodeCreator() {};
 	int create() override;
 };
 
@@ -126,13 +157,14 @@ public:
 	Model();
 	virtual ~Model() {}
 	int update(UpdateEvent update);
+	int update(UpdateStringEvent update);
 	int create(std::string str);
 	void link(int from, int to);
 	std::tuple<float, float> evaluate();
 	const ViewBag refresh(); 
 
 private:
-	std::mutex m_mut;
+	spin_mutex m_mut;
 	std::unordered_map<NodeType, std::shared_ptr<NodeCreationCommand>> m_creators;
 	NodeGraph m_graph;
 	ViewBag m_cache;
@@ -149,6 +181,7 @@ private:
 		{"mixer", NodeType::QUAD_MIXER},
 		{"envelope", NodeType::ENVELOPE},
 		{"trig", NodeType::TRIG},
+		{"sampler", NodeType::SAMPLER},
 		{"seq", NodeType::SEQ}
 	};
 
