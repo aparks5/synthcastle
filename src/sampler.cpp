@@ -15,9 +15,10 @@ Sampler::Sampler()
 	, m_increment(1.)
 	, m_rate(1.)
 	, m_path("")
+	, m_bTriggered(false)
 {
 	stringParams["path"] = "";
-}
+} 
 
 // all node update functions should be called outside of the audio thread
 // and all the relevant data and nodes should
@@ -39,14 +40,22 @@ float Sampler::process()
 		params[STARTSTOP] = 0;
 		m_pos = 0;
 		m_accum = 0;
+		m_bTriggered = true;
 	}
 
-	if (params[POSITION] != 0) {
-		m_pos = params[POSITION];
+	if (params[POSITION] != 0 && m_bTriggered) {
+		m_bTriggered = false;
+		m_pos = audioFile.getNumSamplesPerChannel() * params[POSITION];
+		m_accum = m_pos;
 		params[POSITION] = 0;
 	}
 
-	m_rate = midiNoteToFreq(static_cast<int>((params[PITCH] * 2.f) * 128.f)) / 440.;
+	if (params[PITCH] == 0) {
+		return 0;
+	}
+
+	m_rate = params[PITCH];
+	
 
 	// playing back at 44.1kHz, advance only 1 sample each time
 	m_accum += m_rate*m_increment;

@@ -61,6 +61,7 @@ private:
 	std::vector<float> m_samples;
 	double m_increment;
 	std::string m_path;
+	bool m_bTriggered;
 };
 
 

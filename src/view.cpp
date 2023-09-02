@@ -813,7 +813,7 @@ void SamplerDisplayCommand::display(int id, const NodeSnapshot& snapshot)
         }
         ImGuiFileDialog::Instance()->Close();
     }
-    ImGui::PopStyleColor(16);
+    ImGui::PopStyleColor(18);
 
     auto path = filePathName;
     ImGui::Text("Path: %s", p.c_str());
