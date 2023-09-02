@@ -147,12 +147,19 @@ std::tuple<float,float> Model::evaluate()
 		case NodeType::SAMPLER:
 		{
 			pNode->update();
+
 			auto val = value_stack.top();
 			value_stack.pop();
-			pNode->params[Sampler::INPUT] = val;
+			pNode->params[Sampler::PITCH] = val;
+
+			auto pos = value_stack.top();
+			value_stack.pop();
+			pNode->params[Sampler::POSITION] = pos;
+
 			auto startstop = value_stack.top();
 			value_stack.pop();
 			pNode->params[Sampler::STARTSTOP] = startstop;
+
 			value_stack.push(pNode->process());
 		}
 		break;
@@ -336,24 +343,30 @@ int SamplerNodeCreator::create()
 {
 	auto k = std::make_shared<Sampler>();
 	auto in = std::make_shared<Value>();
+	auto pos = std::make_shared<Value>();
 	auto startstop = std::make_shared<Value>();
 	auto inid = m_g.insert_node(in);
+	auto posid = m_g.insert_node(pos);
 	auto startid = m_g.insert_node(startstop);
 	auto id = m_g.insert_node(k);
 	k->params[Sampler::NODE_ID] = id;
-	k->params[Sampler::INPUT_ID] = inid;
+	k->params[Sampler::PITCH_ID] = inid;
+	k->params[Sampler::POSITION_ID] = posid;
 	k->params[Sampler::STARTSTOP_ID] = startid;
 	m_g.insert_edge(id, startid);
+	m_g.insert_edge(id, posid);
 	m_g.insert_edge(id, inid);
 	cacheType(id, NodeType::SAMPLER);
 	cacheType(inid, NodeType::VALUE);
+	cacheType(posid, NodeType::VALUE);
 	cacheType(startid, NodeType::VALUE);
 
 	for (auto& str : k->paramStrings()) {
 		cacheParam(id, str, 0.f);
 	}
 	cacheParam(id, "node_id", id);
-	cacheParam(id, "input_id", inid);
+	cacheParam(id, "pitch_id", inid);
+	cacheParam(id, "position_id", posid);
 	cacheParam(id, "startstop_id", startid);
 	cacheString(id, "path", "");
 	return id;

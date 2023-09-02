@@ -32,8 +32,10 @@ public:
 
 	enum SamplerParams {
 		NODE_ID,
-		INPUT_ID,
-		INPUT, // input governs sample position
+		POSITION_ID,
+		POSITION, // input governs sample position
+		PITCH_ID,
+		PITCH, 
 		STARTSTOP_ID,
 		STARTSTOP, // 1 to start, 0 to stop
 		FILENAME,
@@ -43,8 +45,10 @@ public:
 private:
 	std::unordered_map<std::string, int> m_lookup = {
 		{"node_id", NODE_ID},
-		{"input_id", INPUT_ID},
-		{"input", INPUT},
+		{"position_id", POSITION_ID},
+		{"position", POSITION},
+		{"pitch_id", PITCH_ID},
+		{"pitch", PITCH},
 		{"filename", FILENAME},
 		{"startstop_id", STARTSTOP_ID},
 		{"startstop", STARTSTOP},
@@ -57,7 +61,6 @@ private:
 	std::vector<float> m_samples;
 	double m_increment;
 	std::string m_path;
-	bool m_bDone = false;
 };
 
 

@@ -15,7 +15,6 @@ Sampler::Sampler()
 	, m_increment(1.)
 	, m_rate(1.)
 	, m_path("")
-	, m_bDone(false)
 {
 	stringParams["path"] = "";
 }
@@ -31,25 +30,28 @@ void Sampler::update()
 		audioFile.load(stringParams["path"]);
 		m_pos = audioFile.getNumSamplesPerChannel();
 		m_accum = audioFile.getNumSamplesPerChannel();
-		m_bDone = true;
 	}
 }
 
 float Sampler::process()
 {
-	if (params[STARTSTOP] >= 0.4 && m_bDone) {
+	if (params[STARTSTOP] >= 0.4) {
 		params[STARTSTOP] = 0;
-		m_bDone = false;
 		m_pos = 0;
 		m_accum = 0;
 	}
-	m_rate = 1; // midiNoteToFreq(params[INPUT]) / 440.;
+
+	if (params[POSITION] != 0) {
+		m_pos = params[POSITION];
+		params[POSITION] = 0;
+	}
+
+	m_rate = midiNoteToFreq(static_cast<int>((params[PITCH] * 2.f) * 128.f)) / 440.;
 
 	// playing back at 44.1kHz, advance only 1 sample each time
 	m_accum += m_rate*m_increment;
 	// linearInterpolate()
 	if (m_accum > (audioFile.getNumSamplesPerChannel() - 1)) {
-		m_bDone = true;
 		return 0.f;
 	}
 	else {

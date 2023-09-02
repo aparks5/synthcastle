@@ -769,13 +769,37 @@ void SamplerDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     ImGui::TextUnformatted("Sampler");
     ImNodes::EndNodeTitleBar();
 
-    ImNodes::BeginInputAttribute(params["input_id"]);
+    ImNodes::BeginInputAttribute(params["pitch_id"]);
+    ImGui::TextUnformatted("Freq");
+    ImNodes::EndInputAttribute();
+
+    ImNodes::BeginInputAttribute(params["position_id"]);
     ImGui::TextUnformatted("Position");
     ImNodes::EndInputAttribute();
 
 	ImNodes::BeginInputAttribute(params["startstop_id"]);
     ImGui::TextUnformatted("Start/Stop");
     ImNodes::EndInputAttribute();
+
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 0, 0, 1.));
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0., 0, 0, 1.));
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(.93, .93, .93, 1.f));
+    ImGui::PushStyleColor(ImGuiCol_Tab, ImVec4(.93, .93, .93, 1.f));
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(.97, .97, .97, 1.f));
+    ImGui::PushStyleColor(ImGuiCol_PopupBg, ImVec4(.95, .95, .95, 1.f));
+    ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(.93, .93, .93, 1.f));
+    ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(.93, .93, .93, 1.f));
+    ImGui::PushStyleColor(ImGuiCol_TitleBgCollapsed, ImVec4(.93, .93, .93, 1.f));
+    ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(.32, 0.7, 0., 1.));
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(.93, .79, .78, 1.f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(.82, .71, .74, 1.f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(.82, .71, .74, 1.f));
+    ImGui::PushStyleColor(ImGuiCol_TableHeaderBg, ImVec4(.73, .72, .78, 1.f));
+    ImGui::PushStyleColor(ImGuiCol_TableRowBg, ImVec4(.2, .87, .79, 1.));
+    ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, ImVec4(.64, .94, .87, 1.));
+    ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(.93,.93,.93, 1.));
+    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(.95,.95,.95, 1.));
+
 
     auto p = snapshot.stringParams.at("path");
     std::string filePathName = "";
@@ -789,6 +813,7 @@ void SamplerDisplayCommand::display(int id, const NodeSnapshot& snapshot)
         }
         ImGuiFileDialog::Instance()->Close();
     }
+    ImGui::PopStyleColor(16);
 
     auto path = filePathName;
     ImGui::Text("Path: %s", p.c_str());
