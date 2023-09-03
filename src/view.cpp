@@ -759,6 +759,8 @@ void MixerDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
 void SamplerDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 {
+
+    ImGui::PushItemWidth(120.0f);
 	auto params = snapshot.params;
     ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(235, 158, 168,255));
     ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(235, 158, 168,255));
@@ -780,6 +782,14 @@ void SamplerDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImNodes::BeginInputAttribute(params["startstop_id"]);
     ImGui::TextUnformatted("Start/Stop");
     ImNodes::EndInputAttribute();
+
+    auto grainsize = snapshot.params.at("grainsize");
+    ImGui::DragFloat("Grain Size (ms)", &grainsize, 0.5f, 0, 1000.);
+    update(id, snapshot, "grainsize", grainsize);
+
+    auto spread = snapshot.params.at("spread");
+    ImGui::DragFloat("Spread", &spread, 0.1f, 0, 1.);
+    update(id, snapshot, "spread", spread);
 
     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 0, 0, 1.));
     ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0., 0, 0, 1.));
@@ -827,6 +837,8 @@ void SamplerDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
     ImNodes::EndNode();
     ImNodes::PopColorStyle();
+
+    ImGui::PopItemWidth();
 }
 
 
@@ -856,13 +868,13 @@ void FilterDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
 	ImGui::PushItemWidth(120.0f);
     auto f = params["freq"];
-	ImGui::DragFloat("Freq", &f, 0., 5000.);
+	ImGui::DragFloat("Freq", &f, 1.f, 0., 5000.);
     update(id, snapshot, "freq", f);
 	ImGui::PopItemWidth();
 
 	ImGui::PushItemWidth(120.0f);
     auto q = params["q"];
-	ImGui::DragFloat("Q", &q, 0., 10.);
+	ImGui::DragFloat("Q", &q, 1.f, 0., 10.);
     update(id, snapshot, "q", q);
 	ImGui::PopItemWidth();
 

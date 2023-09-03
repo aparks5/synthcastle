@@ -29,14 +29,18 @@ public:
 protected:
 	std::shared_ptr<ViewListener> m_listener;
 	void update(int id, const NodeSnapshot& snap, std::string param, float newval) {
-		if (newval != snap.params.at(param)) {
-			m_listener->queueUpdate(id, param, newval);
+		if (snap.params.find(param) != snap.params.end()) {
+			if (newval != snap.params.at(param)) {
+				m_listener->queueUpdate(id, param, newval);
+			}
 		}
 	}
 
 	void update(int id, const NodeSnapshot& snap, std::string param, std::string str) {
-		if (str != snap.stringParams.at(param)) {
-			m_listener->queueUpdate(id, param, str);
+		if (snap.stringParams.find(param) != snap.stringParams.end()) {
+			if (str != snap.stringParams.at(param)) {
+				m_listener->queueUpdate(id, param, str);
+			}
 		}
 	}
 
