@@ -285,8 +285,6 @@ void View::display()
     ImNodes::EndNodeEditor();
     ImGui::PopStyleColor();
 
-    m_listener->update();
-
     // set the latest created node to the last know mouse position
     if (m_bSetPosOfLatestNode && 
         (viewbag.map.size() > m_cachedViewBagSize)) {
@@ -321,6 +319,9 @@ void View::display()
             }
         }
     }
+
+
+    m_listener->update();
 
     ImGui::End();
     ImGui::PopStyleColor(7);

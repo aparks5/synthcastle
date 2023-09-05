@@ -180,15 +180,18 @@ public:
 	    , m_rootId(-1)
 	{}
 
+	NodeGraph(const NodeGraph& g) = default;
+	NodeGraph(NodeGraph&& g) = default;
+
 	void setRoot(int id) { m_rootId = id; }
 
-	void operator=(const NodeGraph& g) {
-		edges_ = g.edges_;
-		edges_from_node_ = g.edges_from_node_;
-		node_neighbors_ = g.node_neighbors_;
-		current_id_ = g.current_id_;
-		nodes_ = g.nodes_;
-	}
+	//void operator=(const NodeGraph& g) {
+	//	edges_ = g.edges_;
+	//	edges_from_node_ = g.edges_from_node_;
+	//	node_neighbors_ = g.node_neighbors_;
+	//	current_id_ = g.current_id_;
+	//	nodes_ = g.nodes_;
+	//}
 
 	virtual ~NodeGraph() {};
 
@@ -233,13 +236,12 @@ private:
 	// This container maps to the edge id
 	IdMap<Edge> edges_;
 	int m_rootId; 
-	std::mutex m_mut;
 };
 
 template<typename Visitor>
-void dfs_traverse(const NodeGraph& graph, Visitor visitor)
+void dfs_traverse(std::shared_ptr<NodeGraph> graph, Visitor visitor)
 {
-	int start_node = graph.getRoot();
+	int start_node = graph->getRoot();
 	std::stack<int> stack;
 
 	stack.push(start_node);
@@ -251,7 +253,7 @@ void dfs_traverse(const NodeGraph& graph, Visitor visitor)
 
 		visitor(current_node);
 
-		for (const int neighbor : graph.neighbors(current_node))
+		for (const int neighbor : graph->neighbors(current_node))
 		{
 			stack.push(neighbor);
 		}

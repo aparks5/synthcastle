@@ -1,14 +1,12 @@
 #include "controller.h"
 
 Controller::Controller(std::shared_ptr<Model> model)
-	: m_model(model)
+	: m_pool(500)
+	, m_model(model)
 	, m_bUpdated(true)
+	, m_bExit(false)
 {
-}
-
-std::tuple<float, float> Controller::evaluate()
-{
-	return m_model->evaluate();
+	// something should cause controller to exit eventually
 }
 
 ViewBag Controller::snapshot()
@@ -59,12 +57,17 @@ void Controller::createLink(int from, int to)
 
 void Controller::update()
 {
-	std::scoped_lock lock{m_mut};
+	// ideally this happens infrequently on its own separate thread, but that thread needs to keep track of the references
+	m_pool.release();
 
-	m_bUpdated = ((!m_creationQueue.empty()) &&
-				  (!m_updates.empty()) &&
-				  (!m_stringUpdates.empty()) &&
-				  (!m_linkQueue.empty()));
+	// do we need to update?
+	if ((m_creationQueue.empty()) &&
+		(m_updates.empty()) &&
+		(m_stringUpdates.empty()) &&
+		(m_linkQueue.empty())) {
+		return;
+	}
+
 	
 	while (!m_linkQueue.empty()) {
 		auto link = m_linkQueue.front();
@@ -91,5 +94,10 @@ void Controller::update()
 		m_model->update(update);
 		m_stringUpdates.pop();
 	}
+
+	// i think this means we need to copy the whole graph
+	std::shared_ptr<NodeGraph> newGraph = std::make_shared<NodeGraph>(m_model->cloneGraph());
+	m_pool.add(newGraph);
+	std::atomic_store(&m_graph, newGraph);
 
 }

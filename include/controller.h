@@ -3,6 +3,7 @@
 #include "model.h"
 #include "viewlistener.h"
 #include "events.h"
+#include "releasepool.h"
 
 #include <memory>
 #include <queue>
@@ -18,14 +19,19 @@ public:
 	void queueLink(int from, int to) override;
 	void queueUpdate(int id, std::string param, float val) override;
 	void queueUpdate(int id, std::string param, std::string str) override;
+	std::shared_ptr<NodeGraph> m_graph;
 
 	void createLink(int from, int to);
 	int createNode(std::string nodeTypeString);
 	ViewBag snapshot() override; 
 	void update() override; // not accessible to View 
 	// because this is not part of the ViewListener interface
+	bool shouldExit() const {
+		return m_bExit;
+	}
 
 private:
+	ReleasePool m_pool;
 	std::mutex m_mut;
 	std::shared_ptr<Model> m_model;
 	ViewBag m_cache;
@@ -34,5 +40,6 @@ private:
 	std::queue<UpdateStringEvent> m_stringUpdates;
 	std::queue<std::string> m_creationQueue;
 	std::queue<LinkEvent> m_linkQueue;
+	bool m_bExit;
 
 };

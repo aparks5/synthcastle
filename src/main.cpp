@@ -1,6 +1,15 @@
+
+#include <thread>
+
 #include "model.h"
 #include "view.h"
 #include "controller.h"
+
+#include "seq.h"
+#include "sampler.h"
+#include "trig.h"
+#include "oscillator.h"
+#include "delay.h"
 
 #include "node_editor.h"
 #include "oscillator.h"
@@ -33,10 +42,214 @@
 
 struct AudioData
 {
-    std::vector<std::vector<float>> output;
-    float sampleRate;
     std::shared_ptr<Controller> controller;
 };
+
+static std::tuple<float,float> evaluate(std::shared_ptr<NodeGraph> graph)
+{
+    if (!graph.get()) {
+        return { 0,0 };
+    }
+
+	float clockCache = -1.f;
+
+	if (graph->getRoot() == -1) {
+		return {0, 0};
+	}
+
+	std::stack<int> postorder;
+	dfs_traverse(graph, [&postorder](const int node_id) -> void { postorder.push(node_id); });
+
+	std::stack<float> value_stack;
+	while (!postorder.empty())
+	{
+		const int id = postorder.top();
+		postorder.pop();
+		const auto& pNode = graph->node(id);
+
+		switch (pNode->type) {
+		case NodeType::DELAY:
+		{
+			auto val = value_stack.top();
+			value_stack.pop();
+			value_stack.push(pNode->process(val));
+		}
+		break;
+        case NodeType::FILTER:
+        {
+            auto in = value_stack.top();
+            value_stack.pop();
+            auto mod = value_stack.top();
+            value_stack.pop();
+            auto depth = value_stack.top();
+            value_stack.pop();
+
+            pNode->params[Filter::FREQMOD] = mod;
+            pNode->params[Filter::MODDEPTH] = depth;
+            value_stack.push(pNode->process(in));
+        }
+        break;
+        case NodeType::ENVELOPE:
+        {
+			// pop off the stack in input order
+            auto in = value_stack.top();
+            value_stack.pop();
+            auto trig = value_stack.top();
+            value_stack.pop();
+            pNode->params[Envelope::TRIG] = trig;
+            value_stack.push(pNode->process(in));
+        }
+        break;
+        case NodeType::SEQ:
+        {
+			// i should queue this til after eval
+			// pop off the stack in input order
+            auto trig = value_stack.top();
+            value_stack.pop();
+            pNode->params[Seq::TRIGIN] = trig;
+            auto reset = value_stack.top();
+            value_stack.pop();
+            pNode->params[Seq::RESET] = reset;
+
+            value_stack.push(pNode->process());
+        }
+        break;
+        case NodeType::QUAD_MIXER:
+        {
+            auto d = value_stack.top();
+            value_stack.pop();
+            auto c = value_stack.top();
+            value_stack.pop();
+            auto b = value_stack.top();
+            value_stack.pop();
+            auto a = value_stack.top();
+            value_stack.pop();
+            pNode->params[QuadMixer::INPUT_A] = a;
+            pNode->params[QuadMixer::INPUT_B] = b;
+            pNode->params[QuadMixer::INPUT_C] = c;
+            pNode->params[QuadMixer::INPUT_D] = d;
+            value_stack.push(pNode->process());
+        }
+        break;
+		case NodeType::SAMPLER:
+		{
+			pNode->update();
+
+			auto val = value_stack.top();
+			value_stack.pop();
+			pNode->params[Sampler::PITCH] = val;
+
+			auto pos = value_stack.top();
+			value_stack.pop();
+			pNode->params[Sampler::POSITION] = pos;
+
+			auto startstop = value_stack.top();
+			value_stack.pop();
+			pNode->params[Sampler::STARTSTOP] = startstop;
+
+			value_stack.push(pNode->process());
+		}
+		break;
+        //case NodeType::MIDI_IN:
+        //{
+        //    // push all voices to stack
+        //    value_stack.push(pNode->process());
+        //}
+        //break;
+		case NodeType::OSCILLATOR:
+		{
+			pNode->update();
+			auto freq = value_stack.top();
+			value_stack.pop();
+			if (freq != INVALID_PARAM_VALUE) {
+                // scale midi as float to hz
+                float target = 0;
+                if ((freq * 128) > 15) {
+                    target = midiNoteToFreq((int)(freq * 128.));
+                }
+                pNode->params[Oscillator::FREQ] = target;
+			}
+			auto mod = value_stack.top();
+			value_stack.pop();
+			if (mod != INVALID_PARAM_VALUE) {
+				pNode->params[Oscillator::MODFREQ] = mod;
+			}
+			auto depth = value_stack.top();
+			value_stack.pop();
+			if (depth != INVALID_PARAM_VALUE) {
+				pNode->params[Oscillator::MODDEPTH] = depth;
+			}
+
+			auto temp = pNode->process();
+			value_stack.push(temp);
+		}
+		break;
+        case NodeType::CONSTANT:
+        {
+            auto val = pNode->process();
+            value_stack.push(val);
+        }
+        break;
+        case NodeType::TRIG:
+        {
+			if (clockCache == -1) {
+				auto val = pNode->process();
+				clockCache = val;
+				value_stack.push(val);
+			}
+			else {
+				value_stack.push(clockCache);
+			}
+        }
+        break;
+		case NodeType::GAIN:
+		{
+			auto in = value_stack.top();
+			value_stack.pop();
+			auto mod = value_stack.top();
+			value_stack.pop();
+			pNode->params[Gain::GAINMOD] = abs(mod);
+			auto val = pNode->process(in);
+			value_stack.push(val);
+		}
+		break;
+		case NodeType::VALUE:
+		{
+             //if the edge does not have an edge connecting to another node, then just use the value
+            // at this node. it means the node's input pin has not been connected to anything and
+            // the value comes from the node's ui.
+			if (graph->num_edges_from_node(id) == 0ull) {
+				value_stack.push(pNode->value);
+			}
+		}
+        break;
+        case NodeType::OUTPUT:
+        {
+			if (!value_stack.empty()) {
+				float left = value_stack.top();
+				value_stack.pop(); 
+				pNode->params[Output::DISPLAY_L] = left;
+				// hack for now, mono output, two outputs triggers process() calls twice
+				return std::make_tuple(left, left);
+                if (value_stack.empty()) {
+                    return std::make_tuple(left, 0.);
+                }
+				else {
+                    float right = value_stack.top();
+                    pNode->params[Output::DISPLAY_R] = right;
+                    value_stack.pop(); 
+					return std::make_tuple(left, right);
+                }
+			}
+		}
+		break;
+		default:
+			break;
+		}
+	}
+
+    return std::make_tuple(0.,0.);
+}
 
 static int paCallbackMethod(const void* inputBuffer, void* outputBuffer,
     unsigned long framesPerBuffer,
@@ -48,23 +261,30 @@ static int paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 
     auto* out = (float*)outputBuffer;
 
+    auto nodeGraph = std::atomic_load(&(data->controller->m_graph));
+    
     (void)timeInfo; /* Prevent unused variable warnings. */
     (void)statusFlags;
     (void)inputBuffer;
 
     for (size_t sampIdx = 0; sampIdx < framesPerBuffer; sampIdx++) {
         float output = 0.f;
-        std::tuple<float,float> lr = data->controller->evaluate();
+        std::tuple<float, float> lr = evaluate(nodeGraph);
             // write interleaved output -- L/R
 		*out++ = std::get<0>(lr);
 		*out++ = std::get<1>(lr);
     }
 
     // perform all queued updates to modify the graph safely
-    data->controller->update();
+    // this should all happen on another thread
+    // use a SPSC queue to tell the controller to update
+
 
     return paContinue;
 }
+
+
+
 
 static void paStreamFinishedMethod()
 {
@@ -112,64 +332,60 @@ const char* initSDL()
     return glsl_version;
 }
 
+void runGui(std::shared_ptr<AudioData> data)
+{
+	std::atomic<std::shared_ptr<NodeGraph>> graph;
+    auto model = std::make_shared<Model>();
+    auto controller = std::make_shared<Controller>(model);
+    data->controller = controller;
+
+    auto view = std::make_shared<View>();
+    view->addListener(controller);
+	view->run();
+}
+
 int main(int, char**)
 {
-    auto model = std::make_shared<Model>();
-    auto view = std::make_shared<View>();
-    auto controller = std::make_shared<Controller>(model);
-    view->addListener(controller);
+    std::shared_ptr<AudioData> audioData = std::make_shared<AudioData>();
+	PaStream* stream;
+	PortAudioHandler paInit;
+	size_t bufSize = 8192;
+	PaStreamParameters outputParameters;
 
-	AudioData audioData; // poll the editor if there is an output node to fill the buffer in audioData
-	audioData.controller = controller;
+	int index = Pa_GetDefaultOutputDevice();
+	outputParameters.device = index;
+	if (outputParameters.device == paNoDevice) {
+		return false;
+	}
 
-        PaStream* stream;
-        PortAudioHandler paInit;
+	const PaDeviceInfo* pInfo = Pa_GetDeviceInfo(index);
+	if (pInfo != 0) {
+		printf("Output device name: '%s'\r", pInfo->name);
+	}
 
-        // Set up audio output
-        size_t bufSize = 8192;
-        PaStreamParameters outputParameters;
+	outputParameters.channelCount = 2;       /* stereo output */
+	outputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
+	outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
+	outputParameters.hostApiSpecificStreamInfo = NULL;
 
-        int index = Pa_GetDefaultOutputDevice();
-        outputParameters.device = index;
-        if (outputParameters.device == paNoDevice) {
-            return false;
-        }
+	PaError err = Pa_OpenStream(&stream, NULL, /* no input */
+		&outputParameters, 44100, 1024, paClipOff, &paCallbackMethod, audioData.get());
 
-        const PaDeviceInfo* pInfo = Pa_GetDeviceInfo(index);
-        if (pInfo != 0)
-        {
-            printf("Output device name: '%s'\r", pInfo->name);
-        }
+	if (err != paNoError) {
+		printf("Failed to open stream to device !!!");
+	}
+	err = Pa_StartStream(stream);
+	if (err != paNoError) {
+		printf("Failed to start stream!!!");
+	}
+	if (err != paNoError) {
+		Pa_CloseStream(stream);
+		stream = 0;
+	}
 
-        outputParameters.channelCount = 2;       /* stereo output */
-        outputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
-        outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
-        outputParameters.hostApiSpecificStreamInfo = NULL;
-
-        PaError err = Pa_OpenStream(
-            &stream,
-            NULL, /* no input */
-            &outputParameters,
-            44100,
-            1024,
-            paClipOff,      /* we won't output out of range samples so don't bother clipping them */
-            &paCallbackMethod,
-            &audioData            /* Using 'this' for userData so we can cast to MixerStream* in paCallback method */
-        );
-
-        if (err != paNoError) {
-            printf("Failed to open stream to device !!!");
-        }
-        err = Pa_StartStream(stream);
-        if (err != paNoError) {
-            printf("Failed to start stream!!!");
-        }
-        if (err != paNoError) {
-            Pa_CloseStream(stream);
-            stream = 0;
-        }
-
-	view->run();
+	std::thread gui(runGui, audioData);
+    gui.join();
 
 	return 0;
 }
+

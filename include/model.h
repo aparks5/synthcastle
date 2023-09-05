@@ -4,6 +4,7 @@
 #include "viewbag.h"
 #include "events.h"
 
+
 struct spin_mutex {
 	void lock() noexcept {
 		while (!try_lock()) {
@@ -26,14 +27,13 @@ private:
 
 class NodeCreationCommand {
 public:
-	NodeCreationCommand(NodeGraph& g,
-		ViewBag& v)
+	NodeCreationCommand(std::shared_ptr<NodeGraph> g, ViewBag& v)
 		: m_g(g)
 		, m_v(v) {}
 	virtual ~NodeCreationCommand() {};
 	virtual int create() = 0;
 protected:
-	NodeGraph& m_g;
+	std::shared_ptr<NodeGraph> m_g;
 	ViewBag& m_v;
 	void cacheParam(int id, std::string param, float value);
 	void cacheString(int id, std::string param, std::string str);
@@ -44,7 +44,7 @@ protected:
 class GainNodeCreator : public NodeCreationCommand
 {
 public:
-	GainNodeCreator(NodeGraph& g, ViewBag& v)
+	GainNodeCreator(std::shared_ptr<NodeGraph> g, ViewBag& v)
 		: NodeCreationCommand(g, v)
 	{}
 	virtual ~GainNodeCreator() {};
@@ -54,7 +54,7 @@ public:
 class SamplerNodeCreator : public NodeCreationCommand
 {
 public:
-	SamplerNodeCreator(NodeGraph& g, ViewBag& v)
+	SamplerNodeCreator(std::shared_ptr<NodeGraph> g, ViewBag& v)
 		: NodeCreationCommand(g, v)
 	{}
 	virtual ~SamplerNodeCreator() {};
@@ -64,7 +64,7 @@ public:
 class ConstantNodeCreator : public NodeCreationCommand
 {
 public:
-	ConstantNodeCreator(NodeGraph& g, ViewBag& v)
+	ConstantNodeCreator(std::shared_ptr<NodeGraph> g, ViewBag& v)
 		: NodeCreationCommand(g, v)
 	{}
 	virtual ~ConstantNodeCreator() {};
@@ -74,7 +74,7 @@ public:
 class OutputNodeCreator : public NodeCreationCommand
 {
 public:
-	OutputNodeCreator(NodeGraph& g, ViewBag& v)
+	OutputNodeCreator(std::shared_ptr<NodeGraph> g, ViewBag& v)
 		: NodeCreationCommand(g, v)
 	{}
 	virtual ~OutputNodeCreator() {};
@@ -84,7 +84,7 @@ public:
 class OscillatorNodeCreator : public NodeCreationCommand
 {
 public:
-	OscillatorNodeCreator(NodeGraph& g, ViewBag& v)
+	OscillatorNodeCreator(std::shared_ptr<NodeGraph> g, ViewBag& v)
 		: NodeCreationCommand(g, v)
 	{}
 	virtual ~OscillatorNodeCreator() {};
@@ -94,7 +94,7 @@ public:
 class FilterNodeCreator : public NodeCreationCommand
 {
 public:
-	FilterNodeCreator(NodeGraph& g, ViewBag& v)
+	FilterNodeCreator(std::shared_ptr<NodeGraph> g, ViewBag& v)
 		: NodeCreationCommand(g, v)
 	{}
 	virtual ~FilterNodeCreator() {};
@@ -104,7 +104,7 @@ public:
 class EnvelopeNodeCreator : public NodeCreationCommand
 {
 public:
-	EnvelopeNodeCreator(NodeGraph& g, ViewBag& v)
+	EnvelopeNodeCreator(std::shared_ptr<NodeGraph> g, ViewBag& v)
 		: NodeCreationCommand(g, v)
 	{}
 	virtual ~EnvelopeNodeCreator() {};
@@ -114,7 +114,7 @@ public:
 class MixerNodeCreator : public NodeCreationCommand
 {
 public:
-	MixerNodeCreator(NodeGraph& g, ViewBag& v)
+	MixerNodeCreator(std::shared_ptr<NodeGraph> g, ViewBag& v)
 		: NodeCreationCommand(g, v)
 	{}
 	virtual ~MixerNodeCreator() {};
@@ -124,7 +124,7 @@ public:
 class TrigNodeCreator : public NodeCreationCommand
 {
 public:
-	TrigNodeCreator(NodeGraph& g, ViewBag& v)
+	TrigNodeCreator(std::shared_ptr<NodeGraph> g, ViewBag& v)
 		: NodeCreationCommand(g, v)
 	{}
 	virtual ~TrigNodeCreator() {};
@@ -134,7 +134,7 @@ public:
 class SeqNodeCreator : public NodeCreationCommand
 {
 public:
-	SeqNodeCreator(NodeGraph& g, ViewBag& v)
+	SeqNodeCreator(std::shared_ptr<NodeGraph> g, ViewBag& v)
 		: NodeCreationCommand(g, v)
 	{}
 	virtual ~SeqNodeCreator() {};
@@ -144,7 +144,7 @@ public:
 class DelayNodeCreator : public NodeCreationCommand
 {
 public:
-	DelayNodeCreator(NodeGraph& g, ViewBag& v)
+	DelayNodeCreator(std::shared_ptr<NodeGraph> g, ViewBag& v)
 		: NodeCreationCommand(g, v)
 	{}
 	virtual ~DelayNodeCreator() {};
@@ -162,11 +162,12 @@ public:
 	void link(int from, int to);
 	std::tuple<float, float> evaluate();
 	const ViewBag refresh(); 
+	// return a deep copy of the graph
+	NodeGraph cloneGraph();
 
 private:
-	spin_mutex m_mut;
+	std::shared_ptr<NodeGraph> m_graph;
 	std::unordered_map<NodeType, std::shared_ptr<NodeCreationCommand>> m_creators;
-	NodeGraph m_graph;
 	ViewBag m_cache;
 
 	// unnecessary, every node type should have a unique name
