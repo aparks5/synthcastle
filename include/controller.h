@@ -4,6 +4,7 @@
 #include "viewlistener.h"
 #include "events.h"
 #include "releasepool.h"
+#include "audioplotbuffer.h"
 
 #include <memory>
 #include <queue>
@@ -23,15 +24,19 @@ public:
 
 	void createLink(int from, int to);
 	int createNode(std::string nodeTypeString);
-	ViewBag snapshot() override; 
+	ViewBag snapshot() const override; 
 	void update() override; // not accessible to View 
 	// because this is not part of the ViewListener interface
 	bool shouldExit() const {
 		return m_bExit;
 	}
 
+	void sendBuffer(std::vector<std::vector<float>> buf);
+	AudioPlotBuffer buffer() const override { return m_circBuff; }
+
 private:
 	ReleasePool m_pool;
+	AudioPlotBuffer m_circBuff;
 	std::mutex m_mut;
 	std::shared_ptr<Model> m_model;
 	ViewBag m_cache;

@@ -24,6 +24,8 @@
 #include "windows.h"
 #include "quadmixer.h"
 
+#include "commands.h"
+
 #include <imgui.h>
 #include <imgui_impl_sdl2.h>
 #include <imgui_impl_opengl3.h>
@@ -43,6 +45,11 @@
 struct AudioData
 {
     std::shared_ptr<Controller> controller;
+	std::shared_ptr<moodycamel::ReaderWriterQueue<Commands>> commandsToAudioCallback;
+	std::shared_ptr<moodycamel::ReaderWriterQueue<Commands>> commandsFromAudioCallback;
+	std::shared_ptr<IOServer> server;
+	std::vector<std::vector<float>> callbackBuffer;
+
 };
 
 static std::tuple<float,float> evaluate(std::shared_ptr<NodeGraph> graph)
@@ -271,13 +278,19 @@ static int paCallbackMethod(const void* inputBuffer, void* outputBuffer,
         float output = 0.f;
         std::tuple<float, float> lr = evaluate(nodeGraph);
             // write interleaved output -- L/R
-		*out++ = std::get<0>(lr);
-		*out++ = std::get<1>(lr);
+		auto l = std::get<0>(lr);
+		auto r = std::get<1>(lr);
+        *out++ = l;
+        *out++ = r;
+        data->callbackBuffer[0][sampIdx] = l;
+        data->callbackBuffer[1][sampIdx] = l;
     }
 
     // perform all queued updates to modify the graph safely
     // this should all happen on another thread
     // use a SPSC queue to tell the controller to update
+    // this should never be resized except at init time to accommodate user driven buffer size
+    data->controller->sendBuffer(data->callbackBuffer);
 
 
     return paContinue;
@@ -334,7 +347,6 @@ const char* initSDL()
 
 void runGui(std::shared_ptr<AudioData> data)
 {
-	std::atomic<std::shared_ptr<NodeGraph>> graph;
     auto model = std::make_shared<Model>();
     auto controller = std::make_shared<Controller>(model);
     data->controller = controller;
@@ -347,9 +359,14 @@ void runGui(std::shared_ptr<AudioData> data)
 int main(int, char**)
 {
     std::shared_ptr<AudioData> audioData = std::make_shared<AudioData>();
+    std::vector<float> myRow(1024, 0.f);
+    for (size_t idx = 0; idx < 2; idx++) {
+        audioData->callbackBuffer.push_back(myRow);
+    }
+
 	PaStream* stream;
 	PortAudioHandler paInit;
-	size_t bufSize = 8192;
+	size_t bufSize = 8192; // 1024 * sizeof(float)
 	PaStreamParameters outputParameters;
 
 	int index = Pa_GetDefaultOutputDevice();

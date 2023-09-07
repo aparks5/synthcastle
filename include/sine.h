@@ -4,7 +4,7 @@
 
 #include "waveform.h"
 
-constexpr size_t TABLE_SIZE = 2048;
+constexpr size_t TABLE_SIZE = 4096;
 
 class Sine : public WaveForm
 {

@@ -7,9 +7,15 @@ Controller::Controller(std::shared_ptr<Model> model)
 	, m_bExit(false)
 {
 	// something should cause controller to exit eventually
+	std::vector<float> myRow(44100, 0.f);
+	for (size_t idx = 0; idx < 2; idx++) {
+		m_circBuff.buffer.push_back(myRow);
+	}
+	m_circBuff.m_writeIdx = 0;
+
 }
 
-ViewBag Controller::snapshot()
+ViewBag Controller::snapshot() const
 {
 	// return a cached viewbag if the model hasn't been updated
 	//if (m_bUpdated) {
@@ -37,6 +43,20 @@ void Controller::queueUpdate(int id, std::string param, float val)
 {
 	UpdateEvent update(id, param, val);
 	m_updates.push(update);
+}
+
+void Controller::sendBuffer(std::vector<std::vector<float>> buf)
+{
+	for (size_t ch = 0; ch < 2; ch++) {
+		size_t len = m_circBuff.buffer[ch].size();
+		for (size_t idx = 0; idx < buf[ch].size(); idx++) {
+			m_circBuff.buffer[ch][m_circBuff.m_writeIdx] = buf[ch][idx];
+			m_circBuff.m_writeIdx++;
+			if (m_circBuff.m_writeIdx >= len) {
+				m_circBuff.m_writeIdx = 0;
+			}
+		}
+	}
 }
 
 void Controller::queueUpdate(int id, std::string param, std::string str)

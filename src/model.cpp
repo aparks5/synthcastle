@@ -323,6 +323,10 @@ int OutputNodeCreator::create()
 	cacheParam(outputId, "right_id", rightNodeId);
 	cacheParam(outputId, "display_left", 0.f);
 	cacheParam(outputId, "display_right", 0.f);
+	cacheParam(outputId, "xmin", 0.f);
+	cacheParam(outputId, "xmax", 0.f);
+	cacheParam(outputId, "ymin", 0.f);
+	cacheParam(outputId, "ymax", 0.f);
 
 	return outputId;
 }

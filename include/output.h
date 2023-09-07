@@ -10,12 +10,21 @@ public:
 	virtual ~Output() {};
 	float process() override;
 
+	int lookupParam(std::string str) override
+	{
+		return m_lookup[str];
+	}
+
 	enum OutputParams {
 		NODE_ID,
 		INPUT_L_ID,
 		INPUT_R_ID,
 		DISPLAY_L,
 		DISPLAY_R,
+		XMIN,
+		XMAX,
+		YMIN,
+		YMAX,
 		NUM_PARAMS
 	};
 
@@ -25,7 +34,11 @@ private:
 		{"left_id", INPUT_L_ID},
 		{"right_id", INPUT_R_ID},
 		{"display_left", DISPLAY_L},
-		{"display_right", DISPLAY_R}
+		{"display_right", DISPLAY_R},
+		{"xmin", XMIN},
+		{"xmax", XMAX},
+		{"ymin", YMIN},
+		{"ymax", YMAX},
 	};
 
 };

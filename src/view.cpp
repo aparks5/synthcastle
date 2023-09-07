@@ -4,6 +4,24 @@
 #include "viewbag.h"
 
 #include "ImGuiFileDialog.h"
+#include "implot.h"
+
+// from implot_demo.cpp - utility structure for realtime plot
+struct RollingBuffer {
+    float Span;
+    ImVector<ImVec2> Data;
+    RollingBuffer() {
+        Span = 10.0f;
+        Data.reserve(44100*10);
+    }
+    void AddPoint(float x, float y) {
+        float xmod = fmodf(x, Span);
+        if (!Data.empty() && xmod < Data.back().x) {
+            Data.shrink(0);
+        }
+        Data.push_back(ImVec2(xmod, y));
+    }
+};
 
 View::View()
 	: m_window(
@@ -37,6 +55,7 @@ View::View()
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+    ImPlot::CreateContext();
     auto io = ImGui::GetIO();
     ImFont* pFont = io.Fonts->AddFontFromFileTTF("../Jost-Regular.ttf", 20.0f);
     ImNodes::CreateContext();
@@ -71,6 +90,7 @@ View::~View()
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();
     ImNodes::DestroyContext();
+    ImPlot::DestroyContext();
     ImGui::DestroyContext();
     SDL_GL_DeleteContext(m_glContext);
     SDL_DestroyWindow(m_window);
@@ -320,7 +340,8 @@ void View::display()
         }
     }
 
-
+    // *** VERY IMPORTANT FUNCTION CALL ***
+    // GUI thread updates the graph at FPS rate
     m_listener->update();
 
     ImGui::End();
@@ -329,7 +350,6 @@ void View::display()
 
 void OutputDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 {
-
 	ImGui::PushItemWidth(120.0f);
     ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(130,255,140, 255));
     ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(130,255,140, 255));
@@ -341,14 +361,52 @@ void OutputDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     ImNodes::PopColorStyle();
 
     ImNodes::BeginInputAttribute(snapshot.params.at("left_id"));
-	ImGui::TextUnformatted("Left Out");
-	ImGui::ProgressBar(snapshot.params.at("display_left"), ImVec2(0.0f, 0.0f), " ");
-	ImNodes::EndInputAttribute();
+    ImGui::TextUnformatted("Output");
+    ImNodes::EndInputAttribute();
 
-    ImNodes::BeginInputAttribute(snapshot.params.at("right_id"));
-	ImGui::TextUnformatted("Right Out");
-	ImGui::ProgressBar(snapshot.params.at("display_right"), ImVec2(0.0f, 0.0f), " ");
-	ImNodes::EndInputAttribute();
+    static RollingBuffer rdata1;
+    auto audio = m_listener->buffer();
+    static float t = 0;
+    static size_t bufidx = 0;
+
+    t += ImGui::GetIO().DeltaTime;
+    int startIdx = audio.m_writeIdx - 736;
+    static float tempval = t;
+
+    if (audio.m_writeIdx < 736) {
+        startIdx = 44100 - (736 - audio.m_writeIdx);
+    }
+
+
+    //// 1/60 * 44100 = the number of samples we can show per frame?
+    auto stepsize = 1. / 60. / 735.;// 0.00002267573;
+    for (size_t idx = 0; idx <= 735; idx++) {
+        startIdx++;
+        if (startIdx >= 44100) {
+            startIdx = 0;
+        }
+        rdata1.AddPoint(tempval, audio.buffer[0][startIdx]);
+        tempval += stepsize;
+    }
+    static float history = 10.0f;
+    ImGui::SliderFloat("History", &history, 1, 10, "%.1f s");
+    rdata1.Span = history;
+
+    static bool showplot = true;
+    ImGui::Checkbox("Plot", &showplot);
+
+    static ImPlotAxisFlags flags = ImPlotAxisFlags_NoTickLabels;
+
+    if (showplot) {
+        if (ImPlot::BeginPlot("##Rolling", ImVec2(300, 150), ImPlotFlags_NoLegend)) {
+            ImPlot::SetupAxes(nullptr, nullptr, flags, flags);
+            ImPlot::SetupAxisLimits(ImAxis_X1, 0, history, ImGuiCond_Always); // 1 or 'history'
+            ImPlot::SetupAxisLimits(ImAxis_Y1, -1, 1);
+
+            ImPlot::PlotLine("Audio", &rdata1.Data[0].x, &rdata1.Data[0].y, rdata1.Data.size(), 0, 0, 2 * sizeof(float));
+            ImPlot::EndPlot();
+        }
+    }
 
 	ImNodes::EndNode();
     ImGui::PopItemWidth();
@@ -707,10 +765,14 @@ void OscillatorDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     int selected = -1;
 
     // Simplified one-liner Combo() API, using values packed in a single constant string
+
+    ImGui::PushStyleColor(ImGuiCol_Header, (ImVec4)ImColor(227, 255, 99));
+    ImGui::PushStyleColor(ImGuiCol_PopupBg, (ImVec4)ImColor(227, 255, 99));
     ImGui::PushItemWidth(120.0f);
     int w = (int)params["waveform"];
     ImGui::Combo("Waveform", &w, "Saw\0Sine\0Square\0Triangle\0S&H\0Noise\0");
     update(id, snapshot, "waveform", w);
+    ImGui::PopStyleColor(2);
 
     ImNodes::BeginOutputAttribute(id);
     const float text_width = ImGui::CalcTextSize("Out").x;

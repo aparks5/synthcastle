@@ -54,6 +54,7 @@ find_package(SDL2 CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glad CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
+find_package(implot CONFIG REQUIRED)
 
 # ImGuiFileDialog
 add_library(ImGuiFileDialog)
@@ -88,5 +89,6 @@ target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE
     FFTW3::fftw3
     glfw
     glad::glad
-    imgui::imgui)
+    imgui::imgui
+	implot::implot)
 
