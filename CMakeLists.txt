@@ -5,6 +5,7 @@ cmake_minimum_required (VERSION 3.8)
 # ...set this right below the cmake_minimum_required
 set(CMAKE_TOOLCHAIN_FILE ./vcpkg/scripts/buildsystems/vcpkg.cmake)
 set(VCPKG_TARGET_TRIPLET x64-windows CACHE STRING "")
+add_compile_definitions(-D PA_USE_ASIO)
 
 # Enable Hot Reload for MSVC compilers if supported.
 if (POLICY CMP0141)
@@ -55,6 +56,8 @@ find_package(glfw3 CONFIG REQUIRED)
 find_package(glad CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 find_package(implot CONFIG REQUIRED)
+find_package(asio CONFIG REQUIRED)
+
 
 # ImGuiFileDialog
 add_library(ImGuiFileDialog)
@@ -90,5 +93,6 @@ target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE
     glfw
     glad::glad
     imgui::imgui
-	implot::implot)
+	implot::implot
+	asio::asio)
 

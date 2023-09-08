@@ -29,6 +29,16 @@ static T clamp(T val, T min, T max)
     return val;
 }
 
+static int floatTodB(float f) 
+{
+	return 20 * log10(f);
+}
+
+static float dBtoFloat(int db) 
+{
+	return pow(10, db / 20.f);
+}
+
 template <class T>
 static T linearInterpolate(T y1, T y2, T x)
 {

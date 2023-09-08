@@ -297,7 +297,7 @@ static int paCallbackMethod(const void* inputBuffer, void* outputBuffer,
     for (size_t sampIdx = 0; sampIdx < framesPerBuffer; sampIdx++) {
         float output = 0.f;
         float inputSample = *in++;
-        *in++; // skip other channel
+        in++; // skip other channel
         std::tuple<float, float> lr = evaluate(inputSample, nodeGraph);
             // write interleaved output -- L/R
 		auto l = std::get<0>(lr);

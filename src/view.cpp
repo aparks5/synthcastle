@@ -481,6 +481,23 @@ void DistortDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImGui::TextUnformatted("In");
 	ImNodes::EndInputAttribute();
 
+
+    ImGui::PushItemWidth(120.0f);
+    auto d = snapshot.params.at("drive_db");
+    ImGui::DragFloat("Drive (dB)", &d, 0.1f, 0, 100);
+    update(id, snapshot, "drive_db", d);
+
+    auto attenuation = snapshot.params.at("atten_db");
+    ImGui::DragFloat("Post-Gain (dB)", &attenuation, 0.1f, -100., 0.);
+    update(id, snapshot, "atten_db", attenuation);
+
+    ImGui::PushStyleColor(ImGuiCol_Header, (ImVec4)ImColor(227, 255, 99));
+    ImGui::PushStyleColor(ImGuiCol_PopupBg, (ImVec4)ImColor(227, 255, 99));
+    int algo = (int)params["algorithm"];
+    ImGui::Combo("Algorithm", &algo, "tanh()\0atan()\0sin()\0");
+    update(id, snapshot, "algorithm", algo);
+    ImGui::PopStyleColor(2);
+
 	ImNodes::BeginOutputAttribute(id);
 	const float text_width = ImGui::CalcTextSize("Out").x;
 	ImGui::Indent(120.f + ImGui::CalcTextSize("Out").x - text_width);

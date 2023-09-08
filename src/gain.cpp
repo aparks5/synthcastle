@@ -1,4 +1,5 @@
 #include "gain.h"
+#include "util.h"
 
 Gain::Gain()
     : Node(NodeType::GAIN, 1., NUM_PARAMS)
@@ -13,16 +14,6 @@ int Gain::lookupParam(std::string str) {
 void Gain::setGaindB(float gaindB)
 {
 	m_gain = dBtoFloat(gaindB);
-}
-
-int Gain::floatTodB(float f) const
-{
-	return 20 * log10(f);
-}
-
-float Gain::dBtoFloat(int db) const
-{
-	return pow(10, db / 20.f);
 }
 
 float Gain::process(float in)

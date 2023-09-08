@@ -32,6 +32,4 @@ private:
 			{"gainmod", GAINMOD},
 	};
 	float m_gain;
-	int floatTodB(float f) const;
-	float dBtoFloat(int db) const;
 };
