@@ -12,7 +12,7 @@ struct RollingBuffer {
     ImVector<ImVec2> Data;
     RollingBuffer() {
         Span = 10.0f;
-        Data.reserve(44100*10);
+        Data.reserve(44100*10.);
     }
     void AddPoint(float x, float y) {
         float xmod = fmodf(x, Span);
@@ -38,11 +38,14 @@ View::View()
     , m_bSetPosOfLatestNode(false)
     , m_cachedViewBagSize(0)
 {
-    m_displays[NodeType::GAIN] = std::make_shared<GainDisplayCommand>();
+
+    m_displays[NodeType::AUDIO_IN] = std::make_shared<AudioInputDisplayCommand>();
     m_displays[NodeType::CONSTANT] = std::make_shared<ConstantDisplayCommand>();
     m_displays[NodeType::DELAY] = std::make_shared<DelayDisplayCommand>();
+    m_displays[NodeType::DISTORT] = std::make_shared<DistortDisplayCommand>();
     m_displays[NodeType::ENVELOPE] = std::make_shared<EnvelopeDisplayCommand>();
     m_displays[NodeType::FILTER] = std::make_shared<FilterDisplayCommand>();
+    m_displays[NodeType::GAIN] = std::make_shared<GainDisplayCommand>();
     m_displays[NodeType::OUTPUT] = std::make_shared<OutputDisplayCommand>();
     m_displays[NodeType::OSCILLATOR] = std::make_shared<OscillatorDisplayCommand>();
     m_displays[NodeType::QUAD_MIXER] = std::make_shared<MixerDisplayCommand>();
@@ -226,8 +229,6 @@ void View::display()
 			m_listener->queueCreation("oscillator");
             bKeyReleased = true;
         }
-        else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_V)) {
-        }
         else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_C)) {
 			m_listener->queueCreation("constant");
             bKeyReleased = true;
@@ -236,8 +237,8 @@ void View::display()
 			m_listener->queueCreation("delay");
             bKeyReleased = true;
         }
-        else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_T)) {
-			m_listener->queueCreation("trig");
+        else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_Z)) {
+			m_listener->queueCreation("distort");
             bKeyReleased = true;
         }
         else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_E)) {
@@ -247,31 +248,35 @@ void View::display()
         else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_F)) {
 			m_listener->queueCreation("filter");
             bKeyReleased = true;
-
+        }
+		else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_G)) {
+            m_listener->queueCreation("gain");
+            bKeyReleased = true;
+        }
+		else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_I)) {
+            m_listener->queueCreation("audio_input");
+            bKeyReleased = true;
+        }
+        else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_T)) {
+			m_listener->queueCreation("trig");
+            bKeyReleased = true;
         }
         else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_M)) {
             m_listener->queueCreation("mixer");
             bKeyReleased = true;
         }
-        else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_G)) {
-            m_listener->queueCreation("gain");
-            bKeyReleased = true;
-        }
-        else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_X)) {
-        }
         else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_O)) {
             m_listener->queueCreation("output");
+            bKeyReleased = true;
+        }
+		else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_R)) {
+            m_listener->queueCreation("sampler");
             bKeyReleased = true;
         }
         else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_S)) {
             m_listener->queueCreation("seq");
             bKeyReleased = true;
         }
-        else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_R)) {
-            m_listener->queueCreation("sampler");
-            bKeyReleased = true;
-        }
-
 
         if (bKeyReleased) {
             m_cachedClickPos = ImGui::GetMousePosOnOpeningCurrentPopup();
@@ -367,29 +372,36 @@ void OutputDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     static RollingBuffer rdata1;
     auto audio = m_listener->buffer();
     static float t = 0;
-    static size_t bufidx = 0;
+    auto delta = ImGui::GetIO().DeltaTime;
+    t += delta;
+    auto nsamps = static_cast<int>(44100 * delta); // per UI frame
+    nsamps = (nsamps > 0) ? nsamps : 0;
+    int startIdx = audio.m_writeIdx - nsamps ;
 
-    t += ImGui::GetIO().DeltaTime;
-    int startIdx = audio.m_writeIdx - 736;
-    static float tempval = t;
-
-    if (audio.m_writeIdx < 736) {
-        startIdx = 44100 - (736 - audio.m_writeIdx);
+    if (startIdx < 0) {
+        startIdx = 44100 - 1 - (nsamps - audio.m_writeIdx);
     }
 
-
     //// 1/60 * 44100 = the number of samples we can show per frame?
-    auto stepsize = 1. / 60. / 735.;// 0.00002267573;
-    for (size_t idx = 0; idx <= 735; idx++) {
-        startIdx++;
+    double stepsize = delta / nsamps;
+    static double tempval = 0;
+    for (size_t idx = 0; idx <= nsamps; idx++) {
+		rdata1.AddPoint(tempval, audio.buffer[0][startIdx]);
+        tempval += stepsize;
+		startIdx++;
         if (startIdx >= 44100) {
             startIdx = 0;
         }
-        rdata1.AddPoint(tempval, audio.buffer[0][startIdx]);
-        tempval += stepsize;
+
     }
+
+	auto mute = snapshot.params.at("mute");
+	bool bMute = (mute > 0);
+    ImGui::Checkbox("Mute", &bMute);
+    update(id, snapshot, "mute", bMute ? 1.f : 0.f);
+
     static float history = 10.0f;
-    ImGui::SliderFloat("History", &history, 1, 10, "%.1f s");
+    ImGui::SliderFloat("History", &history, 1, 10, "%.1f seconds");
     rdata1.Span = history;
 
     static bool showplot = true;
@@ -398,7 +410,7 @@ void OutputDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     static ImPlotAxisFlags flags = ImPlotAxisFlags_NoTickLabels;
 
     if (showplot) {
-        if (ImPlot::BeginPlot("##Rolling", ImVec2(300, 150), ImPlotFlags_NoLegend)) {
+        if (ImPlot::BeginPlot("##Rolling", ImVec2(600,300), ImPlotFlags_NoLegend)) {
             ImPlot::SetupAxes(nullptr, nullptr, flags, flags);
             ImPlot::SetupAxisLimits(ImAxis_X1, 0, history, ImGuiCond_Always); // 1 or 'history'
             ImPlot::SetupAxisLimits(ImAxis_Y1, -1, 1);
@@ -449,6 +461,32 @@ void DelayDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImNodes::EndOutputAttribute();
 	ImNodes::EndNode();
     ImGui::PopItemWidth();
+    ImNodes::PopColorStyle();
+}
+
+void DistortDisplayCommand::display(int id, const NodeSnapshot& snapshot)
+{
+	auto params = snapshot.params;
+
+    ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(227, 105, 241, 255));
+	ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(227, 105, 241, 255));
+	ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(227, 105, 241, 255));
+
+	ImNodes::BeginNode(id);
+	ImNodes::BeginNodeTitleBar();
+	ImGui::TextUnformatted("Distort");
+	ImNodes::EndNodeTitleBar();
+
+	ImNodes::BeginInputAttribute(params["input_id"]);
+	ImGui::TextUnformatted("In");
+	ImNodes::EndInputAttribute();
+
+	ImNodes::BeginOutputAttribute(id);
+	const float text_width = ImGui::CalcTextSize("Out").x;
+	ImGui::Indent(120.f + ImGui::CalcTextSize("Out").x - text_width);
+	ImGui::TextUnformatted("Out");
+	ImNodes::EndOutputAttribute();
+	ImNodes::EndNode();
     ImNodes::PopColorStyle();
 }
 
@@ -515,6 +553,31 @@ void ConstantDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImNodes::EndNode();
 	ImGui::PopItemWidth();
 }
+
+void AudioInputDisplayCommand::display(int id, const NodeSnapshot& snapshot)
+{
+	ImGui::PushItemWidth(120.0f);
+	ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0, 0, 0, 255));
+	ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(0, 0, 0, 255));
+	ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(0, 0, 0, 255));
+	ImNodes::BeginNode(id);
+	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 1, 1, 1));
+	ImNodes::BeginNodeTitleBar();
+	ImGui::TextUnformatted("Audio Input");
+	ImNodes::EndNodeTitleBar();
+	ImGui::PopStyleColor();
+	ImNodes::PopColorStyle();
+
+	ImNodes::BeginOutputAttribute(id);
+	const float text_width = ImGui::CalcTextSize("In").x;
+	ImGui::Indent(120.f + ImGui::CalcTextSize("In").x - text_width);
+	ImGui::TextUnformatted("In");
+	ImNodes::EndOutputAttribute();
+
+	ImNodes::EndNode();
+	ImGui::PopItemWidth();
+}
+
 
 void SeqDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 {

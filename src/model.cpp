@@ -1,8 +1,10 @@
 #include "model.h"
 #include "util.h"
 
+#include "audioinput.h"
 #include "constant.h"
 #include "delay.h"
+#include "distort.h"
 #include "envelope.h"
 #include "filter.h"
 #include "gain.h"
@@ -21,8 +23,10 @@ Model::Model()
 {
 	m_graph = std::make_shared<NodeGraph>();
 
+	m_creators[NodeType::AUDIO_IN] = std::make_shared<AudioInputNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::CONSTANT] = std::make_shared<ConstantNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::DELAY] = std::make_shared<DelayNodeCreator>(m_graph, m_cache);
+	m_creators[NodeType::DISTORT] = std::make_shared<DistortNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::ENVELOPE] = std::make_shared<EnvelopeNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::FILTER] = std::make_shared<FilterNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::GAIN] = std::make_shared<GainNodeCreator>(m_graph, m_cache);
@@ -112,7 +116,6 @@ int Model::update(UpdateStringEvent update)
 	return 0;
 }
 
-
 int Model::create(std::string str)
 {
 	if (m_nodeTypeMap.find(str) != m_nodeTypeMap.end()) {
@@ -132,6 +135,35 @@ int ConstantNodeCreator::create()
 	k->params[Constant::VALUE] = 0.f;
 	cacheType(id, NodeType::CONSTANT);
 	cacheParam(id, "value", 0.f);
+	return id;
+}
+
+int DistortNodeCreator::create()
+{
+	auto k = std::make_shared<Distort>();
+	auto in = std::make_shared<Value>();
+	auto inid = m_g->insert_node(in);
+	auto id = m_g->insert_node(k);
+	m_g->insert_edge(id, inid);
+	k->params[Distort::NODE_ID] = id;
+	k->params[Distort::INPUT_ID] = inid;
+	cacheType(id, NodeType::DISTORT);
+	cacheType(inid, NodeType::VALUE);
+	for (auto& str : k->paramStrings()) {
+		cacheParam(id, str, 0.f);
+	}
+	cacheParam(id, "node_id", id);
+	cacheParam(id, "input_id", inid);
+	return id;
+}
+
+
+int AudioInputNodeCreator::create()
+{
+	auto k = std::make_shared<AudioInput>();
+	auto id = m_g->insert_node(k);
+	k->params[Constant::NODE_ID] = id;
+	cacheType(id, NodeType::AUDIO_IN);
 	return id;
 }
 
@@ -323,10 +355,7 @@ int OutputNodeCreator::create()
 	cacheParam(outputId, "right_id", rightNodeId);
 	cacheParam(outputId, "display_left", 0.f);
 	cacheParam(outputId, "display_right", 0.f);
-	cacheParam(outputId, "xmin", 0.f);
-	cacheParam(outputId, "xmax", 0.f);
-	cacheParam(outputId, "ymin", 0.f);
-	cacheParam(outputId, "ymax", 0.f);
+	cacheParam(outputId, "mute", 0.f);
 
 	return outputId;
 }

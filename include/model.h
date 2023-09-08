@@ -71,6 +71,26 @@ public:
 	int create() override;
 };
 
+class DistortNodeCreator : public NodeCreationCommand
+{
+public:
+	DistortNodeCreator(std::shared_ptr<NodeGraph> g, ViewBag& v)
+		: NodeCreationCommand(g, v)
+	{}
+	virtual ~DistortNodeCreator() {};
+	int create() override;
+};
+
+class AudioInputNodeCreator : public NodeCreationCommand
+{
+public:
+	AudioInputNodeCreator(std::shared_ptr<NodeGraph> g, ViewBag& v)
+		: NodeCreationCommand(g, v)
+	{}
+	virtual ~AudioInputNodeCreator() {};
+	int create() override;
+};
+
 class OutputNodeCreator : public NodeCreationCommand
 {
 public:
@@ -173,10 +193,12 @@ private:
 	// unnecessary, every node type should have a unique name
 	std::unordered_map<std::string, NodeType> m_nodeTypeMap =
 	{
-		{"gain", NodeType::GAIN},
 		{"delay", NodeType::DELAY},
+		{"distort", NodeType::DISTORT},
 		{"oscillator", NodeType::OSCILLATOR},
 		{"constant", NodeType::CONSTANT},
+		{"audio_input", NodeType::AUDIO_IN},
+		{"gain", NodeType::GAIN},
 		{"output", NodeType::OUTPUT},
 		{"filter", NodeType::FILTER},
 		{"mixer", NodeType::QUAD_MIXER},

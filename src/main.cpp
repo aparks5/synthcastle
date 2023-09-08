@@ -1,6 +1,8 @@
 
 #include <thread>
 
+#define BLOCK_SIZE (64)
+
 #include "model.h"
 #include "view.h"
 #include "controller.h"
@@ -52,7 +54,7 @@ struct AudioData
 
 };
 
-static std::tuple<float,float> evaluate(std::shared_ptr<NodeGraph> graph)
+static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeGraph> graph)
 {
     if (!graph.get()) {
         return { 0,0 };
@@ -75,6 +77,11 @@ static std::tuple<float,float> evaluate(std::shared_ptr<NodeGraph> graph)
 		const auto& pNode = graph->node(id);
 
 		switch (pNode->type) {
+		case NodeType::AUDIO_IN:
+		{
+            value_stack.push(inputSample);
+		}
+		break;
 		case NodeType::DELAY:
 		{
 			auto val = value_stack.top();
@@ -197,6 +204,15 @@ static std::tuple<float,float> evaluate(std::shared_ptr<NodeGraph> graph)
             value_stack.push(val);
         }
         break;
+		case NodeType::DISTORT:
+		{
+			auto in = value_stack.top();
+			value_stack.pop();
+			auto val = pNode->process(in);
+			value_stack.push(val);
+		}
+		break;
+
         case NodeType::TRIG:
         {
 			if (clockCache == -1) {
@@ -232,6 +248,9 @@ static std::tuple<float,float> evaluate(std::shared_ptr<NodeGraph> graph)
         break;
         case NodeType::OUTPUT:
         {
+            if (pNode->params[Output::MUTE] == 1) {
+				return std::make_tuple(0., 0.);
+            }
 			if (!value_stack.empty()) {
 				float left = value_stack.top();
 				value_stack.pop(); 
@@ -266,7 +285,8 @@ static int paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 {
     AudioData* data = (AudioData*)userData;
 
-    auto* out = (float*)outputBuffer;
+    float* out = (float*)outputBuffer;
+    float* in = (float*)inputBuffer;
 
     auto nodeGraph = std::atomic_load(&(data->controller->m_graph));
     
@@ -276,7 +296,9 @@ static int paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 
     for (size_t sampIdx = 0; sampIdx < framesPerBuffer; sampIdx++) {
         float output = 0.f;
-        std::tuple<float, float> lr = evaluate(nodeGraph);
+        float inputSample = *in++;
+        *in++; // skip other channel
+        std::tuple<float, float> lr = evaluate(inputSample, nodeGraph);
             // write interleaved output -- L/R
 		auto l = std::get<0>(lr);
 		auto r = std::get<1>(lr);
@@ -359,14 +381,14 @@ void runGui(std::shared_ptr<AudioData> data)
 int main(int, char**)
 {
     std::shared_ptr<AudioData> audioData = std::make_shared<AudioData>();
-    std::vector<float> myRow(1024, 0.f);
+    std::vector<float> myRow(BLOCK_SIZE, 0.f);
     for (size_t idx = 0; idx < 2; idx++) {
         audioData->callbackBuffer.push_back(myRow);
     }
 
 	PaStream* stream;
 	PortAudioHandler paInit;
-	size_t bufSize = 8192; // 1024 * sizeof(float)
+	size_t bufSize = BLOCK_SIZE * sizeof(float);
 	PaStreamParameters outputParameters;
 
 	int index = Pa_GetDefaultOutputDevice();
@@ -374,19 +396,32 @@ int main(int, char**)
 	if (outputParameters.device == paNoDevice) {
 		return false;
 	}
-
 	const PaDeviceInfo* pInfo = Pa_GetDeviceInfo(index);
 	if (pInfo != 0) {
 		printf("Output device name: '%s'\r", pInfo->name);
 	}
-
 	outputParameters.channelCount = 2;       /* stereo output */
 	outputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
 	outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
 	outputParameters.hostApiSpecificStreamInfo = NULL;
 
-	PaError err = Pa_OpenStream(&stream, NULL, /* no input */
-		&outputParameters, 44100, 1024, paClipOff, &paCallbackMethod, audioData.get());
+	PaStreamParameters inputParameters;
+    int in_index = Pa_GetDefaultInputDevice();
+	inputParameters.device = in_index;
+	if (inputParameters.device == paNoDevice) {
+		return false;
+	}
+	const PaDeviceInfo* pInputInfo = Pa_GetDeviceInfo(in_index);
+	if (pInputInfo != 0) {
+		printf("Input device name: '%s'\r", pInputInfo->name);
+	}
+	inputParameters.channelCount = 2;       // mono input
+	inputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
+    inputParameters.suggestedLatency = Pa_GetDeviceInfo(inputParameters.device)->defaultLowInputLatency;
+	inputParameters.hostApiSpecificStreamInfo = NULL;
+
+	PaError err = Pa_OpenStream(&stream, &inputParameters,
+		&outputParameters, 44100, BLOCK_SIZE, paClipOff, &paCallbackMethod, audioData.get());
 
 	if (err != paNoError) {
 		printf("Failed to open stream to device !!!");

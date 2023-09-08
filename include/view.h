@@ -85,10 +85,24 @@ public:
 	void display(int id, const NodeSnapshot& snapshot) override;
 };
 
+class DistortDisplayCommand : public NodeDisplayCommand
+{
+public:
+	DistortDisplayCommand() {}
+	void display(int id, const NodeSnapshot& snapshot) override;
+};
+
 class ConstantDisplayCommand : public NodeDisplayCommand
 {
 public:
 	ConstantDisplayCommand() {}
+	void display(int id, const NodeSnapshot& snapshot) override;
+};
+
+class AudioInputDisplayCommand : public NodeDisplayCommand
+{
+public:
+	AudioInputDisplayCommand() {}
 	void display(int id, const NodeSnapshot& snapshot) override;
 };
 

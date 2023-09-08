@@ -4,10 +4,12 @@ enum NodeType
 {
 	CONSTANT, // for a single unchanging value 
 	DELAY,
+	DISTORT,
 	ENVELOPE,
 	FILTER,
 	FOUR_VOICE,
 	GAIN,
+	AUDIO_IN,
 	MIDI_IN,
 	OSCILLATOR,
 	OUTPUT,

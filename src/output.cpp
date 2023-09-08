@@ -8,10 +8,9 @@ Output::Output()
 
 float Output::process()
 {
+	if (params[MUTE] == 1) {
+	     return 0;
+	}
     return value;
 }
-
-	//m_rootNodeId = outputId;
-	//m_graph.setRoot(m_rootNodeId);
-
 
