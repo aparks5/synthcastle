@@ -406,15 +406,28 @@ int main(int, char**)
 	outputParameters.hostApiSpecificStreamInfo = NULL;
 
 	PaStreamParameters inputParameters;
-    int in_index = Pa_GetDefaultInputDevice();
-	inputParameters.device = in_index;
-	if (inputParameters.device == paNoDevice) {
-		return false;
-	}
-	const PaDeviceInfo* pInputInfo = Pa_GetDeviceInfo(in_index);
-	if (pInputInfo != 0) {
-		printf("Input device name: '%s'\r", pInputInfo->name);
-	}
+    
+    int hostNr = Pa_GetHostApiCount();
+
+    std::vector<const PaHostApiInfo*> infoVertex;
+    for (int t = 0; t < hostNr; ++t) {
+        infoVertex.push_back(Pa_GetHostApiInfo(t));
+    }
+
+    int inputIndex = Pa_GetDefaultInputDevice();
+    inputParameters.device = inputIndex;
+
+    // look for ASIO device if we can find one
+    for (auto& item : infoVertex) {
+        printf("host: %s\n", item->name);
+		if (item->type == paWASAPI) {
+			inputIndex = item->defaultInputDevice;
+			index = item->defaultOutputDevice;
+			inputParameters.device = inputIndex;
+			outputParameters.device = index;
+        }
+    }
+
 	inputParameters.channelCount = 2;       // mono input
 	inputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
     inputParameters.suggestedLatency = Pa_GetDeviceInfo(inputParameters.device)->defaultLowInputLatency;

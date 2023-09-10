@@ -14,7 +14,17 @@ Delay::Delay()
 	, m_readIdx(0)
 	, m_feedbackRatio(0.f)
 	, m_feedbackOut(0.f)
+	, m_lfo(m_sampleRate)
+	, m_hp(m_sampleRate)
+	, m_lp(m_sampleRate)
+    , m_cacheLFORateHz(0.1)
+	, m_cacheLFODepthMs(2)
+	, m_cacheHPCutoffHz(1000)
+	, m_cacheLPCutoffHz(0.7)
 {
+	m_hp.update(m_cacheHPCutoffHz);
+	m_lp.update(m_cacheLPCutoffHz);
+	m_lfo.update(m_cacheLFORateHz); // todo ^ all the above should be user assignable
 	// allocate circular buffer
 	m_circBuff.resize(static_cast<size_t>(m_maxDelaySamps));
 	std::fill(m_circBuff.begin(), m_circBuff.end(), 0.f);
@@ -42,7 +52,28 @@ void Delay::reset()
 
 float Delay::process(float in) 
 {
-	m_delayMs = params[DELAY_MS];
+
+	// update params if needed
+	if (params[MODRATE_HZ] != m_cacheLFORateHz) {
+		m_cacheLFORateHz = params[MODRATE_HZ];
+		m_lfo.update(m_cacheLFORateHz);
+	}
+
+	if (params[MODDEPTH_MS] != m_cacheLFODepthMs) {
+		m_cacheLFODepthMs = params[MODDEPTH_MS];
+	}
+
+	if (params[FEEDBACK_HIGHPASS_HZ] != m_cacheHPCutoffHz) {
+		m_cacheHPCutoffHz = params[FEEDBACK_HIGHPASS_HZ];
+		m_hp.update(m_cacheHPCutoffHz);
+	}
+
+	if (params[FEEDBACK_LOWPASS_HZ] != m_cacheLPCutoffHz) {
+		m_cacheLPCutoffHz = params[FEEDBACK_LOWPASS_HZ];
+		m_lp.update(m_cacheLPCutoffHz);
+	}
+
+	m_delayMs = params[DELAY_MS] + (m_lfo.process() * m_cacheLFODepthMs); // < delay time depth
 	m_feedbackRatio = params[FEEDBACK_RATIO];
 	float drywet = params[DRYWET_RATIO];
 
@@ -65,6 +96,7 @@ float Delay::process(float in)
 
 	// for 0 delay, interpolate the input with the prev output
 	auto yn = 0.f;
+
 	if ((m_writeIdx == m_readIdx) && integerDelay < 1.) {
 		yn = m_circBuff[m_writeIdx];
 	}
@@ -83,6 +115,15 @@ float Delay::process(float in)
 	float out = linearInterpolate(yn, yn1, fractionalDelay);
 	m_feedbackOut = out;
 
+
+	// todo: add switch-case for digital/tape/mod/reverse
+	float dry = in;
+	in = m_hp(in);
+	in = m_lp(in);
+	in = tanh(in);
+	// todo: modulate delay time based on character or params
+
+
 	// lastly, write to buffer
 	m_circBuff[m_writeIdx] = in + (m_feedbackRatio * m_feedbackOut);
 
@@ -91,5 +132,6 @@ float Delay::process(float in)
 		m_writeIdx = 0;
 	}
 
-	return (0.707 * ((drywet * in) + ((1 - drywet) * out)));
+
+	return (0.707 * ((drywet * dry) + ((1 - drywet) * out)));
 }

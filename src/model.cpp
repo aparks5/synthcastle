@@ -432,6 +432,12 @@ int DelayNodeCreator::create()
 		cacheParam(id, str, 0.f);
 	}
 	cacheParam(id, "input_id", inid);
+	cacheParam(id, "delay_ms", 1.f);
+	cacheParam(id, "modrate_hz", 0.f);
+	cacheParam(id, "moddepth_ms", 0.f);
+	cacheParam(id, "feedback_highpass_hz", 1000.f);
+	cacheParam(id, "feedback_lowpass", 0.7f);
+	cacheParam(id, "drywet_ratio", 0.5f);
 
 	return id;
 }

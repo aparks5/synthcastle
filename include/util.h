@@ -39,6 +39,10 @@ static float dBtoFloat(int db)
 	return pow(10, db / 20.f);
 }
 
+template <typename T> int sgn(T val) {
+    return (T(0) < val) - (val < T(0));
+}
+
 template <class T>
 static T linearInterpolate(T y1, T y2, T x)
 {

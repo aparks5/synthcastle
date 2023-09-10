@@ -5,7 +5,8 @@ cmake_minimum_required (VERSION 3.8)
 # ...set this right below the cmake_minimum_required
 set(CMAKE_TOOLCHAIN_FILE ./vcpkg/scripts/buildsystems/vcpkg.cmake)
 set(VCPKG_TARGET_TRIPLET x64-windows CACHE STRING "")
-add_compile_definitions(-D PA_USE_ASIO)
+
+#add_compile_definitions(-D PA_USE_ASIO 1)
 
 # Enable Hot Reload for MSVC compilers if supported.
 if (POLICY CMP0141)
@@ -34,7 +35,6 @@ if (CMAKE_VERSION VERSION_GREATER 3.12)
 endif()
 
 # TODO: Add tests and install targets if needed.
-#vcpkg install imgui
 
 include_directories(./vcpkg/installed/x64-windows/include)
 link_directories(./vcpkg/installed/x64-windows/lib)
@@ -56,8 +56,6 @@ find_package(glfw3 CONFIG REQUIRED)
 find_package(glad CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 find_package(implot CONFIG REQUIRED)
-find_package(asio CONFIG REQUIRED)
-
 
 # ImGuiFileDialog
 add_library(ImGuiFileDialog)
@@ -83,6 +81,12 @@ find_package(SDL2 CONFIG REQUIRED)
         $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
         $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>)
 
+# vcpkg bootstrap and install (all should have -x64-windows appended)
+# portaudio
+# opengl, pthreads, rtmidi, spdlog, fftw3, glfw3, glad, imgui, implot, glfw3, 
+# sdl2
+# imgui[glfw-binding,opengl32-binding,sdl2-binding]
+
 target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE
     "opengl32"
     PThreads4W::PThreads4W
@@ -93,6 +97,4 @@ target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE
     glfw
     glad::glad
     imgui::imgui
-	implot::implot
-	asio::asio)
-
+	implot::implot)

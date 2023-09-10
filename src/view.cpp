@@ -447,12 +447,28 @@ void DelayDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     update(id, snapshot, "delay_ms", d);
 
     auto f = snapshot.params.at("feedback_ratio");
-    ImGui::DragFloat("Feedback Ratio", &f, 0.01f, 0., 0.5);
+    ImGui::DragFloat("Feedback Ratio", &f, 0.01f, 0., 0.999);
     update(id, snapshot, "feedback_ratio", f);
 
     auto w = snapshot.params.at("drywet_ratio");
     ImGui::DragFloat("Dry/Wet Ratio", &w, 0.01f, 0., 1.);
     update(id, snapshot, "drywet_ratio", w);
+
+    auto rate  = snapshot.params.at("modrate_hz");
+    ImGui::DragFloat("Mod Rate (Hz)", &rate, 0.01f, 0.f, 100.f);
+    update(id, snapshot, "modrate_hz", rate);
+
+    auto depth = snapshot.params.at("moddepth_ms");
+    ImGui::DragFloat("Mod Depth (ms)", &depth, 0.01f, 0.f, 100.f);
+    update(id, snapshot, "moddepth_ms", depth);
+
+    auto hp = snapshot.params.at("feedback_highpass_hz");
+    ImGui::DragFloat("Feedback Highpass Cutoff (Hz)", &hp, 1.f, 0.f, 2000.f);
+    update(id, snapshot, "feedback_highpass_hz", hp);
+
+    auto lp = snapshot.params.at("feedback_lowpass_hz");
+    ImGui::DragFloat("Feedback Lowpass Cutoff (Hz)", &lp, 0.1f, 0.f, 1.f);
+    update(id, snapshot, "feedback_lowpass_hz", lp);
 
     ImNodes::BeginOutputAttribute(id);
 	const float text_width = ImGui::CalcTextSize("Out").x;

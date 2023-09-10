@@ -1,7 +1,7 @@
 #ifndef MIDI_H_
 #define MIDI_H_
 
-#include "RtMidi.h"
+#include "rtmidi/RtMidi.h"
 #include "node.h"
 #include <string>
 #include <queue>
