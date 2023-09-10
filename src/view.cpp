@@ -510,9 +510,17 @@ void DistortDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     ImGui::PushStyleColor(ImGuiCol_Header, (ImVec4)ImColor(227, 255, 99));
     ImGui::PushStyleColor(ImGuiCol_PopupBg, (ImVec4)ImColor(227, 255, 99));
     int algo = (int)params["algorithm"];
-    ImGui::Combo("Algorithm", &algo, "tanh()\0atan()\0sin()\0");
+    ImGui::Combo("Algorithm", &algo, "tanh()\0atan()\0sin()\0twostage-softclip\0cubic-softclip");
     update(id, snapshot, "algorithm", algo);
     ImGui::PopStyleColor(2);
+
+    auto hp = snapshot.params.at("preemph_cutoff");
+    ImGui::DragFloat("Tone", &hp, 1.f, 0., 3000.);
+    update(id, snapshot, "preemph_cutoff", hp);
+
+    auto w = snapshot.params.at("drywet");
+    ImGui::DragFloat("Dry/Wet Ratio", &w, 0.01f, 0., 1.);
+    update(id, snapshot, "drywet", w);
 
 	ImNodes::BeginOutputAttribute(id);
 	const float text_width = ImGui::CalcTextSize("Out").x;
