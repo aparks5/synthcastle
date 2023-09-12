@@ -116,6 +116,16 @@ int Model::update(UpdateStringEvent update)
 	return 0;
 }
 
+std::vector<std::string> Model::queryNodeNames() const 
+{
+	std::vector<std::string> names;
+	for (auto& kv : m_nodeTypeMap) {
+		names.push_back(kv.first);
+	}
+
+	return names;
+}
+
 int Model::create(std::string str)
 {
 	if (m_nodeTypeMap.find(str) != m_nodeTypeMap.end()) {
@@ -236,31 +246,32 @@ int MixerNodeCreator::create()
 	auto bId = m_g->insert_node(b);
 	auto cId = m_g->insert_node(c);
 	auto dId = m_g->insert_node(d);
-	auto mixId = m_g->insert_node(mix);
-	m_g->insert_edge(mixId, dId);
-	m_g->insert_edge(mixId, cId);
-	m_g->insert_edge(mixId, bId);
-	m_g->insert_edge(mixId, aId);
-	mix->params[QuadMixer::NODE_ID] = mixId;
+	auto id = m_g->insert_node(mix);
+	m_g->insert_edge(id, dId);
+	m_g->insert_edge(id, cId);
+	m_g->insert_edge(id, bId);
+	m_g->insert_edge(id, aId);
+	mix->params[QuadMixer::NODE_ID] = id;
 	mix->params[QuadMixer::INPUT_A_ID] = aId;
 	mix->params[QuadMixer::INPUT_B_ID] = bId;
 	mix->params[QuadMixer::INPUT_C_ID] = cId;
 	mix->params[QuadMixer::INPUT_D_ID] = dId;
-	cacheType(mixId, NodeType::QUAD_MIXER);
+
+	for (auto& str : mix->paramStrings()) {
+		cacheParam(id, str, 0.f);
+	}
+
+	cacheType(id, NodeType::QUAD_MIXER);
 	cacheType(aId, NodeType::VALUE);
 	cacheType(bId, NodeType::VALUE);
 	cacheType(cId, NodeType::VALUE);
 	cacheType(dId, NodeType::VALUE);
-	cacheParam(mixId, "node_id", mixId);
-	cacheParam(mixId, "inputa_id", aId);
-	cacheParam(mixId, "inputb_id", bId);
-	cacheParam(mixId, "inputc_id", cId);
-	cacheParam(mixId, "inputd_id", dId);
-	cacheParam(mixId, "inputa", 0.f);
-	cacheParam(mixId, "inputb", 0.f);
-	cacheParam(mixId, "inputc", 0.f);
-	cacheParam(mixId, "inputd", 0.f);
-	return mixId;
+	cacheParam(id, "node_id", id);
+	cacheParam(id, "inputa_id", aId);
+	cacheParam(id, "inputb_id", bId);
+	cacheParam(id, "inputc_id", cId);
+	cacheParam(id, "inputd_id", dId);
+	return id;
 }
 
 int SeqNodeCreator::create()

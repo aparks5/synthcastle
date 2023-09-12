@@ -19,5 +19,6 @@ public:
 	virtual void queueLink(int from, int to) = 0;
 	virtual ViewBag snapshot() const = 0;
 	virtual AudioPlotBuffer buffer() const = 0;
+	virtual std::vector<std::string> queryNodeNames() const = 0;
 	virtual void update() = 0; // for now, should take out of interface eventually
 };

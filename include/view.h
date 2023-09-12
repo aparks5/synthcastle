@@ -55,6 +55,7 @@ public:
 	void addListener(std::shared_ptr<ViewListener> listener);
 private:
 	void display();
+	void nodeMenu();
 	const char* initSDL();
 	SDL_Window* m_window;
 	SDL_GLContext m_glContext;

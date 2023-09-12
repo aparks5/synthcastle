@@ -180,6 +180,7 @@ public:
 	int update(UpdateStringEvent update);
 	int create(std::string str);
 	void link(int from, int to);
+	std::vector<std::string> queryNodeNames() const;
 	std::tuple<float, float> evaluate();
 	const ViewBag refresh(); 
 	// return a deep copy of the graph
@@ -193,19 +194,19 @@ private:
 	// unnecessary, every node type should have a unique name
 	std::unordered_map<std::string, NodeType> m_nodeTypeMap =
 	{
+		{"audio_input", NodeType::AUDIO_IN},
+		{"constant", NodeType::CONSTANT},
 		{"delay", NodeType::DELAY},
 		{"distort", NodeType::DISTORT},
-		{"oscillator", NodeType::OSCILLATOR},
-		{"constant", NodeType::CONSTANT},
-		{"audio_input", NodeType::AUDIO_IN},
-		{"gain", NodeType::GAIN},
-		{"output", NodeType::OUTPUT},
-		{"filter", NodeType::FILTER},
-		{"mixer", NodeType::QUAD_MIXER},
 		{"envelope", NodeType::ENVELOPE},
-		{"trig", NodeType::TRIG},
+		{"filter", NodeType::FILTER},
+		{"gain", NodeType::GAIN},
+		{"mixer", NodeType::QUAD_MIXER},
+		{"oscillator", NodeType::OSCILLATOR},
+		{"output", NodeType::OUTPUT},
 		{"sampler", NodeType::SAMPLER},
-		{"seq", NodeType::SEQ}
+		{"seq", NodeType::SEQ},
+		{"trig", NodeType::TRIG},
 	};
 
 };

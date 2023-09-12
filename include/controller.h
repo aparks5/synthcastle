@@ -20,6 +20,7 @@ public:
 	void queueLink(int from, int to) override;
 	void queueUpdate(int id, std::string param, float val) override;
 	void queueUpdate(int id, std::string param, std::string str) override;
+	std::vector<std::string> queryNodeNames() const override;
 	std::shared_ptr<NodeGraph> m_graph;
 
 	void createLink(int from, int to);

@@ -75,6 +75,11 @@ void Controller::createLink(int from, int to)
 	m_model->link(from, to);
 }
 
+std::vector<std::string> Controller::queryNodeNames() const
+{
+	return m_model->queryNodeNames();
+}
+
 void Controller::update()
 {
 	// ideally this happens infrequently on its own separate thread, but that thread needs to keep track of the references

@@ -4,6 +4,7 @@
 #include "viewbag.h"
 
 #include "ImGuiFileDialog.h"
+#include "imgui-knobs.h"
 #include "implot.h"
 
 // from implot_demo.cpp - utility structure for realtime plot
@@ -182,6 +183,25 @@ void View::run()
     }
 }
 
+void View::nodeMenu()
+{
+    auto names = m_listener->queryNodeNames();
+    bool bKeyReleased = false;
+    for (auto& n : names) {
+        if (ImGui::MenuItem(n.c_str())) {
+            m_listener->queueCreation(n);
+            bKeyReleased = true;
+        }
+    }
+
+	if (bKeyReleased) {
+		m_cachedClickPos = ImGui::GetMousePosOnOpeningCurrentPopup();
+		m_bSetPosOfLatestNode = true;
+	}
+
+
+}
+
 void View::display()
 {
     ImNodes::EditorContextSet(m_pEditorContext);
@@ -216,72 +236,33 @@ void View::display()
 
     ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0, 0, 0, 1));
     ImGui::Begin("S Y N T H C A S T L E", 0, ImGuiWindowFlags_NoTitleBar);
-    ImGui::TextUnformatted("Keys: a=osc/c=const/e=envelope/f=filt/g=gain/m=mixer/o=output/t=trigger");
+    ImGui::TextUnformatted("(right-click to add nodes)");
 
     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 0, 0, 1));
     ImNodes::BeginNodeEditor();
 
-    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
-        ImNodes::IsEditorHovered()) {
-        bool bKeyReleased = false;
-        if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_A)) {
-            // something about getting the ID and setting the position
-			m_listener->queueCreation("oscillator");
-            bKeyReleased = true;
-        }
-        else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_C)) {
-			m_listener->queueCreation("constant");
-            bKeyReleased = true;
-        }
-        else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_D)) {
-			m_listener->queueCreation("delay");
-            bKeyReleased = true;
-        }
-        else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_Z)) {
-			m_listener->queueCreation("distort");
-            bKeyReleased = true;
-        }
-        else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_E)) {
-			m_listener->queueCreation("envelope");
-            bKeyReleased = true;
-        }
-        else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_F)) {
-			m_listener->queueCreation("filter");
-            bKeyReleased = true;
-        }
-		else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_G)) {
-            m_listener->queueCreation("gain");
-            bKeyReleased = true;
-        }
-		else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_I)) {
-            m_listener->queueCreation("audio_input");
-            bKeyReleased = true;
-        }
-        else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_T)) {
-			m_listener->queueCreation("trig");
-            bKeyReleased = true;
-        }
-        else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_M)) {
-            m_listener->queueCreation("mixer");
-            bKeyReleased = true;
-        }
-        else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_O)) {
-            m_listener->queueCreation("output");
-            bKeyReleased = true;
-        }
-		else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_R)) {
-            m_listener->queueCreation("sampler");
-            bKeyReleased = true;
-        }
-        else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_S)) {
-            m_listener->queueCreation("seq");
-            bKeyReleased = true;
-        }
 
-        if (bKeyReleased) {
-            m_cachedClickPos = ImGui::GetMousePosOnOpeningCurrentPopup();
-            m_bSetPosOfLatestNode = true;
-        }
+    // node menu
+    {
+	const bool open_popup = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
+		ImNodes::IsEditorHovered() &&
+		ImGui::IsMouseReleased(ImGuiMouseButton_Right);
+
+	ImGui::PushStyleColor(ImGuiCol_Header, (ImVec4)ImColor(227, 255, 99));
+	ImGui::PushStyleColor(ImGuiCol_PopupBg, (ImVec4)ImColor(227, 255, 99));
+
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8.f, 8.f));
+	if (!ImGui::IsAnyItemHovered() && open_popup) {
+		ImGui::OpenPopup("add node");
+	}
+
+	if (ImGui::BeginPopup("add node")) {
+		const ImVec2 click_pos = ImGui::GetMousePosOnOpeningCurrentPopup();
+        nodeMenu();
+        ImGui::EndPopup();
+	}
+
+	ImGui::PopStyleColor(2);
     }
 
     const ViewBag viewbag = m_listener->snapshot();
@@ -426,7 +407,6 @@ void OutputDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
 void DelayDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 {
-
     ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(167, 219, 216, 255));
     ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(167, 219, 216, 255));
     ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(167, 219, 216, 255));
@@ -493,40 +473,61 @@ void DistortDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImGui::TextUnformatted("Distort");
 	ImNodes::EndNodeTitleBar();
 
-	ImNodes::BeginInputAttribute(params["input_id"]);
-	ImGui::TextUnformatted("In");
-	ImNodes::EndInputAttribute();
+    ImGui::PushItemWidth(80);
 
+    ImGui::BeginGroup();
+    {
+        ImNodes::BeginInputAttribute(params["input_id"]);
+        ImGui::TextUnformatted("In");
+        ImNodes::EndInputAttribute();
+    }
+    ImGui::EndGroup();
 
-    ImGui::PushItemWidth(120.0f);
-    auto d = snapshot.params.at("drive_db");
-    ImGui::DragFloat("Drive (dB)", &d, 0.1f, 0, 100);
-    update(id, snapshot, "drive_db", d);
+    ImGui::SameLine();
 
-    auto attenuation = snapshot.params.at("atten_db");
-    ImGui::DragFloat("Post-Gain (dB)", &attenuation, 0.1f, -100., 0.);
-    update(id, snapshot, "atten_db", attenuation);
+    ImGui::BeginGroup();
+    {
+        auto d = snapshot.params.at("drive_db");
+        if (ImGuiKnobs::Knob("Drive", &d, 0.0f, 100.0f, 0.5f, "%.1fdB", ImGuiKnobVariant_Wiper)) {
+            update(id, snapshot, "drive_db", d);
+        }
+        ImGui::SameLine();
 
+		auto hp = snapshot.params.at("preemph_cutoff");
+		if (ImGuiKnobs::Knob("Tone", &hp, 0.0f, 3000.f, 20.f, "%.1f Hz", ImGuiKnobVariant_Wiper)) {
+            update(id, snapshot, "preemph_cutoff", hp);
+        }
+        ImGui::SameLine();
+
+		auto attenuation = snapshot.params.at("atten_db");
+		if (ImGuiKnobs::Knob("Gain", &attenuation, -100.0f, 0.f, 1.f, "%.1fdB", ImGuiKnobVariant_Wiper)) {
+            update(id, snapshot, "atten_db", attenuation);
+        }
+    
+    
     ImGui::PushStyleColor(ImGuiCol_Header, (ImVec4)ImColor(227, 255, 99));
     ImGui::PushStyleColor(ImGuiCol_PopupBg, (ImVec4)ImColor(227, 255, 99));
     int algo = (int)params["algorithm"];
-    ImGui::Combo("Algorithm", &algo, "tanh()\0atan()\0sin()\0twostage-softclip\0cubic-softclip");
+    ImGui::Combo("Algo", &algo, "tanh()\0atan()\0sin()\0twostage-softclip\0cubic-softclip");
     update(id, snapshot, "algorithm", algo);
     ImGui::PopStyleColor(2);
 
-    auto hp = snapshot.params.at("preemph_cutoff");
-    ImGui::DragFloat("Tone", &hp, 1.f, 0., 3000.);
-    update(id, snapshot, "preemph_cutoff", hp);
-
+    
     auto w = snapshot.params.at("drywet");
-    ImGui::DragFloat("Dry/Wet Ratio", &w, 0.01f, 0., 1.);
+    ImGui::DragFloat("Dry/Wet", &w, 0.01f, 0., 1.);
     update(id, snapshot, "drywet", w);
+	}
+    ImGui::EndGroup();
 
-	ImNodes::BeginOutputAttribute(id);
-	const float text_width = ImGui::CalcTextSize("Out").x;
-	ImGui::Indent(120.f + ImGui::CalcTextSize("Out").x - text_width);
-	ImGui::TextUnformatted("Out");
-	ImNodes::EndOutputAttribute();
+    ImGui::SameLine();
+    ImGui::BeginGroup();
+    {
+        ImNodes::BeginOutputAttribute(id);
+        ImGui::TextUnformatted("Out");
+        ImNodes::EndOutputAttribute();
+    }
+    ImGui::EndGroup();
+
 	ImNodes::EndNode();
     ImNodes::PopColorStyle();
 }
@@ -597,7 +598,8 @@ void ConstantDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
 void AudioInputDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 {
-	ImGui::PushItemWidth(120.0f);
+    float width = 40.f;
+	ImGui::PushItemWidth(width);
 	ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0, 0, 0, 255));
 	ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(0, 0, 0, 255));
 	ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(0, 0, 0, 255));
@@ -611,7 +613,7 @@ void AudioInputDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
 	ImNodes::BeginOutputAttribute(id);
 	const float text_width = ImGui::CalcTextSize("In").x;
-	ImGui::Indent(120.f + ImGui::CalcTextSize("In").x - text_width);
+	ImGui::Indent(width + ImGui::CalcTextSize("In").x - text_width);
 	ImGui::TextUnformatted("In");
 	ImNodes::EndOutputAttribute();
 
@@ -890,31 +892,68 @@ void OscillatorDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 void MixerDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 {
 
-	auto params = snapshot.params;
+    auto params = snapshot.params;
     ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(206, 171, 156, 255));
     ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(206, 171, 156, 255));
-    ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(233,127,2, 230));
+    ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(233, 127, 2, 230));
 
     ImNodes::BeginNode(id);
     ImNodes::BeginNodeTitleBar();
     ImGui::TextUnformatted("QuadMix");
     ImNodes::EndNodeTitleBar();
 
-    ImNodes::BeginInputAttribute(params["inputa_id"]);
-    ImGui::TextUnformatted("A");
-    ImNodes::EndInputAttribute();
+    ImGui::PushItemWidth(120.0f);
+    ImGui::BeginGroup();
+    {
+        ImNodes::BeginInputAttribute(params["inputa_id"]);
+        ImGui::TextUnformatted("A");
+        ImNodes::EndInputAttribute();
 
-    ImNodes::BeginInputAttribute(params["inputb_id"]);
-    ImGui::TextUnformatted("B");
-    ImNodes::EndInputAttribute();
+        ImNodes::BeginInputAttribute(params["inputb_id"]);
+        ImGui::TextUnformatted("B");
+        ImNodes::EndInputAttribute();
 
-    ImNodes::BeginInputAttribute(params["inputc_id"]);
-    ImGui::TextUnformatted("C");
-    ImNodes::EndInputAttribute();
+        ImNodes::BeginInputAttribute(params["inputc_id"]);
+        ImGui::TextUnformatted("C");
+        ImNodes::EndInputAttribute();
 
-    ImNodes::BeginInputAttribute(params["inputd_id"]);
-    ImGui::TextUnformatted("D");
-    ImNodes::EndInputAttribute();
+        ImNodes::BeginInputAttribute(params["inputd_id"]);
+        ImGui::TextUnformatted("D");
+        ImNodes::EndInputAttribute();
+    }
+    ImGui::EndGroup();
+
+    ImGui::SameLine();
+
+    ImGui::BeginGroup();
+    {
+
+	auto a = snapshot.params.at("gain_a");
+    if (ImGuiKnobs::Knob("A", &a, -60.0f, 0.0f, 0.1f, "%.1fdB", ImGuiKnobVariant_Wiper)) {
+        update(id, snapshot, "gain_a", a);
+    }
+    ImGui::SameLine();
+
+	auto b = snapshot.params.at("gain_b");
+    if (ImGuiKnobs::Knob("B", &b, -60.0f, 0.0f, 0.1f, "%.1fdB", ImGuiKnobVariant_Wiper)) {
+        update(id, snapshot, "gain_b", b);
+    }
+    ImGui::SameLine();
+
+	auto c = snapshot.params.at("gain_c");
+    if (ImGuiKnobs::Knob("C", &c, -60.0f, 0.0f, 0.1f, "%.1fdB", ImGuiKnobVariant_Wiper)) {
+        update(id, snapshot, "gain_c", c);
+    }
+    ImGui::SameLine();
+
+	auto d = snapshot.params.at("gain_d");
+    if (ImGuiKnobs::Knob("D", &d, -60.0f, 0.0f, 0.1f, "%.1fdB", ImGuiKnobVariant_Wiper)) {
+        update(id, snapshot, "gain_d", d);
+    }
+    ImGui::SameLine();
+}
+    ImGui::EndGroup();
+    ImGui::SameLine();
 
     ImNodes::BeginOutputAttribute(id);
     ImGui::TextUnformatted("Mix");
