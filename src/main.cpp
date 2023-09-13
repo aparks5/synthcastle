@@ -1,7 +1,7 @@
 
 #include <thread>
 
-#define BLOCK_SIZE (256)
+#define BLOCK_SIZE (1024)
 
 #include "model.h"
 #include "view.h"

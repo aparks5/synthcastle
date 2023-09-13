@@ -18,5 +18,6 @@ void Gain::setGaindB(float gaindB)
 
 float Gain::process(float in)
 {
-	return in * params[Gain::GAIN] * params[Gain::GAINMOD];
+	auto g = dBtoFloat(params[Gain::GAIN]);
+	return in * g * params[Gain::GAINMOD];
 }

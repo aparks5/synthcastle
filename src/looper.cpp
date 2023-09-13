@@ -49,11 +49,11 @@ float Looper::process(float in)
 		m_numLayers++;
 		if (m_numLayers == 1) {
 			m_maxBufferSize = m_buffer.size(); // no more resizing after the first loop
+			m_loop.resize(m_buffer.size());
 		}
 		if (m_numLayers > 0) {
 			size_t loopSamples = 0;
 			loopSamples = (m_loop.size() > m_buffer.size()) ? m_loop.size() : m_buffer.size();
-			m_loop.resize(m_buffer.size());
 			for (size_t idx = 0; idx < loopSamples; idx++) {
 				// if idx > m_buffer.size(), insert a zero
 				if (idx > (m_buffer.size() - 1)) {

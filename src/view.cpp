@@ -559,19 +559,36 @@ void LooperDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
     ImGui::BeginGroup();
     {
-        if (ImGui::Button("Stop")) {
+        ImVec2 buttSize(100, 100);
+
+        if (ImGui::Button("Stop (space)", buttSize)) {
             update(id, snapshot, "stop", 1);
         }
+
+        if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_SPACE)) {
+            update(id, snapshot, "stop", 1);
+        }
+        
         ImGui::SameLine();
 
-        if (ImGui::Button("Loop")) {
+        if (ImGui::Button("Loop (enter)", buttSize)) {
             update(id, snapshot, "loop", 1);
         }
+
+        if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_RETURN)) {
+            update(id, snapshot, "loop", 1);
+        }
+ 
         ImGui::SameLine();
 
-		if (ImGui::Button("Erase")) {
+		if (ImGui::Button("Erase", buttSize)) {
             update(id, snapshot, "erase", 1);
         }
+
+        if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_BACKSPACE)) {
+            update(id, snapshot, "erase", 1);
+        }
+ 
 
     }
     ImGui::EndGroup();
@@ -607,11 +624,10 @@ void GainDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImGui::TextUnformatted("Mod");
 	ImNodes::EndInputAttribute();
 
-	ImGui::PushItemWidth(120.0f);
 	auto g = snapshot.params.at("gain");
-	ImGui::SliderFloat("Gain", &g, 0., 1.);
-    update(id, snapshot, "gain", g);
-	ImGui::PopItemWidth();
+    if (ImGuiKnobs::Knob("Gain", &g, -60.0f, 30.0f, 0.1f, "%.1fdB", ImGuiKnobVariant_Wiper)) {
+        update(id, snapshot, "gain", g);
+    }
 
 	ImNodes::BeginOutputAttribute(id);
 	const float text_width = ImGui::CalcTextSize("Out").x;
