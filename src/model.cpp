@@ -8,6 +8,7 @@
 #include "envelope.h"
 #include "filter.h"
 #include "gain.h"
+#include "looper.h"
 #include "oscillator.h"
 #include "output.h"
 #include "quadmixer.h"
@@ -30,6 +31,7 @@ Model::Model()
 	m_creators[NodeType::ENVELOPE] = std::make_shared<EnvelopeNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::FILTER] = std::make_shared<FilterNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::GAIN] = std::make_shared<GainNodeCreator>(m_graph, m_cache);
+	m_creators[NodeType::LOOPER] = std::make_shared<LooperNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::OSCILLATOR] = std::make_shared<OscillatorNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::OUTPUT] = std::make_shared<OutputNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::QUAD_MIXER] = std::make_shared<MixerNodeCreator>(m_graph, m_cache);
@@ -174,6 +176,28 @@ int AudioInputNodeCreator::create()
 	auto id = m_g->insert_node(k);
 	k->params[Constant::NODE_ID] = id;
 	cacheType(id, NodeType::AUDIO_IN);
+	return id;
+}
+
+int LooperNodeCreator::create()
+{
+	auto k = std::make_shared<Looper>();
+	auto in = std::make_shared<Value>();
+	auto inid = m_g->insert_node(in);
+	auto id = m_g->insert_node(k);
+	k->params[Looper::NODE_ID] = id;
+	k->params[Looper::INPUT_ID] = inid;
+	m_g->insert_edge(id, inid);
+	cacheType(id, NodeType::LOOPER);
+	cacheType(inid, NodeType::VALUE);
+
+	for (auto& str : k->paramStrings()) {
+		cacheParam(id, str, 0.f);
+	}
+
+	cacheParam(id, "node_id", id);
+	cacheParam(id, "input_id", inid);
+	cacheString(id, "path", "");
 	return id;
 }
 

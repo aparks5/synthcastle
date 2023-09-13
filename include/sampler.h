@@ -1,5 +1,4 @@
-#ifndef SAMPLER_H_
-#define SAMPLER_H_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -78,5 +77,3 @@ private:
 	size_t m_loopPoint;
 };
 
-
-#endif // SAMPLER_H_

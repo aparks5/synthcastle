@@ -47,6 +47,7 @@ View::View()
     m_displays[NodeType::ENVELOPE] = std::make_shared<EnvelopeDisplayCommand>();
     m_displays[NodeType::FILTER] = std::make_shared<FilterDisplayCommand>();
     m_displays[NodeType::GAIN] = std::make_shared<GainDisplayCommand>();
+    m_displays[NodeType::LOOPER] = std::make_shared<LooperDisplayCommand>();
     m_displays[NodeType::OUTPUT] = std::make_shared<OutputDisplayCommand>();
     m_displays[NodeType::OSCILLATOR] = std::make_shared<OscillatorDisplayCommand>();
     m_displays[NodeType::QUAD_MIXER] = std::make_shared<MixerDisplayCommand>();
@@ -195,7 +196,7 @@ void View::nodeMenu()
     }
 
 	if (bKeyReleased) {
-		m_cachedClickPos = ImGui::GetMousePosOnOpeningCurrentPopup();
+		m_cachedClickPos = ImGui::GetMousePos();
 		m_bSetPosOfLatestNode = true;
 	}
 
@@ -233,8 +234,8 @@ void View::display()
     ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0, 0, 0, 1));
     ImGui::PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor(227, 255, 99));
     ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0, 0, 0, 1));
-
     ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0, 0, 0, 1));
+
     ImGui::Begin("S Y N T H C A S T L E", 0, ImGuiWindowFlags_NoTitleBar);
     ImGui::TextUnformatted("(right-click to add nodes)");
 
@@ -250,19 +251,19 @@ void View::display()
 
 	ImGui::PushStyleColor(ImGuiCol_Header, (ImVec4)ImColor(227, 255, 99));
 	ImGui::PushStyleColor(ImGuiCol_PopupBg, (ImVec4)ImColor(227, 255, 99));
-
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8.f, 8.f));
-	if (!ImGui::IsAnyItemHovered() && open_popup) {
-		ImGui::OpenPopup("add node");
-	}
+    if (!ImGui::IsAnyItemHovered() && open_popup) {
+        ImGui::OpenPopup("add node");
+    }
 
 	if (ImGui::BeginPopup("add node")) {
-		const ImVec2 click_pos = ImGui::GetMousePosOnOpeningCurrentPopup();
-        nodeMenu();
-        ImGui::EndPopup();
+        const ImVec2 click_pos = ImGui::GetMousePos(); // GetMousePosOnOpeningCurrentPopup();
+		nodeMenu();
+		ImGui::EndPopup();
 	}
 
 	ImGui::PopStyleColor(2);
+    ImGui::PopStyleVar();
     }
 
     const ViewBag viewbag = m_listener->snapshot();
@@ -361,6 +362,7 @@ void OutputDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
     if (startIdx < 0) {
         startIdx = 44100 - 1 - (nsamps - audio.m_writeIdx);
+        startIdx = (startIdx >= 0) ? startIdx : 0;
     }
 
     //// 1/60 * 44100 = the number of samples we can show per frame?
@@ -473,7 +475,8 @@ void DistortDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImGui::TextUnformatted("Distort");
 	ImNodes::EndNodeTitleBar();
 
-    ImGui::PushItemWidth(80);
+    float width = 80.f;
+    ImGui::PushItemWidth(width);
 
     ImGui::BeginGroup();
     {
@@ -519,10 +522,11 @@ void DistortDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	}
     ImGui::EndGroup();
 
-    ImGui::SameLine();
     ImGui::BeginGroup();
     {
         ImNodes::BeginOutputAttribute(id);
+		const float text_width = ImGui::CalcTextSize("Out").x;
+		ImGui::Indent(width + ImGui::CalcTextSize("Out").x + text_width);
         ImGui::TextUnformatted("Out");
         ImNodes::EndOutputAttribute();
     }
@@ -531,6 +535,56 @@ void DistortDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImNodes::EndNode();
     ImNodes::PopColorStyle();
 }
+
+void LooperDisplayCommand::display(int id, const NodeSnapshot& snapshot)
+{
+	auto params = snapshot.params;
+
+    ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(227, 105, 241, 255));
+	ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(227, 105, 241, 255));
+	ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(227, 105, 241, 255));
+
+	ImNodes::BeginNode(id);
+	ImNodes::BeginNodeTitleBar();
+	ImGui::TextUnformatted("Looper");
+	ImNodes::EndNodeTitleBar();
+
+    ImGui::BeginGroup();
+    {
+        ImNodes::BeginInputAttribute(params["input_id"]);
+        ImGui::TextUnformatted("In");
+        ImNodes::EndInputAttribute();
+    }
+    ImGui::EndGroup();
+
+    ImGui::BeginGroup();
+    {
+        if (ImGui::Button("Stop")) {
+            update(id, snapshot, "stop", 1);
+        }
+        ImGui::SameLine();
+
+        if (ImGui::Button("Loop")) {
+            update(id, snapshot, "loop", 1);
+        }
+        ImGui::SameLine();
+
+		if (ImGui::Button("Erase")) {
+            update(id, snapshot, "erase", 1);
+        }
+
+    }
+    ImGui::EndGroup();
+
+	ImNodes::BeginOutputAttribute(id);
+	const float text_width = ImGui::CalcTextSize("Out").x;
+	ImGui::Indent(120.f + ImGui::CalcTextSize("Out").x - text_width);
+	ImGui::TextUnformatted("Out");
+	ImNodes::EndOutputAttribute();
+	ImNodes::EndNode();
+    ImNodes::PopColorStyle();
+}
+
 
 void GainDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 {
@@ -953,9 +1007,10 @@ void MixerDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     ImGui::SameLine();
 }
     ImGui::EndGroup();
-    ImGui::SameLine();
 
     ImNodes::BeginOutputAttribute(id);
+	const float text_width = ImGui::CalcTextSize("Out").x;
+	ImGui::Indent(120.f + ImGui::CalcTextSize("Out").x + text_width);
     ImGui::TextUnformatted("Mix");
     ImNodes::EndOutputAttribute();
 
@@ -1038,6 +1093,8 @@ void SamplerDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     }
 
     ImNodes::BeginOutputAttribute(id);
+	const float text_width = ImGui::CalcTextSize("Out").x;
+	ImGui::Indent(120.f + ImGui::CalcTextSize("Out").x - text_width);
     ImGui::TextUnformatted("Out");
     ImNodes::EndOutputAttribute();
 

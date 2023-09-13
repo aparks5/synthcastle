@@ -1,7 +1,7 @@
 
 #include <thread>
 
-#define BLOCK_SIZE (64)
+#define BLOCK_SIZE (256)
 
 #include "model.h"
 #include "view.h"
@@ -112,6 +112,13 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
             value_stack.pop();
             pNode->params[Envelope::TRIG] = trig;
             value_stack.push(pNode->process(in));
+        }
+        break;
+        case NodeType::LOOPER:
+        {
+            auto val = value_stack.top();
+            value_stack.pop();
+            value_stack.push(pNode->process(val));
         }
         break;
         case NodeType::SEQ:

@@ -101,6 +101,16 @@ public:
 	int create() override;
 };
 
+class LooperNodeCreator : public NodeCreationCommand
+{
+public:
+	LooperNodeCreator(std::shared_ptr<NodeGraph> g, ViewBag& v)
+		: NodeCreationCommand(g, v)
+	{}
+	virtual ~LooperNodeCreator() {};
+	int create() override;
+};
+
 class OscillatorNodeCreator : public NodeCreationCommand
 {
 public:
@@ -201,6 +211,7 @@ private:
 		{"envelope", NodeType::ENVELOPE},
 		{"filter", NodeType::FILTER},
 		{"gain", NodeType::GAIN},
+		{"looper", NodeType::LOOPER},
 		{"mixer", NodeType::QUAD_MIXER},
 		{"oscillator", NodeType::OSCILLATOR},
 		{"output", NodeType::OUTPUT},

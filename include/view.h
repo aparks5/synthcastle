@@ -107,6 +107,13 @@ public:
 	void display(int id, const NodeSnapshot& snapshot) override;
 };
 
+class LooperDisplayCommand : public NodeDisplayCommand
+{
+public:
+	LooperDisplayCommand() {}
+	void display(int id, const NodeSnapshot& snapshot) override;
+};
+
 class MixerDisplayCommand : public NodeDisplayCommand
 {
 public:
