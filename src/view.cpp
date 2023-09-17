@@ -652,16 +652,80 @@ void ConstantDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     ImGui::PopStyleColor();
     ImNodes::PopColorStyle();
 
-    auto v = snapshot.params.at("value");
-	ImGui::DragFloat("Value", &v, 0.1f, 0, 1.);
-    update(id, snapshot, "value", v);
+	ImGui::BeginGroup(); 
+    {
+        ImNodes::BeginInputAttribute(snapshot.params.at("input1_id"));
+        ImGui::TextUnformatted("In 1");
+        ImNodes::EndInputAttribute();
 
-	ImNodes::BeginOutputAttribute(id);
-    const float text_width = ImGui::CalcTextSize("Out").x;
-    ImGui::Indent(120.f + ImGui::CalcTextSize("Out").x - text_width);
-	ImGui::TextUnformatted("Out");
-	ImNodes::EndOutputAttribute();
+        ImNodes::BeginInputAttribute(snapshot.params.at("input2_id"));
+        ImGui::TextUnformatted("In 2");
+        ImNodes::EndInputAttribute();
 
+        ImNodes::BeginInputAttribute(snapshot.params.at("input3_id"));
+        ImGui::TextUnformatted("In 3");
+        ImNodes::EndInputAttribute();
+
+        ImNodes::BeginInputAttribute(snapshot.params.at("input4_id"));
+        ImGui::TextUnformatted("In 4");
+        ImNodes::EndInputAttribute();
+
+    }
+    ImGui::EndGroup();
+
+    {
+        std::string p = "value1";
+        std::string title = "V1";
+        auto v = snapshot.params.at(p);
+        ImGui::DragFloat(title.c_str(), &v, 0.1f, 0, 1.);
+        update(id, snapshot, p, v);
+    }
+
+    {
+        std::string p = "value2";
+        std::string title = "V2";
+        auto v = snapshot.params.at(p);
+        ImGui::DragFloat(title.c_str(), &v, 0.1f, 0, 1.);
+        update(id, snapshot, p, v);
+    }
+
+    {
+        std::string p = "value3";
+        std::string title = "V3";
+        auto v = snapshot.params.at(p);
+        ImGui::DragFloat(title.c_str(), &v, 0.1f, 0, 1.);
+        update(id, snapshot, p, v);
+    }
+
+    {
+        std::string p = "value4";
+        std::string title = "V4";
+        auto v = snapshot.params.at(p);
+        ImGui::DragFloat(title.c_str(), &v, 0.1f, 0, 1.);
+        update(id, snapshot, p, v);
+    }
+
+    ImGui::BeginGroup(); 
+    {
+        ImNodes::BeginOutputAttribute(snapshot.params.at("output1_id"));
+        ImGui::TextUnformatted("Out 1");
+        ImNodes::EndOutputAttribute();
+
+        ImNodes::BeginOutputAttribute(snapshot.params.at("output2_id"));
+        ImGui::TextUnformatted("Out 2");
+        ImNodes::EndOutputAttribute();
+
+        ImNodes::BeginOutputAttribute(snapshot.params.at("output3_id"));
+        ImGui::TextUnformatted("Out 3");
+        ImNodes::EndOutputAttribute();
+
+        ImNodes::BeginOutputAttribute(snapshot.params.at("output4_id"));
+        ImGui::TextUnformatted("Out 4");
+        ImNodes::EndOutputAttribute();
+    }
+    ImGui::EndGroup();
+
+	
 	ImNodes::EndNode();
 	ImGui::PopItemWidth();
 }

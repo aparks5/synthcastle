@@ -34,6 +34,7 @@ size_t NodeGraph::num_edges_from_node(const int id) const
 int NodeGraph::insert_node(const std::shared_ptr<Node>& node)
 {
 	const int id = current_id_++;
+	printf("INSERTING NODE id (%d) type (%d)\n", id, node->type);
 	assert(!nodes_.contains(id));
 	nodes_.insert(id, node);
 	edges_from_node_.insert(id, 0);

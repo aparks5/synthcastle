@@ -8,6 +8,7 @@
 #include "controller.h"
 
 #include "seq.h"
+#include "constant.h"
 #include "sampler.h"
 #include "trig.h"
 #include "oscillator.h"
@@ -56,6 +57,7 @@ struct AudioData
 
 static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeGraph> graph)
 {
+
     if (!graph.get()) {
         return { 0,0 };
     }
@@ -70,11 +72,28 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
 	dfs_traverse(graph, [&postorder](const int node_id) -> void { postorder.push(node_id); });
 
 	std::stack<float> value_stack;
+    // traverse all nodes and say none of them have been visited yet
+    // reset FLAGS before traversal
+    // i don't want to have to do two traversals
+	//std::stack<int> postorder;
+	dfs_traverse(graph, [&postorder](const int node_id) -> void { postorder.push(node_id); });
+
+    printf("-----------------\n");
+    printf("NEXT TRAVERSAL \n");
+    printf("-----------------\n");
+    // make a hashmap of ids and count visited
+    std::unordered_map<int, int> idVisited;
+// check stack size?    
+    std::vector<float> cached;
+    cached.reserve(16);
 	while (!postorder.empty())
 	{
 		const int id = postorder.top();
+
+        idVisited[id]++;
 		postorder.pop();
 		const auto& pNode = graph->node(id);
+        printf("NODE ID: %d\n", id);
 
 		switch (pNode->type) {
 		case NodeType::AUDIO_IN:
@@ -131,7 +150,6 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
             auto reset = value_stack.top();
             value_stack.pop();
             pNode->params[Seq::RESET] = reset;
-
             value_stack.push(pNode->process());
         }
         break;
@@ -171,12 +189,6 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
 			value_stack.push(pNode->process());
 		}
 		break;
-        //case NodeType::MIDI_IN:
-        //{
-        //    // push all voices to stack
-        //    value_stack.push(pNode->process());
-        //}
-        //break;
 		case NodeType::OSCILLATOR:
 		{
 			pNode->update();
@@ -205,10 +217,44 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
 			value_stack.push(temp);
 		}
 		break;
+        case NodeType::RELAY:
+        {
+            // if there is a Relay it's attached to a process node
+            // push its index to the stack to obtain the output?
+            // just pull the value-th item from the cache
+			value_stack.push(cached[pNode->value]);
+        }
+        break;
         case NodeType::CONSTANT:
         {
-            auto val = pNode->process();
-            value_stack.push(val);
+            // pop inputs in input order
+            // only consume when evaluating for the first time
+            // we expect a relay
+
+// i had an extra value somewhere in the output node...
+            // un fuckking believable
+			auto in1 = value_stack.top();
+			value_stack.pop();
+			auto in2 = value_stack.top();
+			value_stack.pop();
+			auto in3 = value_stack.top();
+			value_stack.pop();
+			auto in4 = value_stack.top();
+			value_stack.pop();
+
+			if (idVisited[id] == 1) {
+				printf("process constant, no out\n");
+				pNode->params[Constant::INPUT1] = in1;
+				pNode->params[Constant::INPUT2] = in2;
+				pNode->params[Constant::INPUT3] = in3;
+				pNode->params[Constant::INPUT4] = in4;
+				pNode->process();
+                cached.push_back(pNode->params[Constant::VALUE1]);
+                cached.push_back(pNode->params[Constant::VALUE2]);
+                cached.push_back(pNode->params[Constant::VALUE3]);
+                cached.push_back(pNode->params[Constant::VALUE4]);
+                break;
+			}
         }
         break;
 		case NodeType::DISTORT:
@@ -249,6 +295,7 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
             // at this node. it means the node's input pin has not been connected to anything and
             // the value comes from the node's ui.
 			if (graph->num_edges_from_node(id) == 0ull) {
+                printf("push value node\n");
 				value_stack.push(pNode->value);
 			}
 		}
@@ -267,12 +314,12 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
                 if (value_stack.empty()) {
                     return std::make_tuple(left, 0.);
                 }
-				else {
+			/*	else {
                     float right = value_stack.top();
                     pNode->params[Output::DISPLAY_R] = right;
                     value_stack.pop(); 
 					return std::make_tuple(left, right);
-                }
+                }*/
 			}
 		}
 		break;
@@ -321,12 +368,8 @@ static int paCallbackMethod(const void* inputBuffer, void* outputBuffer,
     // this should never be resized except at init time to accommodate user driven buffer size
     data->controller->sendBuffer(data->callbackBuffer);
 
-
     return paContinue;
 }
-
-
-
 
 static void paStreamFinishedMethod()
 {
