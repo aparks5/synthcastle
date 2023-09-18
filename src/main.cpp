@@ -78,9 +78,6 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
 	//std::stack<int> postorder;
 	dfs_traverse(graph, [&postorder](const int node_id) -> void { postorder.push(node_id); });
 
-    printf("-----------------\n");
-    printf("NEXT TRAVERSAL \n");
-    printf("-----------------\n");
     // make a hashmap of ids and count visited
     std::unordered_map<int, int> idVisited;
 // check stack size?    
@@ -93,7 +90,6 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
         idVisited[id]++;
 		postorder.pop();
 		const auto& pNode = graph->node(id);
-        printf("NODE ID: %d\n", id);
 
 		switch (pNode->type) {
 		case NodeType::AUDIO_IN:
@@ -243,7 +239,7 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
 			value_stack.pop();
 
 			if (idVisited[id] == 1) {
-				printf("process constant, no out\n");
+                cached.clear();
 				pNode->params[Constant::INPUT1] = in1;
 				pNode->params[Constant::INPUT2] = in2;
 				pNode->params[Constant::INPUT3] = in3;
@@ -284,9 +280,20 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
 			value_stack.pop();
 			auto mod = value_stack.top();
 			value_stack.pop();
-			pNode->params[Gain::GAINMOD] = abs(mod);
-			auto val = pNode->process(in);
-			value_stack.push(val);
+
+			auto panmod = value_stack.top();
+			value_stack.pop();
+
+			if (idVisited[id] == 1) {
+                cached.clear();
+				pNode->params[Gain::INPUT] = in;
+				pNode->params[Gain::GAINMOD] = abs(mod);
+				pNode->params[Gain::PANMOD] = abs(panmod);
+				pNode->process();
+                cached.push_back(pNode->params[Gain::LEFTOUT]);
+                cached.push_back(pNode->params[Gain::RIGHTOUT]);
+                break;
+			}
 		}
 		break;
 		case NodeType::VALUE:
@@ -295,7 +302,6 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
             // at this node. it means the node's input pin has not been connected to anything and
             // the value comes from the node's ui.
 			if (graph->num_edges_from_node(id) == 0ull) {
-                printf("push value node\n");
 				value_stack.push(pNode->value);
 			}
 		}
@@ -309,17 +315,15 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
 				float left = value_stack.top();
 				value_stack.pop(); 
 				pNode->params[Output::DISPLAY_L] = left;
-				// hack for now, mono output, two outputs triggers process() calls twice
-				return std::make_tuple(left, left);
                 if (value_stack.empty()) {
                     return std::make_tuple(left, 0.);
                 }
-			/*	else {
+				else {
                     float right = value_stack.top();
                     pNode->params[Output::DISPLAY_R] = right;
                     value_stack.pop(); 
 					return std::make_tuple(left, right);
-                }*/
+                }
 			}
 		}
 		break;

@@ -347,9 +347,18 @@ void OutputDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImNodes::EndNodeTitleBar();
     ImNodes::PopColorStyle();
 
-    ImNodes::BeginInputAttribute(snapshot.params.at("left_id"));
-    ImGui::TextUnformatted("Output");
-    ImNodes::EndInputAttribute();
+    ImGui::BeginGroup();
+    {
+        ImNodes::BeginInputAttribute(snapshot.params.at("left_id"));
+        ImGui::TextUnformatted("Left Output");
+        ImNodes::EndInputAttribute();
+
+        ImNodes::BeginInputAttribute(snapshot.params.at("right_id"));
+        ImGui::TextUnformatted("Right Output");
+        ImNodes::EndInputAttribute();
+    }
+    ImGui::EndGroup();
+
 
     static RollingBuffer rdata1;
     auto audio = m_listener->buffer();
@@ -383,8 +392,8 @@ void OutputDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     ImGui::Checkbox("Mute", &bMute);
     update(id, snapshot, "mute", bMute ? 1.f : 0.f);
 
-    static float history = 10.0f;
-    ImGui::SliderFloat("History", &history, 1, 10, "%.1f seconds");
+    static float history = 3.0f;
+    ImGui::SliderFloat("History", &history, 1, 3, "%.1f seconds");
     rdata1.Span = history;
 
     static bool showplot = true;
@@ -393,7 +402,9 @@ void OutputDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     static ImPlotAxisFlags flags = ImPlotAxisFlags_NoTickLabels;
 
     if (showplot) {
-        if (ImPlot::BeginPlot("##Rolling", ImVec2(600,300), ImPlotFlags_NoLegend)) {
+        // since there are only 500 pixels wide we should only bother plotting 500 points
+        // we shouldn't even store everything in the plot buffer and wait between storing samples
+        if (ImPlot::BeginPlot("##Rolling", ImVec2(500,200), ImPlotFlags_NoLegend)) {
             ImPlot::SetupAxes(nullptr, nullptr, flags, flags);
             ImPlot::SetupAxisLimits(ImAxis_X1, 0, history, ImGuiCond_Always); // 1 or 'history'
             ImPlot::SetupAxisLimits(ImAxis_Y1, -1, 1);
@@ -603,6 +614,7 @@ void LooperDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 }
 
 
+// change to Mix node
 void GainDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 {
 	auto params = snapshot.params;
@@ -621,19 +633,51 @@ void GainDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImNodes::EndInputAttribute();
 
 	ImNodes::BeginInputAttribute(params["gainmod_id"]);
-	ImGui::TextUnformatted("Mod");
+	ImGui::TextUnformatted("Gain Mod");
 	ImNodes::EndInputAttribute();
 
-	auto g = snapshot.params.at("gain");
-    if (ImGuiKnobs::Knob("Gain", &g, -60.0f, 30.0f, 0.1f, "%.1fdB", ImGuiKnobVariant_Wiper)) {
-        update(id, snapshot, "gain", g);
+	ImNodes::BeginInputAttribute(params["panmod_id"]);
+	ImGui::TextUnformatted("Pan Mod");
+	ImNodes::EndInputAttribute();
+
+
+    {
+        auto g = snapshot.params.at("gain");
+        if (ImGuiKnobs::Knob("Gain", &g, -60.0f, 30.0f, 0.1f, "%.1fdB", ImGuiKnobVariant_Wiper)) {
+            update(id, snapshot, "gain", g);
+        }
     }
 
-	ImNodes::BeginOutputAttribute(id);
-	const float text_width = ImGui::CalcTextSize("Out").x;
-	ImGui::Indent(120.f + ImGui::CalcTextSize("Out").x - text_width);
-	ImGui::TextUnformatted("Out");
+    {
+	  auto g = snapshot.params.at("gainmod_depth");
+		if (ImGuiKnobs::Knob("Gain Mod Depth", &g, 0.f, 1.f, 0.1f, "%.1fdB", ImGuiKnobVariant_Wiper)) {
+            update(id, snapshot, "gainmod_depth", g);
+        }
+    }
+
+    {
+        auto p = snapshot.params.at("pan");
+        if (ImGuiKnobs::Knob("Pan", &p, -1.f, 1.0f, 0.1f, "%.1f", ImGuiKnobVariant_Wiper)) {
+            update(id, snapshot, "pan", p);
+        }
+    }
+
+    {
+        auto d = snapshot.params.at("panmod_depth");
+        if (ImGuiKnobs::Knob("Pan Mod Depth", &d, 0.f, 1.0f, 0.1f, "%.1f", ImGuiKnobVariant_Wiper)) {
+            update(id, snapshot, "panmod_depth", d);
+        }
+    }
+
+
+	ImNodes::BeginOutputAttribute(params["left_id"]);
+	ImGui::TextUnformatted("Left");
 	ImNodes::EndOutputAttribute();
+
+	ImNodes::BeginOutputAttribute(params["right_id"]);
+	ImGui::TextUnformatted("Right");
+	ImNodes::EndOutputAttribute();
+
 	ImNodes::EndNode();
     ImNodes::PopColorStyle();
 }

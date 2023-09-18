@@ -80,7 +80,7 @@ float Voice::operator()()
 
 	// OUTPUTGAIN
 	gain.setGaindB(-5);
-	output = gain.process(output);
+	//output = gain.process(output);
 
 	return output;
 }
@@ -118,7 +118,7 @@ void Voice::oscillate(float& output)
 			osc2out = m_square2.process();
 			break;
 		}
-		output += 0.707 * m_osc2gain.process(osc2out);
+		//output += 0.707 * m_osc2gain.process(osc2out);
 	}
 
 }

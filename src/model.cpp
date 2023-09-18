@@ -386,8 +386,6 @@ int SeqNodeCreator::create()
 	return id;
 }
 
-
-
 int OscillatorNodeCreator::create()
 {
 	auto oscNode = std::make_shared<Oscillator>();
@@ -428,21 +426,21 @@ int OutputNodeCreator::create()
 {
 	auto outputNode = std::make_shared<Output>();
 	auto leftNode = std::make_shared<Value>(0.f);
-	//auto rightNode = std::make_shared<Value>(0.f);
-	//auto rightNodeId = m_g->insert_node(rightNode);
+	auto rightNode = std::make_shared<Value>(0.f);
+	auto rightNodeId = m_g->insert_node(rightNode);
 	auto leftNodeId = m_g->insert_node(leftNode);
 	auto outputId = m_g->insert_node(outputNode);
 	m_g->setRoot(outputId);
-	//m_g->insert_edge(outputId, rightNodeId);
+	m_g->insert_edge(outputId, rightNodeId);
 	m_g->insert_edge(outputId, leftNodeId);
 	outputNode->params[Output::NODE_ID] = outputId;
-	//outputNode->params[Output::INPUT_R_ID] = rightNodeId;
+	outputNode->params[Output::INPUT_R_ID] = rightNodeId;
 	outputNode->params[Output::INPUT_L_ID] = leftNodeId;
 	cacheType(outputId, NodeType::OUTPUT);
 	cacheType(leftNodeId, NodeType::VALUE);
-	//cacheType(rightNodeId, NodeType::VALUE);
+	cacheType(rightNodeId, NodeType::VALUE);
 	cacheParam(outputId, "left_id", leftNodeId);
-	//cacheParam(outputId, "right_id", rightNodeId);
+	cacheParam(outputId, "right_id", rightNodeId);
 	cacheParam(outputId, "display_left", 0.f);
 	cacheParam(outputId, "display_right", 0.f);
 	cacheParam(outputId, "mute", 0.f);
@@ -452,23 +450,55 @@ int OutputNodeCreator::create()
 
 int GainNodeCreator::create()
 {
+	// process
 	auto gainNode = std::make_shared<Gain>();
+	// inputs
 	auto gainIn = std::make_shared<Value>(0.f);
 	auto gainMod = std::make_shared<Value>(1.f);
+	auto panMod = std::make_shared<Value>(0.f);
+	// outputs
+	auto leftNode = std::make_shared<Relay>(0);
+	auto rightNode = std::make_shared<Relay>(1);
+	// insert inputs -- reverse order
+	auto panModId = m_g->insert_node(panMod);
 	auto gainModId = m_g->insert_node(gainMod);
 	auto gainInId = m_g->insert_node(gainIn);
+	// insert process
 	auto gainId = m_g->insert_node(gainNode);
+	// insert outputs
+	auto leftId = m_g->insert_node(leftNode);
+	auto rightId = m_g->insert_node(rightNode);
+	// assign node ids
 	gainNode->params[Gain::NODE_ID] = gainId;
 	gainNode->params[Gain::INPUT_ID] = gainInId;
 	gainNode->params[Gain::GAINMOD_ID] = gainModId;
+	gainNode->params[Gain::LEFT_ID] = leftId;
+	gainNode->params[Gain::RIGHT_ID] = rightId;
+	// create links
+	m_g->insert_edge(gainId, panModId);
 	m_g->insert_edge(gainId, gainModId);
 	m_g->insert_edge(gainId, gainInId);
+	m_g->insert_edge(leftId, gainId);
+	m_g->insert_edge(rightId, gainId);
+	// cache types
 	cacheType(gainId, NodeType::GAIN);
+	cacheType(panModId, NodeType::VALUE);
 	cacheType(gainInId, NodeType::VALUE);
 	cacheType(gainModId, NodeType::VALUE);
+	cacheType(leftId, NodeType::RELAY);
+	cacheType(rightId, NodeType::RELAY);
+	// cache params
 	cacheParam(gainId, "input_id", gainInId);
 	cacheParam(gainId, "gainmod_id", gainModId);
+	cacheParam(gainId, "left_id", leftId);
+	cacheParam(gainId, "right_id", rightId);
+	cacheParam(gainId, "panmod_id", panModId);
 	cacheParam(gainId, "gain", 0.f);
+	cacheParam(gainId, "gainmod_depth", 0.f);
+	cacheParam(gainId, "panmod_depth", 0.f);
+	cacheParam(gainId, "pan", 0.f);
+	cacheParam(gainId, "leftout", 0.f);
+	cacheParam(gainId, "rightout", 0.f);
 
 	return gainId;
 }

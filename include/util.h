@@ -7,6 +7,7 @@
 #include <iostream>
 #include <sstream>
 
+
 static float semitoneToRatio(float semitone)
 {
     semitone = (semitone < -24) ? -24 : semitone;
