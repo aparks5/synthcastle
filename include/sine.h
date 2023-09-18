@@ -2,22 +2,21 @@
 #ifndef SINE_H_
 #define SINE_H_
 
-#include "oscillator.h"
+#include "waveform.h"
 
-constexpr auto TABLE_SIZE = 2048;
+constexpr size_t TABLE_SIZE = 4096;
 
-class Sine : public Oscillator<float>
+class Sine : public WaveForm
 {
 public:
-    Sine(float fs);
-    void freq(float frequency) override;
-    float operator()() override;
-    float operator()(float in) override { return 0.f; }
+    Sine(int sampleRate);
+    float process() override;
+	void update(float freq) override;
 
 private:
 	float m_sine[TABLE_SIZE];
-
 };
+
 
 #endif // SINE_H_
 

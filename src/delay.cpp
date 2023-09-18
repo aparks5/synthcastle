@@ -3,16 +3,28 @@
 
 #include <vector>
 
-Delay::Delay(float sampleRate, float maxDelaySeconds)
-	: Module(sampleRate)
+Delay::Delay()
+	: Node(DELAY, 0, NUM_PARAMS)
+	, m_sampleRate(44100)
+	, m_maxDelaySeconds(3.0)
 	, m_delayMs(0)
 	, m_delaySamps(0)
-	, m_maxDelaySamps(maxDelaySeconds*sampleRate)
+	, m_maxDelaySamps(m_maxDelaySeconds*m_sampleRate)
 	, m_writeIdx(0)
 	, m_readIdx(0)
 	, m_feedbackRatio(0.f)
 	, m_feedbackOut(0.f)
+	, m_lfo(m_sampleRate)
+	, m_hp(m_sampleRate)
+	, m_lp(m_sampleRate)
+    , m_cacheLFORateHz(0.1)
+	, m_cacheLFODepthMs(2)
+	, m_cacheHPCutoffHz(1000)
+	, m_cacheLPCutoffHz(0.7)
 {
+	m_hp.update(m_cacheHPCutoffHz);
+	m_lp.update(m_cacheLPCutoffHz);
+	m_lfo.update(m_cacheLFORateHz); // todo ^ all the above should be user assignable
 	// allocate circular buffer
 	m_circBuff.resize(static_cast<size_t>(m_maxDelaySamps));
 	std::fill(m_circBuff.begin(), m_circBuff.end(), 0.f);
@@ -33,29 +45,39 @@ float Delay::tap(float ms)
 
 }
 
-void Delay::update(float delayMs, float feedbackRatio)
-{
-	m_delayMs = delayMs;
-	m_feedbackRatio = feedbackRatio;
-}
-
 void Delay::reset()
 {
 	std::fill(m_circBuff.begin(), m_circBuff.end(), 0.f);
 }
 
-void Delay::write(float val)
+float Delay::process(float in) 
 {
-	m_circBuff[m_writeIdx] = val + (m_feedbackRatio * m_feedbackOut);
 
-	m_writeIdx++;
-	if (m_writeIdx > m_bufSize) {
-		m_writeIdx = 0;
+	// update params if needed
+	if (params[MODRATE_HZ] != m_cacheLFORateHz) {
+		m_cacheLFORateHz = params[MODRATE_HZ];
+		m_lfo.update(m_cacheLFORateHz);
 	}
-}
 
-float Delay::operator()()
-{
+	if (params[MODDEPTH_MS] != m_cacheLFODepthMs) {
+		m_cacheLFODepthMs = params[MODDEPTH_MS];
+	}
+
+	if (params[FEEDBACK_HIGHPASS_HZ] != m_cacheHPCutoffHz) {
+		m_cacheHPCutoffHz = params[FEEDBACK_HIGHPASS_HZ];
+		m_hp.update(m_cacheHPCutoffHz);
+	}
+
+	if (params[FEEDBACK_LOWPASS_HZ] != m_cacheLPCutoffHz) {
+		m_cacheLPCutoffHz = params[FEEDBACK_LOWPASS_HZ];
+		m_lp.update(m_cacheLPCutoffHz);
+	}
+
+	m_delayMs = params[DELAY_MS] + (m_lfo.process() * m_cacheLFODepthMs); // < delay time depth
+	m_feedbackRatio = params[FEEDBACK_RATIO];
+	float drywet = params[DRYWET_RATIO];
+
+	// read from buffer
 
 	// find delay index and separate fractional delay for interpolation
 	float fractionalDelay = (m_delayMs / 1000.f * m_sampleRate) - (int)(m_delayMs / 1000.f * m_sampleRate);
@@ -74,6 +96,7 @@ float Delay::operator()()
 
 	// for 0 delay, interpolate the input with the prev output
 	auto yn = 0.f;
+
 	if ((m_writeIdx == m_readIdx) && integerDelay < 1.) {
 		yn = m_circBuff[m_writeIdx];
 	}
@@ -91,5 +114,24 @@ float Delay::operator()()
 
 	float out = linearInterpolate(yn, yn1, fractionalDelay);
 	m_feedbackOut = out;
-	return out;
+
+
+	// todo: add switch-case for digital/tape/mod/reverse
+	float dry = in;
+	in = m_hp(in);
+	in = m_lp(in);
+	in = tanh(in);
+	// todo: modulate delay time based on character or params
+
+
+	// lastly, write to buffer
+	m_circBuff[m_writeIdx] = in + (m_feedbackRatio * m_feedbackOut);
+
+	m_writeIdx++;
+	if (m_writeIdx > m_bufSize) {
+		m_writeIdx = 0;
+	}
+
+
+	return (0.707 * ((drywet * dry) + ((1 - drywet) * out)));
 }

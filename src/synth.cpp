@@ -4,10 +4,10 @@
 
 Synth::Synth(size_t fs)
 	: Module(fs)
-	, chorus(fs, 0.2, 0.8, 0.0)
+	, chorus(fs, 0.8, 0.0)
 	, delay(fs)
-	, delay2(fs, 1.f)
-	, delay3(fs, 1.f)
+	, delay2()
+	, delay3()
 	, bitcrush(fs)
 	, reverb(fs)
 	, pitch(fs)
@@ -20,7 +20,7 @@ Synth::Synth(size_t fs)
 		m_voices.push_back(v);
 	}
 
-	delay.update(333);
+	//delay.update(333);
 
 }
 
@@ -69,7 +69,7 @@ void Synth::update(VoiceParams params)
 void Synth::update(FxParams fxParams)
 {
 	m_fxParams = fxParams;
-	delay.update(m_fxParams.delay1time);
+	//delay.update(m_fxParams.delay1time);
 }
 
 void Synth::blockRateUpdate()
@@ -105,8 +105,7 @@ float Synth::operator()()
 		fxCount++;
 	}
 	if (m_fxParams.bEnableDelay2) {
-		output += delay2();
-		delay2.write(output);
+		output += delay2.process(output);
 		fxCount++;
 	}
 	if (m_fxParams.bEnableReverb) {

@@ -1,33 +1,48 @@
 #include "gain.h"
+#include "util.h"
 #include "math.h"
+#include "constants.h"
 
-Gain::Gain(size_t sampleRate)
-	: Module(sampleRate)
-	, m_fgain(1)
+Gain::Gain()
+    : Node(NodeType::GAIN, 1., NUM_PARAMS)
 {
+	params[Gain::GAIN] = 1.f;
+}
+
+int Gain::lookupParam(std::string str) {
+	return m_lookup[str];
 }
 
 void Gain::setGaindB(float gaindB)
 {
-	m_fgain = dBtoFloat(gaindB);
+	m_gain = dBtoFloat(gaindB);
 }
 
-void Gain::setGainf(float fgain)
+float Gain::process()
 {
-	m_fgain = fgain;
-}
+	float in = params[Gain::INPUT];
 
-int Gain::floatTodB(float f) const
-{
-	return 20 * log10(f);
-}
+	auto g = dBtoFloat(params[Gain::GAIN]);
+	in *= g * params[Gain::GAINMOD];
 
-float Gain::dBtoFloat(int db) const
-{
-	return pow(10, db / 20.f);
-}
+	auto p = params[Gain::PAN];
 
-float Gain::operator()(float in)
-{
-	return in * m_fgain;
+	if (params[Gain::PANMOD] != 0) {
+		p *= params[Gain::PANMOD];
+		if (params[Gain::PANMOD_DEPTH] != 0) {
+			p *= params[Gain::PANMOD_DEPTH];
+		}
+	}
+
+	float temp = M_PI * 0.25 * p;
+
+    float scale = 0.7071; // ~= sqrt(2)/2
+	float rightPanGain = scale * (cos(temp) + sin(temp));
+	float leftPanGain = scale * (cos(temp) - sin(temp));
+
+	params[Gain::LEFTOUT] = in * leftPanGain;
+	params[Gain::RIGHTOUT] = in * rightPanGain;
+
+	return 0;
+
 }

@@ -2,6 +2,7 @@
 #define PITCHSHIFT_TIMEDOMAIN_H_
 
 #include "delay.h"
+#include "module.h"
 #include "saw.h"
 #include "envelope.h"
 #include "sine.h"

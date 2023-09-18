@@ -1,2 +1,4 @@
 .vs/
 out/
+vcpkg/
+visual_studio/

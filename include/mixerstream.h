@@ -8,7 +8,6 @@
 #include <string>
 #include "synth.h"
 #include "sampler.h"
-#include "granular.h"
 #include "fdn.h"
 #include "platereverb.h"
 #include "mixer.h"
@@ -49,7 +48,6 @@ public:
         m_bLogMidi = false;
     }
 
-
 private:
     /// @brief The instance callback, where we have access to every method/variable in object of class MixerStream */
 	int paCallbackMethod(const void* inputBuffer, void* outputBuffer,
@@ -80,11 +78,10 @@ private:
     Mixer m_mixer;
     Synth m_synth;
     Synth m_synth2;
-    Sampler m_kick;
-    Sampler m_hat;
-    Sampler m_clap;
-    Sampler m_snare;
-    Granular m_granular;
+    //Sampler m_kick;
+    //Sampler m_hat;
+    //Sampler m_clap;
+    //Sampler m_snare;
     FeedbackDelayNetwork m_fdn;
     PlateReverb m_plate;
     bool m_bLoop;

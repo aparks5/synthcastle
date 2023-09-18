@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\acous\Documents\GitHub\synthcastle\build\CMakeFiles\60826857bd070c30ba01f90fbe735353\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{03DB2BE2-F894-37EB-809E-746B9B905C4D}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

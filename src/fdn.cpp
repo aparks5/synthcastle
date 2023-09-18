@@ -9,9 +9,9 @@ FeedbackDelayNetwork::FeedbackDelayNetwork(size_t order)
 	}
 
 	for (size_t idx = 0; idx < order; idx++) {
-		Delay delay(SAMPLE_RATE, 1.f);
+		Delay delay;
 		m_delays.push_back(delay);
-		m_delays[idx].update(m_primeTimes[idx], 0.0f); // feedback comes from write()
+		//m_delays[idx].update(m_primeTimes[idx], 0.0f); // feedback comes from write()
 		m_delayOutputs.push_back(0.f);
 		m_lowpassDelayElements[idx] = 0.f;
 	}
@@ -35,9 +35,7 @@ float FeedbackDelayNetwork::operator()(float in)
 		out += accum;
 		accum += in;
 
-		m_lowpassDelayElements[idx] = (m_delays[idx]()*0.8) + (0.2 * m_lowpassDelayElements[idx]);
-		m_delays[idx].write(accum);
-
+		m_lowpassDelayElements[idx] = (m_delays[idx].process(accum)*0.8) + (0.2 * m_lowpassDelayElements[idx]);
 	}
 
 	return out;

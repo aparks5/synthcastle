@@ -1,0 +1,4 @@
+C:/Users/acous/Documents/GitHub/synthcastle/build/CMakeFiles/synthcastle.dir
+C:/Users/acous/Documents/GitHub/synthcastle/build/CMakeFiles/imnodes.dir
+C:/Users/acous/Documents/GitHub/synthcastle/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/acous/Documents/GitHub/synthcastle/build/CMakeFiles/ZERO_CHECK.dir

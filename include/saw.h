@@ -2,16 +2,14 @@
 #ifndef SAW_H_ 
 #define SAW_H_
 
-#include "oscillator.h"
+#include "waveform.h"
 
-class Saw : public Oscillator<float>
+class Saw : public WaveForm 
 {
 public:
-    Saw(float fs);
-    void freq(float frequency) override;
-    float operator()() override;
-    float operator()(float in) override { return 0.f; }
-
+    Saw(int sampleRate);
+    float process() override;
+    void update(float freq);
 };
 
 #endif // SAW_H_

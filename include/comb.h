@@ -2,6 +2,7 @@
 #define COMB_H_
 
 #include "delay.h"
+#include "module.h"
 
 class Comb : public Module
 {

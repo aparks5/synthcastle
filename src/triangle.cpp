@@ -7,20 +7,20 @@
 #include <iostream>
 
 
-Triangle::Triangle(float fs)
-	: Oscillator<float>(fs, 0.f, 0.f, 0.f)
+Triangle::Triangle(int sampleRate)
+	: WaveForm(sampleRate)
 	, m_bRising(true)
 {
+	m_sampleRate = sampleRate;
 }
 
-void Triangle::freq(float frequency)
+void Triangle::update(float freq)
 {
-	m_freq = frequency;
-	auto samplesPerCycle = 1. * m_sampleRate / m_freq;
+	auto samplesPerCycle = 1. * m_sampleRate / freq;
 	m_step = 4.0f / samplesPerCycle;
 }
 
-float Triangle::operator()()
+float Triangle::process()
 {
 	if ((m_out >= 0.9999f)) {
 		m_bRising = false;

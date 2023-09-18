@@ -2,7 +2,7 @@
 
 Mixer::Mixer(size_t fs)
 	: Module(fs)
-	, m_overallGain(fs)
+	, m_overallGain()
 	, m_scaleFactor(0.f)
 	, m_pan(fs)
 {
@@ -82,10 +82,10 @@ float Mixer::operator()()
 		if (pModule) {
 			temp = (*pModule)();
 		}
-		Gain trackGain(m_sampleRate);
+		Gain trackGain;
 		trackGain.setGaindB(m_inputGains[moduleName]);
-		temp = trackGain(temp);
-		temp = m_overallGain(temp);
+		//temp = trackGain.process(temp);
+		//temp = m_overallGain.process(temp);
 		output += temp;
 
 	}

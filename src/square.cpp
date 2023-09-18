@@ -6,21 +6,18 @@
 
 #include <iostream>
 
-constexpr auto NUM_SECONDS = (2);
-
-Square::Square(float fs)
-	: Oscillator<float>(fs, 0.f, 0.f, 0.f)
+Square::Square(int sampleRate)
+	: WaveForm(sampleRate)
 {
 }
 
-void Square::freq(float frequency)
+void Square::update(float freq)
 {
-	m_freq = frequency;
-	auto samplesPerCycle = m_sampleRate / m_freq;
+	auto samplesPerCycle = m_sampleRate / freq;
 	m_step = 2.0f / samplesPerCycle;
 }
 
-float Square::operator()()
+float Square::process()
 {
 	if (m_out >= 1.0f) {
 		m_out = -1;

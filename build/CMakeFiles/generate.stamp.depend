@@ -1,0 +1,84 @@
+# CMake generation dependency list for this directory.
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.26/Modules/CMakeCInformation.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.26/Modules/CMakeCXXInformation.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.26/Modules/CMakeCommonLanguageInclude.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.26/Modules/CMakeDependentOption.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.26/Modules/CMakeFindDependencyMacro.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.26/Modules/CMakeGenericSystem.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.26/Modules/CMakeInitializeConfigs.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.26/Modules/CMakeLanguageInformation.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.26/Modules/CMakeRCInformation.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.26/Modules/CMakeSystemSpecificInformation.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.26/Modules/CMakeSystemSpecificInitialize.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.26/Modules/CheckCSourceCompiles.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.26/Modules/CheckIncludeFile.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.26/Modules/CheckLibraryExists.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.26/Modules/Compiler/CMakeCommonCompilerMacros.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.26/Modules/Compiler/MSVC-C.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.26/Modules/Compiler/MSVC-CXX.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.26/Modules/Compiler/MSVC.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.26/Modules/FeatureSummary.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.26/Modules/FindPackageHandleStandardArgs.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.26/Modules/FindPackageMessage.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.26/Modules/FindThreads.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.26/Modules/Internal/CheckSourceCompiles.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.26/Modules/Platform/Windows-MSVC-C.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.26/Modules/Platform/Windows-MSVC-CXX.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.26/Modules/Platform/Windows-MSVC.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.26/Modules/Platform/Windows.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.26/Modules/Platform/WindowsPaths.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.26/Modules/SelectLibraryConfigurations.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/CMakeLists.txt
+C:/Users/acous/Documents/GitHub/synthcastle/build/CMakeFiles/3.26.0-msvc3/CMakeCCompiler.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/build/CMakeFiles/3.26.0-msvc3/CMakeCXXCompiler.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/build/CMakeFiles/3.26.0-msvc3/CMakeRCCompiler.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/build/CMakeFiles/3.26.0-msvc3/CMakeSystem.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/PThreads4W/PThreads4WConfig.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/fftw3/FFTW3Config.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/fftw3/FFTW3ConfigVersion.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/fftw3/FFTW3LibraryDepends-debug.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/fftw3/FFTW3LibraryDepends-release.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/fftw3/FFTW3LibraryDepends.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/fmt/fmt-config-version.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/fmt/fmt-config.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/fmt/fmt-targets-debug.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/fmt/fmt-targets-release.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/fmt/fmt-targets.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/glad/gladConfig.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/glad/gladConfigVersion.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/glad/gladTargets-debug.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/glad/gladTargets-release.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/glad/gladTargets.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/glfw3/glfw3Config.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/glfw3/glfw3ConfigVersion.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/glfw3/glfw3Targets-debug.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/glfw3/glfw3Targets-release.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/glfw3/glfw3Targets.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/imgui/imgui-config.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/imgui/imgui-targets-debug.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/imgui/imgui-targets-release.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/imgui/imgui-targets.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/portaudio/portaudioConfig.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/portaudio/portaudioConfigVersion.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/portaudio/portaudioTargets-debug.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/portaudio/portaudioTargets-release.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/portaudio/portaudioTargets.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/rtmidi/RtMidiTargets-debug.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/rtmidi/RtMidiTargets-release.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/rtmidi/RtMidiTargets.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/rtmidi/rtmidi-config-version.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/rtmidi/rtmidi-config.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/sdl2/SDL2Config.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/sdl2/SDL2ConfigVersion.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/sdl2/SDL2Targets-debug.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/sdl2/SDL2Targets-release.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/sdl2/SDL2Targets.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/sdl2/SDL2mainTargets-debug.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/sdl2/SDL2mainTargets-release.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/sdl2/SDL2mainTargets.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/spdlog/spdlogConfig.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/spdlog/spdlogConfigTargets-debug.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/spdlog/spdlogConfigTargets-release.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/spdlog/spdlogConfigTargets.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/installed/x64-windows/share/spdlog/spdlogConfigVersion.cmake
+C:/Users/acous/Documents/GitHub/synthcastle/vcpkg/scripts/buildsystems/vcpkg.cmake

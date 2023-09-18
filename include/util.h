@@ -7,6 +7,7 @@
 #include <iostream>
 #include <sstream>
 
+
 static float semitoneToRatio(float semitone)
 {
     semitone = (semitone < -24) ? -24 : semitone;
@@ -27,6 +28,20 @@ static T clamp(T val, T min, T max)
     val = (val < min) ? min : val;
     val = (val > max) ? max : val;
     return val;
+}
+
+static int floatTodB(float f) 
+{
+	return 20 * log10(f);
+}
+
+static float dBtoFloat(int db) 
+{
+	return pow(10, db / 20.f);
+}
+
+template <typename T> int sgn(T val) {
+    return (T(0) < val) - (val < T(0));
 }
 
 template <class T>

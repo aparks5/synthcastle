@@ -1,19 +1,18 @@
 /// Copyright (c) 2021. Anthony Parks. All rights reserved.
 #include "saw.h" 
 
-Saw::Saw(float fs)
-	: Oscillator<float>(fs, 0.f, 0.f, 0.f)
+Saw::Saw(int sampleRate)
+	: WaveForm(sampleRate)
 {
 }
 
-void Saw::freq(float frequency)
+void Saw::update(float freq)
 {
-	m_freq = frequency;
-	auto samplesPerCycle = m_sampleRate * 1.0f / m_freq;
+	auto samplesPerCycle = m_sampleRate * 1.0f / freq;
 	m_step = 2.0f / samplesPerCycle;
 }
 
-float Saw::operator()()
+float Saw::process()
 {
 	if (m_out>= 1.0f) {
 		m_out = -1.0f;

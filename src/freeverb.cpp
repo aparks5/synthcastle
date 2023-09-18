@@ -1,8 +1,10 @@
 #include "freeverb.h"
 
-Freeverb::Freeverb(size_t fs)
-	: Module(fs)
+Freeverb::Freeverb()
+	: Node(NodeType::FREEVERB, 0.f, NUM_PARAMS)
+	, m_sampleRate(44100)
 {
+	auto fs = m_sampleRate;
 	Allpass ap1(fs, 5.1f, 0.5);
 	m_allpassFilters.push_back(ap1);
 	Allpass ap2(fs, 12.6f, 0.5);
@@ -12,7 +14,7 @@ Freeverb::Freeverb(size_t fs)
 	Allpass ap4(fs, 7.7f, 0.5);
 	m_allpassFilters.push_back(ap4);
 
-	float fb = 0.84;
+	float fb = 0.84; // tuneable?
 	Comb c1(fs, 35.3, fb);
 	Comb c2(fs, 36.6, fb);
 	Comb c3(fs, 33.8, fb);
@@ -33,7 +35,7 @@ Freeverb::Freeverb(size_t fs)
 }
 
 
-float Freeverb::operator()(float in)
+float Freeverb::process(float in)
 {
 	float dry = in;
 	float earlyReflections = 0.f;
@@ -47,5 +49,5 @@ float Freeverb::operator()(float in)
 	output = m_allpassFilters[1](output);
 	output = m_allpassFilters[2](output);
 	output = m_allpassFilters[3](output);
-	return output;
+	return params[WETDRY]*output;
 }
