@@ -9,6 +9,7 @@
 #include "filter.h"
 #include "gain.h"
 #include "looper.h"
+#include "midi.h"
 #include "oscillator.h"
 #include "output.h"
 #include "quadmixer.h"
@@ -32,6 +33,7 @@ Model::Model()
 	m_creators[NodeType::FILTER] = std::make_shared<FilterNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::GAIN] = std::make_shared<GainNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::LOOPER] = std::make_shared<LooperNodeCreator>(m_graph, m_cache);
+	m_creators[NodeType::MIDI_IN] = std::make_shared<MidiInputNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::OSCILLATOR] = std::make_shared<OscillatorNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::OUTPUT] = std::make_shared<OutputNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::QUAD_MIXER] = std::make_shared<MixerNodeCreator>(m_graph, m_cache);
@@ -47,7 +49,7 @@ NodeGraph Model::cloneGraph()
 
 }
 
-const ViewBag Model::refresh()
+ViewBag Model::refresh()
 {
 	std::stack<int> postorder;
 	if (m_graph->getRoot() != -1) {
@@ -231,6 +233,61 @@ int AudioInputNodeCreator::create()
 	auto id = m_g->insert_node(k);
 	k->params[Constant::NODE_ID] = id;
 	cacheType(id, NodeType::AUDIO_IN);
+	return id;
+}
+
+int MidiInputNodeCreator::create()
+{
+	auto k = std::make_shared<MIDI>();
+	// for auto & output : k->outputs();
+	// std::make_shared
+	// insert node into map with id
+	// assign out ids
+	// cache as relays
+	auto v1 = std::make_shared<Relay>(0);
+	auto v2 = std::make_shared<Relay>(1);
+	auto v3 = std::make_shared<Relay>(2);
+	auto v4 = std::make_shared<Relay>(3);
+	auto vel = std::make_shared<Relay>(4);
+	auto id = m_g->insert_node(k);
+	auto v1id = m_g->insert_node(v1);
+	auto v2id = m_g->insert_node(v2);
+	auto v3id = m_g->insert_node(v3);
+	auto v4id = m_g->insert_node(v4);
+	auto velid = m_g->insert_node(vel);
+	m_g->insert_edge(v1id, id);
+	m_g->insert_edge(v2id, id);
+	m_g->insert_edge(v3id, id);
+	m_g->insert_edge(v4id, id);
+	m_g->insert_edge(velid, id);
+	k->params[MIDI::NODE_ID] = id;
+	k->params[MIDI::OUT_VOICE1_ID] = v1id;
+	k->params[MIDI::OUT_VOICE2_ID] = v2id;
+	k->params[MIDI::OUT_VOICE3_ID] = v3id;
+	k->params[MIDI::OUT_VOICE4_ID] = v4id;
+	k->params[MIDI::OUT_VELOCITY_ID] = velid;
+	cacheType(id, NodeType::MIDI_IN);
+	cacheType(v1id, NodeType::RELAY);
+	cacheType(v2id, NodeType::RELAY);
+	cacheType(v3id, NodeType::RELAY);
+	cacheType(v4id, NodeType::RELAY);
+	cacheType(velid, NodeType::RELAY);
+
+	for (auto& str : k->paramStrings()) {
+		cacheParam(id, str, 0.f);
+	}
+
+	cacheParam(id, "num_ports", k->params[MIDI::NUM_PORTS]);
+
+	cacheString(id, "portname", "");
+
+	cacheParam(id, "node_id", id);
+	cacheParam(id, "out_voice1_id", v1id);
+	cacheParam(id, "out_voice2_id", v2id);
+	cacheParam(id, "out_voice3_id", v3id);
+	cacheParam(id, "out_voice4_id", v4id);
+	cacheParam(id, "out_velocity_id", velid);
+
 	return id;
 }
 

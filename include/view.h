@@ -171,6 +171,18 @@ public:
 	void display(int id, const NodeSnapshot& snapshot) override;
 };
 
+class MidiInputDisplayCommand : public NodeDisplayCommand
+{
+public:
+	MidiInputDisplayCommand() {}
+	void display(int id, const NodeSnapshot& snapshot) override;
+};
+
+
+
+
+
+
 
 
 

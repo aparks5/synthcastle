@@ -48,6 +48,7 @@ View::View()
     m_displays[NodeType::FILTER] = std::make_shared<FilterDisplayCommand>();
     m_displays[NodeType::GAIN] = std::make_shared<GainDisplayCommand>();
     m_displays[NodeType::LOOPER] = std::make_shared<LooperDisplayCommand>();
+    m_displays[NodeType::MIDI_IN] = std::make_shared<MidiInputDisplayCommand>();
     m_displays[NodeType::OUTPUT] = std::make_shared<OutputDisplayCommand>();
     m_displays[NodeType::OSCILLATOR] = std::make_shared<OscillatorDisplayCommand>();
     m_displays[NodeType::QUAD_MIXER] = std::make_shared<MixerDisplayCommand>();
@@ -417,6 +418,74 @@ void OutputDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImNodes::EndNode();
     ImGui::PopItemWidth();
 }
+
+void MidiInputDisplayCommand::display(int id, const NodeSnapshot& snapshot)
+{
+    ImNodes::BeginNode(id);
+
+	ImNodes::BeginNodeTitleBar();
+	ImGui::TextUnformatted("Midi In");
+	ImNodes::EndNodeTitleBar();
+
+	int currentIdx = 0;
+
+	ImGui::PushItemWidth(120.0f);
+    // todo: grab strings from MIDI node to populate list
+    auto numports = snapshot.params.at("num_ports");
+    if ((numports > 0) && ImGui::BeginCombo("Port Selection", std::to_string(snapshot.params.at("selected_port")).c_str())) {
+        for (int n = 0; n < numports; n++) {
+            const bool bSelected = (currentIdx == n);
+            // todo change this to names 
+            if (ImGui::Selectable(std::to_string(n).c_str(), bSelected)) {
+                currentIdx = n;
+                update(id, snapshot, "selected_port", currentIdx);
+            }
+            // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+            if (bSelected) {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+		ImGui::EndCombo();
+	}
+
+	ImGui::PopItemWidth();
+	ImGui::PushItemWidth(120.0f);
+	ImGui::Spacing();
+    ImGui::Text("Note 1: %f", snapshot.params.at("out_voice1"));
+    ImGui::Text("Note 2: %f", snapshot.params.at("out_voice2"));
+    ImGui::Text("Note 3: %f", snapshot.params.at("out_voice3"));
+    ImGui::Text("Note 4: %f", snapshot.params.at("out_voice4"));
+    ImGui::Text("Velocity: %f", snapshot.params.at("velocity"));
+	ImGui::PopItemWidth();
+
+	ImGui::Spacing();
+	// display note and velocity
+
+    ImNodes::BeginOutputAttribute(snapshot.params.at("out_voice1_id"));
+	ImGui::TextUnformatted("Voice 1");
+	ImNodes::EndOutputAttribute();
+
+    ImNodes::BeginOutputAttribute(snapshot.params.at("out_voice2_id"));
+	ImGui::TextUnformatted("Voice 2");
+	ImNodes::EndOutputAttribute();
+
+    ImNodes::BeginOutputAttribute(snapshot.params.at("out_voice3_id"));
+	ImGui::TextUnformatted("Voice 3");
+	ImNodes::EndOutputAttribute();
+
+    ImNodes::BeginOutputAttribute(snapshot.params.at("out_voice4_id"));
+	ImGui::TextUnformatted("Voice 4");
+	ImNodes::EndOutputAttribute();
+
+    ImNodes::BeginOutputAttribute(snapshot.params.at("out_velocity_id"));
+	ImGui::TextUnformatted("Velocity");
+	ImNodes::EndOutputAttribute();
+
+	ImNodes::EndNode();
+
+}
+
+
 
 void DelayDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 {

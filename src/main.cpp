@@ -19,6 +19,7 @@
 #include "fourvoice.h"
 #include "filter.h"
 #include "gain.h"
+#include "midi.h"
 #include "signal_flow_editor.h"
 #include "output.h"
 #include "util.h"
@@ -136,6 +137,21 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
             value_stack.push(pNode->process(val));
         }
         break;
+        case NodeType::MIDI_IN:
+        {
+			if (idVisited[id] == 1) {
+                cached.clear();
+				pNode->process();
+                cached.push_back(pNode->params[MIDI::OUT_VOICE1]);
+                cached.push_back(pNode->params[MIDI::OUT_VOICE2]);
+                cached.push_back(pNode->params[MIDI::OUT_VOICE3]);
+                cached.push_back(pNode->params[MIDI::OUT_VOICE4]);
+                cached.push_back(pNode->params[MIDI::VELOCITY]);
+                break;
+			}
+
+        }
+        break;
         case NodeType::SEQ:
         {
 			// i should queue this til after eval
@@ -227,8 +243,6 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
             // only consume when evaluating for the first time
             // we expect a relay
 
-// i had an extra value somewhere in the output node...
-            // un fuckking believable
 			auto in1 = value_stack.top();
 			value_stack.pop();
 			auto in2 = value_stack.top();

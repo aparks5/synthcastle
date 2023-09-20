@@ -4,27 +4,6 @@
 #include "viewbag.h"
 #include "events.h"
 
-
-struct spin_mutex {
-	void lock() noexcept {
-		while (!try_lock()) {
-			flag.wait(true, std::memory_order_relaxed);
-		}
-	}
-
-	bool try_lock() noexcept {
-		return !flag.test_and_set(std::memory_order_acquire);
-	}
-
-	void unlock() noexcept {
-		flag.clear(std::memory_order_release);
-		flag.notify_one();
-	}
-
-private:
-	std::atomic_flag flag = ATOMIC_FLAG_INIT;
-};
-
 class NodeCreationCommand {
 public:
 	NodeCreationCommand(std::shared_ptr<NodeGraph> g, ViewBag& v)
@@ -88,6 +67,16 @@ public:
 		: NodeCreationCommand(g, v)
 	{}
 	virtual ~AudioInputNodeCreator() {};
+	int create() override;
+};
+
+class MidiInputNodeCreator : public NodeCreationCommand
+{
+public:
+	MidiInputNodeCreator(std::shared_ptr<NodeGraph> g, ViewBag& v)
+		: NodeCreationCommand(g, v)
+	{}
+	virtual ~MidiInputNodeCreator() {};
 	int create() override;
 };
 
@@ -192,7 +181,7 @@ public:
 	void link(int from, int to);
 	std::vector<std::string> queryNodeNames() const;
 	std::tuple<float, float> evaluate();
-	const ViewBag refresh(); 
+	ViewBag refresh(); 
 	// return a deep copy of the graph
 	NodeGraph cloneGraph();
 
@@ -213,6 +202,7 @@ private:
 		{"gain", NodeType::GAIN},
 		{"looper", NodeType::LOOPER},
 		{"mixer", NodeType::QUAD_MIXER},
+		{"midi", NodeType::MIDI_IN},
 		{"oscillator", NodeType::OSCILLATOR},
 		{"output", NodeType::OUTPUT},
 		{"sampler", NodeType::SAMPLER},

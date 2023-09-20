@@ -3,13 +3,19 @@
 #include <iostream>
 #include "imnodes.h"
 
+
+
 MIDI::MIDI()
 	: Node(NodeType::MIDI_IN, 0.f, NUM_PARAMS)
 	, midiin(std::make_shared<RtMidiIn>())
+	, m_portId(-1)
 	, m_currentVoice(0)
-	, m_cycle(0)
+	, m_numVoices(4)
 	, m_cachedNumVoices(0)
+	, lastActiveVoice(0)
+	, prevFreq(0)
 {
+	m_voices.resize(4);
 	midiin->setCallback(&MIDI::midiCallback, &midiUserData);
 
 	// populate the MIDI port list at initialization
@@ -22,6 +28,7 @@ MIDI::MIDI()
 		for (unsigned int i = 0; i < nPorts; i++) {
 			ports.push_back(midiin->getPortName(i));
 		}
+		params[NUM_PORTS] = nPorts;
 	}
 
 }
@@ -55,108 +62,68 @@ void MIDI::midiCallback(double deltatime, std::vector<unsigned char>* message, v
 	}
 }
 
-void MIDI::display()
-{
-	ImNodes::BeginNode(params[MidiParams::NODE_ID]);
-	ImNodes::BeginNodeTitleBar();
-	ImGui::TextUnformatted("Midi In");
-	ImNodes::EndNodeTitleBar();
 
-
-	int currentIdx = 0;
-
-	ImGui::PushItemWidth(120.0f);
-	if (ports.size() && ImGui::BeginCombo("Port Selection", ports[params[MidiParams::SELECTED_PORT]].c_str(), 0)) {
-		for (int n = 0; n < ports.size(); n++) {
-			const bool bSelected = (currentIdx == n);
-			if (ImGui::Selectable(ports[n].c_str(), bSelected)) {
-				currentIdx = n;
-				if (currentIdx != params[MidiParams::SELECTED_PORT]) {
-					params[MidiParams::SELECTED_PORT] = currentIdx;
-					midiin->closePort();
-					midiin->openPort(params[MidiParams::SELECTED_PORT]);
-				}
-				// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-				if (bSelected) {
-					ImGui::SetItemDefaultFocus();
-				}
-			}
-		}
-		ImGui::EndCombo();
-	}
-	ImGui::PopItemWidth();
-
-	ImGui::PushItemWidth(120.0f);
-	int voices = (int)params[MIDI::NUM_VOICES];
-	ImGui::InputInt("Voices", &voices);
-	// todo: notify controller that number of voices has changed
-	if (voices != (int)params[MIDI::NUM_VOICES]) {
-		params[MIDI::NUM_VOICES] = voices;
-	}
-
-	ImGui::PushItemWidth(120.0f);
-	ImGui::Spacing();
-	ImGui::Text("Note: %d", midiUserData.note);
-	ImGui::Text("Velocity: %d", midiUserData.velocity);
-	ImGui::PopItemWidth();
-
-	ImGui::Spacing();
-	// display note and velocity
-
-	ImNodes::BeginOutputAttribute(params[MidiParams::EXTRA_OUT_ID]);
-	ImGui::TextUnformatted("Extra Out");
-	ImNodes::EndOutputAttribute();
-
-	ImNodes::BeginOutputAttribute(params[MidiParams::NODE_ID]);
-	ImGui::TextUnformatted("CV Out");
-	ImNodes::EndOutputAttribute();
-	ImNodes::EndNode();
-
-}
 
 float MIDI::process()
 {
-	// todo: move this to an update function
-	if (m_cachedNumVoices != params[MidiParams::NUM_VOICES]) {
-		m_cachedNumVoices = params[MidiParams::NUM_VOICES];
-		m_voices.resize(params[MidiParams::NUM_VOICES]);
-		m_currentVoice = 0;
-		m_cycle = 0;
+
+	if (params[SELECTED_PORT] != m_portId) {
+		m_portId = params[SELECTED_PORT];
+		midiin->closePort();
+		midiin->openPort((int)m_portId);
 	}
 
+	// all voices are exhausted, we need to turn one off
+
 	params[MidiParams::NOTE] = midiUserData.note;
+	params[MidiParams::VELOCITY] = midiUserData.velocity;
 
 	float freq = params[MidiParams::NOTE] / 128.f;
 	// next problem, which voice changed to 0?
 	// note off should be for one voice only,
 	// but which voice?
-	//
-	if (freq == 0) {
+	if (params[MidiParams::VELOCITY] == 0) {
 		for (auto& v : m_voices) {
 			v = 0;
 		}
 	}
 
-	// something changed, find another voice
-    if (freq != m_voices[m_currentVoice]) {
-		m_currentVoice++;
-		if (m_currentVoice >= m_voices.size()) {
-			m_currentVoice = 0;
+	int activeVoices = 0;
+	for (auto& v : m_voices) {
+		if (v != 0) {
+			activeVoices++;
 		}
-		m_voices[m_currentVoice] = freq;
-		
+		else { // we found an unused voice
+			if (freq != prevFreq) {
+				v = freq;
+				prevFreq = freq;
+				lastActiveVoice++;
+				if (lastActiveVoice >= 4) {
+					lastActiveVoice = 0;
+				}
+			}
+			break;
+
+		}
+
+		// all voices are exhausted we need to turn one off
+		if (activeVoices >= 4) {
+			m_voices[lastActiveVoice] = freq;
+			lastActiveVoice++;
+			if (lastActiveVoice >= 4) {
+				lastActiveVoice = 0;
+			}
+		}
 	}
 
+	params[OUT_VOICE1] = m_voices[0];
+	params[OUT_VOICE2] = m_voices[1];
+	params[OUT_VOICE3] = m_voices[2];
+	params[OUT_VOICE4] = m_voices[3];
 
 
-	// N calls to process will return N voices
-	// this module should push N values to the stack
-	float val = m_voices[m_cycle];
-	m_cycle++;
-	if (m_cycle >= m_voices.size()) {
-		m_cycle = 0;
-	}
-	return m_voices[m_cycle];
+
+	return 0;
 
 }
 
