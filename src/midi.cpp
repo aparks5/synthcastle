@@ -2,6 +2,7 @@
 #include <functional>
 #include <iostream>
 #include "imnodes.h"
+#include "util.h"
 
 
 
@@ -75,10 +76,16 @@ float MIDI::process()
 
 	// all voices are exhausted, we need to turn one off
 
-	params[MidiParams::NOTE] = midiUserData.note;
+	if (midiUserData.note > 21) {
+		params[MidiParams::NOTE] = midiUserData.note;
+	}
+	else {
+		params[MidiParams::NOTE] = 0;
+	}
+
 	params[MidiParams::VELOCITY] = midiUserData.velocity;
 
-	float freq = params[MidiParams::NOTE] / 128.f;
+	float freq = params[MidiParams::NOTE];
 	// next problem, which voice changed to 0?
 	// note off should be for one voice only,
 	// but which voice?
@@ -98,7 +105,7 @@ float MIDI::process()
 				v = freq;
 				prevFreq = freq;
 				lastActiveVoice++;
-				if (lastActiveVoice >= 4) {
+				if (lastActiveVoice > 4) {
 					lastActiveVoice = 0;
 				}
 			}
@@ -107,10 +114,10 @@ float MIDI::process()
 		}
 
 		// all voices are exhausted we need to turn one off
-		if (activeVoices >= 4) {
+		if (activeVoices > 4) {
 			m_voices[lastActiveVoice] = freq;
 			lastActiveVoice++;
-			if (lastActiveVoice >= 4) {
+			if (lastActiveVoice > 4) {
 				lastActiveVoice = 0;
 			}
 		}

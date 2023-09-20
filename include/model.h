@@ -179,6 +179,7 @@ public:
 	int update(UpdateStringEvent update);
 	int create(std::string str);
 	void link(int from, int to);
+	void deleteLink(int link_id);
 	std::vector<std::string> queryNodeNames() const;
 	std::tuple<float, float> evaluate();
 	ViewBag refresh(); 

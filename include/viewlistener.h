@@ -17,6 +17,7 @@ public:
 	virtual void queueUpdate(int id, std::string param, float val) = 0;
 	virtual void queueUpdate(int id, std::string param, std::string str) = 0;
 	virtual void queueLink(int from, int to) = 0;
+	virtual void queueDestroyLink(int link_id) = 0;
 	virtual ViewBag snapshot() const = 0;
 	virtual AudioPlotBuffer buffer() const = 0;
 	virtual std::vector<std::string> queryNodeNames() const = 0;

@@ -238,7 +238,7 @@ void View::display()
     ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0, 0, 0, 1));
 
     ImGui::Begin("S Y N T H C A S T L E", 0, ImGuiWindowFlags_NoTitleBar);
-    ImGui::TextUnformatted("(right-click to add nodes)");
+    ImGui::TextUnformatted("instructions: right-click to add nodes | select and press x to delete link");
 
     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 0, 0, 1));
     ImNodes::BeginNodeEditor();
@@ -285,7 +285,7 @@ void View::display()
                 if (viewbag.map.at(edge.from).nodeType != NodeType::VALUE) {
                     continue;
                 }
-                ImNodes::Link(id, edge.from, edge.to);
+                ImNodes::Link(edgenum, edge.from, edge.to);
             }
         }
 	}
@@ -327,6 +327,34 @@ void View::display()
             }
         }
     }
+
+    // DESTROY LINKS
+    {
+        {
+            int link_id;
+            if (ImNodes::IsLinkDestroyed(&link_id))
+            {
+                m_listener->queueDestroyLink(link_id);
+            }
+        }
+
+        {
+			const int num_selected = ImNodes::NumSelectedLinks();
+                if (num_selected > 0 && ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_X))
+                {
+                    static std::vector<int> selected_links;
+                    selected_links.resize(static_cast<size_t>(num_selected));
+                    ImNodes::GetSelectedLinks(selected_links.data());
+                    for (const int edge_id : selected_links)
+                    {
+                        ImNodes::ClearLinkSelection();
+						m_listener->queueDestroyLink(edge_id);
+                    }
+                }
+        }
+    }
+    
+    // TODO DESTROY SELECTED NODES
 
     // *** VERY IMPORTANT FUNCTION CALL ***
     // GUI thread updates the graph at FPS rate

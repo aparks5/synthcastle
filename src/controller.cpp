@@ -33,6 +33,11 @@ void Controller::queueCreation(std::string nodeType)
 	m_creationQueue.push(nodeType);
 }
 
+void Controller::queueDestroyLink(int link_id)
+{
+	m_linkDeletionQueue.push(link_id);
+}
+
 void Controller::queueLink(int from, int to)
 {
 	LinkEvent link(from, to);
@@ -75,6 +80,11 @@ void Controller::createLink(int from, int to)
 	m_model->link(from, to);
 }
 
+void Controller::deleteLink(int link_id)
+{
+	m_model->deleteLink(link_id);
+}
+
 std::vector<std::string> Controller::queryNodeNames() const
 {
 	return m_model->queryNodeNames();
@@ -89,11 +99,16 @@ void Controller::update()
 	if ((m_creationQueue.empty()) &&
 		(m_updates.empty()) &&
 		(m_stringUpdates.empty()) &&
-		(m_linkQueue.empty())) {
+		(m_linkQueue.empty()) &&
+		(m_linkDeletionQueue.empty())) {
 		return;
 	}
 
-	
+	while (!m_linkDeletionQueue.empty()) {
+		auto linkIdToDelete = m_linkDeletionQueue.front();
+		m_linkDeletionQueue.pop();
+		deleteLink(linkIdToDelete);
+	}
 	while (!m_linkQueue.empty()) {
 		auto link = m_linkQueue.front();
 		m_linkQueue.pop();

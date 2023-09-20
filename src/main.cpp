@@ -209,8 +209,8 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
 			if (freq != INVALID_PARAM_VALUE) {
                 // scale midi as float to hz
                 float target = 0;
-                if ((freq * 128) > 15) {
-                    target = midiNoteToFreq((int)(freq * 128.));
+                if (freq > 21) {
+                    target = midiNoteToFreq((int)(freq));
                 }
                 pNode->params[Oscillator::FREQ] = target;
 			}

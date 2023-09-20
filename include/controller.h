@@ -18,12 +18,14 @@ public:
 	std::tuple<float, float> evaluate();
 	void queueCreation(std::string nodeType) override;
 	void queueLink(int from, int to) override;
+	void queueDestroyLink(int link_id) override;
 	void queueUpdate(int id, std::string param, float val) override;
 	void queueUpdate(int id, std::string param, std::string str) override;
 	std::vector<std::string> queryNodeNames() const override;
 	std::shared_ptr<NodeGraph> m_graph;
 
 	void createLink(int from, int to);
+	void deleteLink(int link_id);
 	int createNode(std::string nodeTypeString);
 	ViewBag snapshot() const override; 
 	void update() override; // not accessible to View 
@@ -46,6 +48,7 @@ private:
 	std::queue<UpdateStringEvent> m_stringUpdates;
 	std::queue<std::string> m_creationQueue;
 	std::queue<LinkEvent> m_linkQueue;
+	std::queue<int> m_linkDeletionQueue;
 	bool m_bExit;
 
 };

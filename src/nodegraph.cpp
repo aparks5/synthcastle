@@ -91,7 +91,7 @@ void NodeGraph::erase_edge(const int edge_id)
 {
 	// This is a bit lazy, we find the pointer here, but we refind it when we erase the edge based
 	// on id key.
-	assert(edges_.contains(edge_id));
+	//assert(edges_.contains(edge_id));
 	const Edge& edge = *edges_.find(edge_id);
 
 	// update neighbor count

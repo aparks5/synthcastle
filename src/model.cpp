@@ -80,10 +80,29 @@ ViewBag Model::refresh()
 void Model::link(int from, int to)
 {
 
+	auto id = m_graph->insert_edge(from, to);
+
+	// changed, edges are now indexed by id
 	if (m_cache.map.find(from) != m_cache.map.end()) {
-		m_cache.map[from].edges[from] = EdgeSnapshot(from, to);
+		m_cache.map[from].edges[id] = EdgeSnapshot(from, to);
 	}
-	m_graph->insert_edge(from, to);
+}
+
+void Model::deleteLink(int link_id)
+{
+	// i dont think the cache knows about link ids 
+	// but it needs to know if wants to delete edges
+
+	// how do i find the map index
+	// this has a terrible worst case searching for the node that contains this link
+	// but its the price we pay for using a cache
+	for (auto const& [id, snap] : m_cache.map) {
+		if (snap.edges.find(link_id) != snap.edges.end()) {
+			m_cache.map[id].edges.erase(link_id);
+		}
+	}
+
+	m_graph->erase_edge(link_id);
 }
 
 int Model::update(UpdateEvent update)
