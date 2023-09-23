@@ -49,16 +49,16 @@ void MIDI::midiCallback(double deltatime, std::vector<unsigned char>* message, v
 		if (byte0 == 144) {
 			if (velocity != 0) {
 				pUserData->note = note;
-				printf("note on: %d\n", pUserData->note);
+				//printf("note on: %d\n", pUserData->note);
 			}
 			else {
 				pUserData->note = 0;
-				printf("note off: %d\n", pUserData->note);
+				//printf("note off: %d\n", pUserData->note);
 			}
 		}
 		else if (byte0 == 128) {
 			pUserData->note = 0;
-			printf("note off: %d\n", pUserData->note);
+			//printf("note off: %d\n", pUserData->note);
 		}
 	}
 }

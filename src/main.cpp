@@ -18,6 +18,7 @@
 #include "oscillator.h"
 #include "fourvoice.h"
 #include "filter.h"
+#include "freqshift.h"
 #include "gain.h"
 #include "midi.h"
 #include "signal_flow_editor.h"
@@ -117,6 +118,22 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
             pNode->params[Filter::FREQMOD] = mod;
             pNode->params[Filter::MODDEPTH] = depth;
             value_stack.push(pNode->process(in));
+        }
+        break;
+        case NodeType::FREQ_SHIFT:
+        {
+            auto in = value_stack.top();
+            value_stack.pop();
+            pNode->params[FrequencyShifter::INPUT] = in;
+            auto modfreq = value_stack.top();
+            value_stack.pop();
+            pNode->params[FrequencyShifter::MODFREQ] = modfreq;
+
+            if (idVisited[id] == 1) {
+                cached.clear();
+                pNode->process();
+                cached.push_back(pNode->params[FrequencyShifter::OUTPUT]);
+            }
         }
         break;
         case NodeType::ENVELOPE:

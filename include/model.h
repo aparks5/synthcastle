@@ -170,6 +170,16 @@ public:
 	int create() override;
 };
 
+class FreqShiftNodeCreator : public NodeCreationCommand
+{
+public:
+	FreqShiftNodeCreator(std::shared_ptr<NodeGraph> g, ViewBag& v)
+		: NodeCreationCommand(g, v)
+	{}
+	virtual ~FreqShiftNodeCreator() {};
+	int create() override;
+};
+
 class Model
 {
 public:
@@ -200,6 +210,7 @@ private:
 		{"distort", NodeType::DISTORT},
 		{"envelope", NodeType::ENVELOPE},
 		{"filter", NodeType::FILTER},
+		{"freqshift", NodeType::FREQ_SHIFT},
 		{"gain", NodeType::GAIN},
 		{"looper", NodeType::LOOPER},
 		{"mixer", NodeType::QUAD_MIXER},

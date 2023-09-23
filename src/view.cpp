@@ -46,6 +46,7 @@ View::View()
     m_displays[NodeType::DISTORT] = std::make_shared<DistortDisplayCommand>();
     m_displays[NodeType::ENVELOPE] = std::make_shared<EnvelopeDisplayCommand>();
     m_displays[NodeType::FILTER] = std::make_shared<FilterDisplayCommand>();
+    m_displays[NodeType::FREQ_SHIFT] = std::make_shared<FreqShiftDisplayCommand>();
     m_displays[NodeType::GAIN] = std::make_shared<GainDisplayCommand>();
     m_displays[NodeType::LOOPER] = std::make_shared<LooperDisplayCommand>();
     m_displays[NodeType::MIDI_IN] = std::make_shared<MidiInputDisplayCommand>();
@@ -290,6 +291,7 @@ void View::display()
         }
 	}
 
+    ImNodes::MiniMap(0.2f, ImNodesMiniMapLocation_BottomRight);
     ImNodes::EndNodeEditor();
     ImGui::PopStyleColor();
 
@@ -895,6 +897,56 @@ void AudioInputDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImNodes::EndNode();
 	ImGui::PopItemWidth();
 }
+
+
+void FreqShiftDisplayCommand::display(int id, const NodeSnapshot& snapshot)
+{
+    float width = 100.f;
+	ImGui::PushItemWidth(width);
+	ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0, 0, 0, 255));
+	ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(0, 0, 0, 255));
+	ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(0, 0, 0, 255));
+	ImNodes::BeginNode(id);
+	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 1, 1, 1));
+	ImNodes::BeginNodeTitleBar();
+	ImGui::TextUnformatted("Frequency Shifter");
+	ImNodes::EndNodeTitleBar();
+	ImGui::PopStyleColor();
+	ImNodes::PopColorStyle();
+
+	ImNodes::BeginInputAttribute(snapshot.params.at("input_id"));
+	ImGui::TextUnformatted("Input");
+	ImNodes::EndInputAttribute();
+
+	ImNodes::BeginInputAttribute(snapshot.params.at("freq_id"));
+	ImGui::TextUnformatted("Mod Freq");
+	ImNodes::EndInputAttribute();
+
+	auto a = snapshot.params.at("freq");
+    if (ImGuiKnobs::Knob("Freq Shift", &a, 0.0f, 1000.0f, 0.1f, "%1fHz", ImGuiKnobVariant_Wiper)) {
+        update(id, snapshot, "freq", a);
+    }
+    ImGui::SameLine();
+
+    {
+        auto a = snapshot.params.at("drywet");
+        if (ImGuiKnobs::Knob("Dry/Wet", &a, 0.0f, 1.0f, 0.1f, "%1f", ImGuiKnobVariant_Wiper)) {
+            update(id, snapshot, "drywet", a);
+        }
+    }
+
+    ImGui::SameLine();
+
+	ImNodes::BeginOutputAttribute(snapshot.params.at("output_id"));
+	const float text_width = ImGui::CalcTextSize("Out").x;
+	ImGui::Indent(width + ImGui::CalcTextSize("Out").x - text_width);
+	ImGui::TextUnformatted("Out");
+	ImNodes::EndOutputAttribute();
+
+	ImNodes::EndNode();
+	ImGui::PopItemWidth();
+}
+
 
 
 void SeqDisplayCommand::display(int id, const NodeSnapshot& snapshot)

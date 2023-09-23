@@ -164,6 +164,13 @@ public:
 	void display(int id, const NodeSnapshot& snapshot) override;
 };
 
+class FreqShiftDisplayCommand : public NodeDisplayCommand
+{
+public:
+	FreqShiftDisplayCommand() {}
+	void display(int id, const NodeSnapshot& snapshot) override;
+};
+
 class EnvelopeDisplayCommand : public NodeDisplayCommand
 {
 public:

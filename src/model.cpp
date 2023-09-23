@@ -7,6 +7,7 @@
 #include "distort.h"
 #include "envelope.h"
 #include "filter.h"
+#include "freqshift.h"
 #include "gain.h"
 #include "looper.h"
 #include "midi.h"
@@ -31,6 +32,7 @@ Model::Model()
 	m_creators[NodeType::DISTORT] = std::make_shared<DistortNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::ENVELOPE] = std::make_shared<EnvelopeNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::FILTER] = std::make_shared<FilterNodeCreator>(m_graph, m_cache);
+	m_creators[NodeType::FREQ_SHIFT] = std::make_shared<FreqShiftNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::GAIN] = std::make_shared<GainNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::LOOPER] = std::make_shared<LooperNodeCreator>(m_graph, m_cache);
 	m_creators[NodeType::MIDI_IN] = std::make_shared<MidiInputNodeCreator>(m_graph, m_cache);
@@ -245,6 +247,44 @@ int DistortNodeCreator::create()
 	return id;
 }
 
+int FreqShiftNodeCreator::create()
+{
+	auto k = std::make_shared<FrequencyShifter>();
+	auto in = std::make_shared<Value>();
+	auto freq = std::make_shared<Value>();
+	// when adding outputs we should simply increment the relay index
+	auto out = std::make_shared<Relay>(0);
+
+	auto freqid = m_g->insert_node(freq);
+	auto inid = m_g->insert_node(in);
+	auto id = m_g->insert_node(k);
+	auto outid = m_g->insert_node(out);
+
+	m_g->insert_edge(id, freqid);
+	m_g->insert_edge(id, inid);
+	m_g->insert_edge(outid, id);
+
+	k->params[FrequencyShifter::NODE_ID] = id;
+	k->params[FrequencyShifter::INPUT_ID] = inid;
+	k->params[FrequencyShifter::FREQ_ID] = freqid;
+	k->params[FrequencyShifter::OUTPUT_ID] = outid;
+
+	cacheType(id, NodeType::FREQ_SHIFT);
+	cacheType(inid, NodeType::VALUE);
+	cacheType(freqid, NodeType::VALUE);
+	cacheType(outid, NodeType::RELAY);
+
+	for (auto& str : k->paramStrings()) {
+		cacheParam(id, str, 0.f);
+	}
+	cacheParam(id, "node_id", id);
+	cacheParam(id, "freq_id", freqid);
+	cacheParam(id, "input_id", inid);
+	cacheParam(id, "output_id", outid);
+
+	return id;
+
+}
 
 int AudioInputNodeCreator::create()
 {
