@@ -144,7 +144,13 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
             auto trig = value_stack.top();
             value_stack.pop();
             pNode->params[Envelope::TRIG] = trig;
-            value_stack.push(pNode->process(in));
+
+            if (idVisited[id] == 1) {
+                pNode->process(in);
+            }
+
+            cached.clear();
+            cached.push_back(pNode->params[Envelope::OUTPUT]);
         }
         break;
         case NodeType::LOOPER:
@@ -246,8 +252,12 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
 				pNode->params[Oscillator::MODDEPTH] = depth;
 			}
 
-			auto temp = pNode->process();
-			value_stack.push(temp);
+            if (idVisited[id] == 1) {
+                pNode->process();
+            }
+
+            cached.clear();
+            cached.push_back(pNode->params[Oscillator::OUTPUT]);
 		}
 		break;
         case NodeType::RELAY:

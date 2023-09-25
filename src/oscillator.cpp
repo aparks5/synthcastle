@@ -44,6 +44,8 @@ void Oscillator::update()
 
 float Oscillator::process()
 {
-	return m_waveforms[(size_t)(params[OscillatorParams::WAVEFORM])]->process();
+	float out = m_waveforms[(size_t)(params[OscillatorParams::WAVEFORM])]->process();
+	params[OUTPUT] = out;
+	return 0;
 }
 

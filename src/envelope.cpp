@@ -96,5 +96,8 @@ float Envelope::process(float in)
 
 		break;
 	}
-	return in * m_gain;
+
+	params[OUTPUT] = in * m_gain;
+
+	return 0;
 }

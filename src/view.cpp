@@ -1124,7 +1124,7 @@ void EnvelopeDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     ImGui::DragFloat("Release Time (ms)", &r, 1.f, 0., 10000.);
     update(id, snapshot, "release_ms", r);
 
-	ImNodes::BeginOutputAttribute(id);
+	ImNodes::BeginOutputAttribute(snapshot.params.at("output_id"));
     const float text_width = ImGui::CalcTextSize("Out").x;
     ImGui::Indent(120.f + ImGui::CalcTextSize("Out").x - text_width);
 	ImGui::TextUnformatted("Out");
@@ -1189,7 +1189,7 @@ void OscillatorDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     update(id, snapshot, "waveform", w);
     ImGui::PopStyleColor(2);
 
-    ImNodes::BeginOutputAttribute(id);
+    ImNodes::BeginOutputAttribute(snapshot.params.at("output_id"));
     const float text_width = ImGui::CalcTextSize("Out").x;
     ImGui::Indent(120.f + ImGui::CalcTextSize("Out").x - text_width);
     ImGui::TextUnformatted("Out");

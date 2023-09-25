@@ -40,6 +40,8 @@ public:
 	enum EnvParams {
 		NODE_ID,
 		INPUT_ID,
+		OUTPUT_ID,
+		OUTPUT,
 		TRIG_ID,
 		TRIG,
 		ATTACK_MS,
@@ -60,6 +62,8 @@ private:
 	{
 		{"node_id", NODE_ID},
 		{"input_id", INPUT_ID},
+		{"output_id", OUTPUT_ID},
+		{"output", OUTPUT},
 		{"trigger_id", TRIG_ID},
 		{"trigger", TRIG},
 		{"attack_ms", ATTACK_MS},

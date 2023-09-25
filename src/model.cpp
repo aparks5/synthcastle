@@ -504,24 +504,31 @@ int OscillatorNodeCreator::create()
 	auto oscMod = std::make_shared<Value>(INVALID_PARAM_VALUE);
 	auto freq = std::make_shared<Value>(INVALID_PARAM_VALUE);
 	auto depthMod = std::make_shared<Value>(0.f);
+	auto out = std::make_shared<Relay>(0);
 	auto depthModId = m_g->insert_node(depthMod);
 	auto oscModId = m_g->insert_node(oscMod);
 	auto freqId = m_g->insert_node(freq);
 	auto id = m_g->insert_node(oscNode);
+	auto outId = m_g->insert_node(out);
 	oscNode->params[Oscillator::MODDEPTH_ID] = depthModId;
 	oscNode->params[Oscillator::MODFREQ_ID] = oscModId;
 	oscNode->params[Oscillator::FREQ_ID] = freqId;
 	oscNode->params[Oscillator::NODE_ID] = id;
+	oscNode->params[Oscillator::OUTPUT_ID] = outId;
 	m_g->insert_edge(id, depthModId);
 	m_g->insert_edge(id, oscModId);
 	m_g->insert_edge(id, freqId);
+	m_g->insert_edge(outId, id);
 	// todo: refactor assignment and caching should happen in one call
 	cacheType(id, NodeType::OSCILLATOR);
 	cacheType(oscModId, NodeType::VALUE);
 	cacheType(freqId, NodeType::VALUE);
 	cacheType(depthModId, NodeType::VALUE);
+	cacheType(outId, NodeType::RELAY);
 	cacheParam(id, "moddepth_id", depthModId);
 	cacheParam(id, "modfreq_id", oscModId);
+	cacheParam(id, "output_id", outId);
+	cacheParam(id, "output", 0.f);
 	cacheParam(id, "freq_id", freqId);
 	cacheParam(id, "node_id", id);
 	cacheParam(id, "freq", 0.f);
@@ -621,24 +628,31 @@ int EnvelopeNodeCreator::create()
 	// all inputs are Value nodes
 	auto in = std::make_shared<Value>();
 	auto trig = std::make_shared<Value>();
+	auto out = std::make_shared<Relay>(0);
 	// insert input params in reverse order
 	auto trig_id = m_g->insert_node(trig);
 	auto in_id = m_g->insert_node(in);
 	auto id = m_g->insert_node(node);
+	auto outid = m_g->insert_node(out);
 	// assign input ids in order
 	node->params[Envelope::NODE_ID] = id;
 	node->params[Envelope::INPUT_ID] = in_id;
 	node->params[Envelope::TRIG_ID] = trig_id;
+	node->params[Envelope::OUTPUT_ID] = outid;
 	// insert input edges in reverse order
 	m_g->insert_edge(id, trig_id);
 	m_g->insert_edge(id, in_id);
+	m_g->insert_edge(outid, id);
 	// update cache
 	cacheType(id, NodeType::ENVELOPE);
 	cacheType(trig_id, NodeType::VALUE);
 	cacheType(in_id, NodeType::VALUE);
+	cacheType(outid, NodeType::RELAY);
 	cacheParam(id, "node_id", id);
 	cacheParam(id, "input_id", in_id);
 	cacheParam(id, "trig_id", trig_id);
+	cacheParam(id, "output_id", outid);
+	cacheParam(id, "output", 0.f);
 	cacheParam(id, "attack_ms", 0.f);
 	cacheParam(id, "decay_ms", 0.f);
 	cacheParam(id, "sustain_db", 0.f);
