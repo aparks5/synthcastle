@@ -115,7 +115,7 @@ float MIDI::process()
 
 		// all voices are exhausted we need to turn one off
 		if (activeVoices > 4) {
-			m_voices[lastActiveVoice] = freq;
+			m_voices[lastActiveVoice] = midiNoteToFreq((int)(freq));
 			lastActiveVoice++;
 			if (lastActiveVoice > 4) {
 				lastActiveVoice = 0;

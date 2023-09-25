@@ -20,13 +20,15 @@ int Envelope::lookupParam(std::string str)
 // it should not be coupled to Gain in its class definition
 float Envelope::process(float in)
 {
-	if (params[TRIG] != 0) {
+	if ((params[TRIG] != 0)) { // && (!m_bTriggered)) {
 		m_stage = EnvelopeStage::ATTACK;
-		params[TRIG] = 0;
 		m_bTriggered = true;
 	}
-	else {
-		if (m_bTriggered == false) {
+
+	if ((params[TRIG] == 0)) {
+		//printf("no trigger\n");
+		m_bTriggered = false;
+		if (m_stage != EnvelopeStage::RELEASE) {
 			m_stage = EnvelopeStage::RELEASE;
 		}
 	}
@@ -39,8 +41,9 @@ float Envelope::process(float in)
 	switch (m_stage) {
 
 	case EnvelopeStage::ATTACK:
+
 		if (env.attackTimeSamps != 0) {
-			m_gain = m_gain + static_cast<double>(1.f / env.attackTimeSamps);
+			m_gain += static_cast<double>(1.f / env.attackTimeSamps);
 		}
 		else {
 			m_gain = 1.0f;
@@ -55,19 +58,18 @@ float Envelope::process(float in)
 	case EnvelopeStage::DECAY:
 		if (env.decayTimeSamps > 0) {
 			m_gain -= static_cast<float>((1.f /  env.decayTimeSamps) * pow(10, 1.f * env.sustainLeveldB / 20));
-			if (m_gain <= 0) {
+			if (m_gain < 0) {
 				m_gain = 0;
-				m_stage = EnvelopeStage::OFF;
+				m_stage = EnvelopeStage::RELEASE;
 			}
 		}
 
-		if (m_gain == pow(10, 1.f * env.sustainLeveldB / 20)) {
+		if (m_gain <= (pow(10, 1.f * env.sustainLeveldB / 20))) {
 			m_stage = EnvelopeStage::SUSTAIN;
 		}
 
 		break;
 	case EnvelopeStage::SUSTAIN:
-		m_stage = EnvelopeStage::RELEASE;
 		m_gain = pow(10, 1.f * env.sustainLeveldB / 20);
 		break;
 	case EnvelopeStage::RELEASE:
@@ -90,7 +92,6 @@ float Envelope::process(float in)
 		if (m_gain <= 0.f) {
 			m_gain = 0.f;
 		}
-		m_bTriggered = false;
 
 
 		break;

@@ -969,9 +969,8 @@ void SeqDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImGui::TextUnformatted("Reset");
 	ImNodes::EndInputAttribute();
 
-
-
     auto step = snapshot.params.at("step");
+    ImGui::Text("Step: %d", (int)step);
     auto progress = ((1.+step) / 8.);
 
     // Typically we would use ImVec2(-1.0f,0.0f) or ImVec2(-FLT_MIN,0.0f) to use all available width,
@@ -989,7 +988,7 @@ void SeqDisplayCommand::display(int id, const NodeSnapshot& snapshot)
         ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(i / 7.0f, 0.6f, 0.5f));
         ImGui::PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(i / 7.0f, 0.7f, 0.5f));
         ImGui::PushStyleColor(ImGuiCol_SliderGrab, (ImVec4)ImColor::HSV(i / 7.0f, 0.9f, 0.9f));
-        ImGui::VSliderFloat("##v", ImVec2(22, 160), &val, 0.0f, 0.5f, "");
+        ImGui::VSliderFloat("##v", ImVec2(22, 160), &val, 0.0f, 1000.f, "");
 		update(id, snapshot, str[i], val);
         if (ImGui::IsItemActive() || ImGui::IsItemHovered())
             ImGui::SetTooltip("%.3f", val);
@@ -1019,7 +1018,7 @@ void SeqDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     update(id, snapshot, "gatemode", (float)g);
 
     ImGui::PopID();
-	ImNodes::BeginOutputAttribute(id);
+	ImNodes::BeginOutputAttribute(snapshot.params.at("trigout_id"));
     const float text_width = ImGui::CalcTextSize("Out").x;
     ImGui::Indent(120.f + ImGui::CalcTextSize("Out").x - text_width);
 	ImGui::TextUnformatted("Out");
@@ -1041,32 +1040,15 @@ void TrigDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     ImNodes::EndNodeTitleBar();
 
     int clicked = 0;
-    if (ImGui::SmallButton("Trig!")) {
+    if (ImGui::Button("Trig!")) {
+        printf("clicked trig\n");
         clicked = 1;
     }
-    update(id, snapshot, "trig", clicked);
+	update(id, snapshot, "trig", clicked);
 
-
-    // first output is not a relay
-    ImNodes::BeginOutputAttribute(id);
-    std::string str = "Trig1";
-	auto text_width = ImGui::CalcTextSize(str.c_str()).x;
-	ImGui::Indent(60.f + ImGui::CalcTextSize(str.c_str()).x - text_width);
-	ImGui::TextUnformatted(str.c_str());
+	ImNodes::BeginOutputAttribute(snapshot.params.at("trigout_id"));
+    ImGui::TextUnformatted("Trig");
 	ImNodes::EndOutputAttribute();
-
-
-    size_t numTrigs = static_cast<size_t>(snapshot.params.at("numtrigs"));
-    for (size_t idx = 2; idx <= numTrigs; idx++) {
-        std::string str = "Trig" + std::to_string(idx);
-        std::string idstr = "trig" + std::to_string(idx);
-        idstr += "_id";
-        ImNodes::BeginOutputAttribute(snapshot.params.at(idstr));
-		auto text_width = ImGui::CalcTextSize(str.c_str()).x;
-		ImGui::Indent(60.f + ImGui::CalcTextSize(str.c_str()).x - text_width);
-		ImGui::TextUnformatted(str.c_str());
-		ImNodes::EndOutputAttribute();
-    }
 
     auto v = snapshot.params.at("bpm");
     ImGui::DragFloat("BPM", &v, 0.5f, 0, 300.);
@@ -1127,7 +1109,7 @@ void EnvelopeDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImNodes::EndInputAttribute();
 
     auto a = snapshot.params.at("attack_ms");
-	ImGui::DragFloat("Attack Time (ms)", &a, 0.2f, 0., 1000.);
+	ImGui::DragFloat("Attack Time (ms)", &a, 0.2f, 0., 5000.);
     update(id, snapshot, "attack_ms", a);
 
     auto d = snapshot.params.at("decay_ms");
@@ -1135,11 +1117,11 @@ void EnvelopeDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     update(id, snapshot, "decay_ms", d);
 
     auto s = snapshot.params.at("sustain_db");
-	ImGui::DragFloat("Sustain Level (dB)", &s, 1.f, -100, 0.);
+	ImGui::DragFloat("Sustain Level (dB)", &s, 1.f, -60, 0.);
     update(id, snapshot, "sustain_db", s);
 
     auto r = snapshot.params.at("release_ms");
-    ImGui::DragFloat("Release Time (ms)", &r, 1.f, 0., 1000.);
+    ImGui::DragFloat("Release Time (ms)", &r, 1.f, 0., 10000.);
     update(id, snapshot, "release_ms", r);
 
 	ImNodes::BeginOutputAttribute(id);

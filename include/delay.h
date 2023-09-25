@@ -46,7 +46,6 @@ public:
 		NUM_PARAMS
 	};
 
-
 	void update(float delayMs, float feedbackRatio);
 	void reset();
 	void write(float val);

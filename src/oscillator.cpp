@@ -26,7 +26,7 @@ void Oscillator::update()
 {
 	auto modfreq = params[Oscillator::MODFREQ];
 	auto moddepth = params[Oscillator::MODDEPTH];
-	auto freq = params[Oscillator::FREQ];
+	auto freq = params[Oscillator::FREQ]; // scale 0 to 1 to 0 to 22050
 	auto coarse = params[Oscillator::TUNING_COARSE];
 	auto fine = params[Oscillator::TUNING_FINE];
 

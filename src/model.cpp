@@ -408,25 +408,22 @@ int SamplerNodeCreator::create()
 int TrigNodeCreator::create()
 {
 	auto k = std::make_shared<Trig>();
+	auto out = std::make_shared<Relay>(0);
 	auto id = m_g->insert_node(k);
+	auto outid = m_g->insert_node(out);
+	m_g->insert_edge(outid, id);
+
 	k->params[Trig::NODE_ID] = id;
+	k->params[Trig::TRIGOUT_ID] = outid;
 	cacheType(id, NodeType::TRIG);
+	cacheType(outid, NodeType::RELAY);
+	cacheParam(id, "trigout_id", outid);
 	cacheParam(id, "bpm", 0.f);
 	cacheParam(id, "trig", 0.f);
-	cacheParam(id, "value", 0.f);
+	cacheParam(id, "trigout", 0.f);
 	cacheParam(id, "progress", 0.f);
 	cacheParam(id, "progress_dir", 1.f);
 	cacheParam(id, "stop", 0.f);
-	cacheParam(id, "numtrigs", k->params[Trig::NUMTRIGS]);
-	for (size_t idx = 2; idx <= k->params[Trig::NUMTRIGS]; idx++) {
-		std::string str = "trig" + std::to_string(idx);
-		str += "_id";
-		auto temp = std::make_shared<Relay>(idx);
-		auto tempId = m_g->insert_node(temp);
-		k->params[Trig::TRIG1_ID + idx - 1] = tempId;
-		m_g->insert_edge(tempId, id);
-		cacheParam(id, str, tempId);
-	}
 	return id;
 }
 
@@ -474,31 +471,30 @@ int SeqNodeCreator::create()
 	auto k = std::make_shared<Seq>();
 	auto t = std::make_shared<Value>();
 	auto reset = std::make_shared<Value>();
+	auto out = std::make_shared<Relay>(0);
 	auto tid = m_g->insert_node(t);
 	auto rid = m_g->insert_node(reset);
 	auto id = m_g->insert_node(k);
+	auto outid = m_g->insert_node(out);
 	m_g->insert_edge(id, rid);
 	m_g->insert_edge(id, tid);
+	m_g->insert_edge(outid, id);
 	k->params[Seq::NODE_ID] = id;
 	k->params[Seq::TRIGIN_ID] = tid;
 	k->params[Seq::RESET_ID] = rid;
+	k->params[Seq::TRIGOUT_ID] = outid;
 	k->params[Seq::TRIGIN] = 0.f;
 	cacheType(id, NodeType::SEQ);
 	cacheType(tid, NodeType::VALUE);
 	cacheType(rid, NodeType::VALUE);
+	cacheType(outid, NodeType::RELAY);
 	for (auto& str : k->paramStrings()) {
 		cacheParam(id, str, 0.f);
 	}
+	cacheParam(id, "node_id", id);
 	cacheParam(id, "trigin_id", tid);
 	cacheParam(id, "reset_id", rid);
-	cacheParam(id, "enable_s1", 1.f);
-	cacheParam(id, "enable_s2", 1.f);
-	cacheParam(id, "enable_s3", 1.f);
-	cacheParam(id, "enable_s4", 1.f);
-	cacheParam(id, "enable_s5", 1.f);
-	cacheParam(id, "enable_s6", 1.f);
-	cacheParam(id, "enable_s7", 1.f);
-	cacheParam(id, "enable_s8", 1.f);
+	cacheParam(id, "trigout_id", outid);
 	return id;
 }
 

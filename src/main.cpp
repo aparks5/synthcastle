@@ -166,7 +166,6 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
                 cached.push_back(pNode->params[MIDI::VELOCITY]);
                 break;
 			}
-
         }
         break;
         case NodeType::SEQ:
@@ -179,7 +178,17 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
             auto reset = value_stack.top();
             value_stack.pop();
             pNode->params[Seq::RESET] = reset;
-            value_stack.push(pNode->process());
+
+            if (idVisited[id] == 1) {
+                pNode->process();
+			}
+
+            // allow one out to branch to multiple ins
+            // repopulate the cache each visit
+			cached.clear();
+			auto val = pNode->params[Seq::TRIGOUT];
+			cached.push_back(val);
+
         }
         break;
         case NodeType::QUAD_MIXER:
@@ -223,14 +232,9 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
 			pNode->update();
 			auto freq = value_stack.top();
 			value_stack.pop();
-			if (freq != INVALID_PARAM_VALUE) {
-                // scale midi as float to hz
-                float target = 0;
-                if (freq > 21) {
-                    target = midiNoteToFreq((int)(freq));
-                }
-                pNode->params[Oscillator::FREQ] = target;
-			}
+            if (freq > 0) {
+                pNode->params[Oscillator::FREQ] = freq;
+            }
 			auto mod = value_stack.top();
 			value_stack.pop();
 			if (mod != INVALID_PARAM_VALUE) {
@@ -292,17 +296,15 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
 			value_stack.push(val);
 		}
 		break;
-
         case NodeType::TRIG:
         {
-			if (clockCache == -1) {
-				auto val = pNode->process();
-				clockCache = val;
-				value_stack.push(val);
+			if (idVisited[id] == 1) {
+				pNode->process();
 			}
-			else {
-				value_stack.push(clockCache);
-			}
+
+			cached.clear();
+			auto val = pNode->params[Trig::TRIGOUT];
+			cached.push_back(val);
         }
         break;
 		case NodeType::GAIN:
