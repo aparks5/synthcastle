@@ -27,7 +27,10 @@ Welcome to...
 -~--~                   ~---__|,--~'                  ~~----_____-~'   `~----~~                                                                                  
 ```
 
-# News 08/2023
+# News 
+## 09/2023
+- `imgui` UI overhaul has been merged to main
+## 08/2023
 - complete UI overhaul in progress using imgui, implot, imnodes
 - `imgui` branch now open for business
 
