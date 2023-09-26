@@ -7,7 +7,7 @@
 #include "util.h"
 
 Looper::Looper()
-	: Node(NodeType::LOOPER, 0.f, NUM_PARAMS)
+	: Node(NodeType::LOOPER, "looper", NUM_INPUTS, NUM_OUTPUTS, NUM_PARAMS)
 	, m_sampleRate(44100)
 	, m_numLayers(0)
 	, m_maxLoopTimeSec(60)

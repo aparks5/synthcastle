@@ -8,7 +8,7 @@
 #include "util.h"
 
 Sampler::Sampler()
-	: Node(NodeType::SAMPLER, 0.f, NUM_PARAMS)
+	: Node(NodeType::SAMPLER, "sampler", NUM_INPUTS, NUM_OUTPUTS, NUM_PARAMS)
 	, m_sampleRate(44100)
 	, m_startPos(0)
 	, m_accum(0)
@@ -23,6 +23,24 @@ Sampler::Sampler()
 	m_env.params[Envelope::DECAY_MS] = 250;
 	m_env.params[Envelope::SUSTAIN_DB] = -30.;
 	m_env.params[Envelope::RELEASE_MS] = 50;
+
+	paramMap = {
+		{"node_id", NODE_ID},
+		{"position_id", POSITION_ID},
+		{"position", POSITION},
+		{"spread", SPREAD},
+		{"distance", DISTANCE},
+		{"num_voices", NUM_VOICES},
+		{"grainsize", GRAINSIZE},
+		{"grainsize_mod", GRAINSIZE_MOD},
+		{"spray", SPRAY},
+		{"pitch_id", PITCH_ID},
+		{"pitch", PITCH},
+		{"filename", FILENAME},
+		{"startstop_id", STARTSTOP_ID},
+		{"startstop", STARTSTOP},
+	};
+
 } 
 
 // all node update functions should be called outside of the audio thread

@@ -1,3 +1,4 @@
+/*
 #include "signal_flow_editor.h"
 
 #include "gain.h"
@@ -133,9 +134,9 @@ void SignalFlowEditor::show()
         ImNodes::IsEditorHovered()) {
         if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_A)) {
 				auto oscNode = std::make_shared<Oscillator>();
-				auto oscMod = std::make_shared<Value>(INVALID_PARAM_VALUE);
-				auto freq = std::make_shared<Value>(INVALID_PARAM_VALUE);
-				auto depthMod = std::make_shared<Value>(0.f);
+				auto oscMod = std::make_shared<ProcessorInput>(INVALID_PARAM_VALUE);
+				auto freq = std::make_shared<ProcessorInput>(INVALID_PARAM_VALUE);
+				auto depthMod = std::make_shared<ProcessorInput>(0.f);
 				auto depthModId = m_graph.insert_node(depthMod);
 				auto oscModId = m_graph.insert_node(oscMod);
 				auto freqId = m_graph.insert_node(freq);
@@ -153,7 +154,7 @@ void SignalFlowEditor::show()
         }
 		else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_V)) {
 			auto node = std::make_shared<FourVoice>(m_voiceCount++);
-			auto input = std::make_shared<Value>(0.f);
+			auto input = std::make_shared<ProcessorInput>(0.f);
 			auto inputId = m_graph.insert_node(input);
 			auto id = m_graph.insert_node(node);
 			node->params[FourVoice::INPUT_ID] = inputId;
@@ -173,9 +174,9 @@ void SignalFlowEditor::show()
 		}
 		else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_F)) {
 			auto node = std::make_shared<Filter>();
-			auto in = std::make_shared<Value>(0.f);
-			auto mod = std::make_shared<Value>(0.f);
-			auto depth = std::make_shared<Value>(0.f);
+			auto in = std::make_shared<ProcessorInput>(0.f);
+			auto mod = std::make_shared<ProcessorInput>(0.f);
+			auto depth = std::make_shared<ProcessorInput>(0.f);
 			auto dId = m_graph.insert_node(depth);
 			auto mId = m_graph.insert_node(mod);
 			auto inId = m_graph.insert_node(in);
@@ -193,7 +194,7 @@ void SignalFlowEditor::show()
 		}
 		else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_M)) {
 			auto node = std::make_shared<MIDI>();
-			//auto extra = std::make_shared<Relay>();
+			//auto extra = std::make_shared<ProcessorOutput>();
 			auto id = m_graph.insert_node(node);
 			//auto extraId = m_graph.insert_node(extra);
 			//m_graph.insert_edge(extraId, id);
@@ -206,8 +207,8 @@ void SignalFlowEditor::show()
 		}
 		else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_G)) {
 			auto gainNode = std::make_shared<Gain>();
-			auto gainIn = std::make_shared<Value>(0.f);
-			auto gainMod = std::make_shared<Value>(1.f);
+			auto gainIn = std::make_shared<ProcessorInput>(0.f);
+			auto gainMod = std::make_shared<ProcessorInput>(1.f);
 			// you need to assign this gain id for linking
 			auto gainModId = m_graph.insert_node(gainMod);
 			auto gainInId = m_graph.insert_node(gainIn);
@@ -223,10 +224,10 @@ void SignalFlowEditor::show()
 		}
 		else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_X)) {
 			auto mix = std::make_shared<QuadMixer>();
-			auto a = std::make_shared<Value>(0.f);
-			auto b = std::make_shared<Value>(0.f);
-			auto c = std::make_shared<Value>(0.f);
-			auto d = std::make_shared<Value>(0.f);
+			auto a = std::make_shared<ProcessorInput>(0.f);
+			auto b = std::make_shared<ProcessorInput>(0.f);
+			auto c = std::make_shared<ProcessorInput>(0.f);
+			auto d = std::make_shared<ProcessorInput>(0.f);
 			auto aId = m_graph.insert_node(a);
 			auto bId = m_graph.insert_node(b);
 			auto cId = m_graph.insert_node(c);
@@ -249,8 +250,8 @@ void SignalFlowEditor::show()
 
 		else if (ImGui::IsKeyReleased((ImGuiKey)SDL_SCANCODE_S)) {
 			auto outputNode = std::make_shared<Output>();
-			auto leftNode = std::make_shared<Value>(0.f);
-			auto rightNode = std::make_shared<Value>(0.f);
+			auto leftNode = std::make_shared<ProcessorInput>(0.f);
+			auto rightNode = std::make_shared<ProcessorInput>(0.f);
 			auto rightNodeId = m_graph.insert_node(rightNode);
 			auto leftNodeId = m_graph.insert_node(leftNode);
 			auto outputId = m_graph.insert_node(outputNode);
@@ -278,7 +279,7 @@ void SignalFlowEditor::show()
 		// an edge which links a node's operation to its input. We don't
 		// want to render node internals with visible links.
 		auto node = m_graph.node(edge.from);
-		if (node->type != NodeType::VALUE) {
+		if (node->type != NodeType::PROCESSOR_INPUT) {
 			continue;
 		}
 
@@ -298,7 +299,7 @@ void SignalFlowEditor::show()
 
 			const bool bLinkValid = (startType != endType);
 			if (bLinkValid) {
-				if (startType != NodeType::VALUE) {
+				if (startType != NodeType::PROCESSOR_INPUT) {
 					std::swap(startAttr, endAttr);
 				}
 				m_graph.insert_edge(startAttr, endAttr);
@@ -308,4 +309,4 @@ void SignalFlowEditor::show()
 
     ImGui::End();
 }
-
+*/

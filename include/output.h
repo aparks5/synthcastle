@@ -10,15 +10,22 @@ public:
 	virtual ~Output() {};
 	float process() override;
 
-	int lookupParam(std::string str) override
-	{
-		return m_lookup[str];
-	}
-
-	enum OutputParams {
-		NODE_ID,
+	enum Inputs {
 		INPUT_L_ID,
 		INPUT_R_ID,
+		INPUT_L,
+		INPUT_R,
+		NUM_INPUTS
+	};
+
+	enum Outputs {
+		OUTPUT_L,
+		OUTPUT_R,
+		NUM_OUTPUTS
+	};
+
+	enum Params {
+		NODE_ID,
 		MUTE,
 		DISPLAY_L,
 		DISPLAY_R,

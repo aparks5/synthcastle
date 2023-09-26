@@ -4,13 +4,9 @@
 #include "constants.h"
 
 Gain::Gain()
-    : Node(NodeType::GAIN, 1., NUM_PARAMS)
+    : Node(NodeType::GAIN, "gain", NUM_INPUTS, NUM_OUTPUTS, NUM_PARAMS)
 {
 	params[Gain::GAIN] = 1.f;
-}
-
-int Gain::lookupParam(std::string str) {
-	return m_lookup[str];
 }
 
 void Gain::setGaindB(float gaindB)

@@ -15,21 +15,15 @@ public:
 	float process() override;
 	void update() override;
 
-	int lookupParam(std::string str) override {
-		return m_lookup[str];
-	}
-	std::vector<std::string> paramStrings() override
-	{
-		std::vector<std::string> strings;
-		for (std::unordered_map<std::string, int>::iterator iter = m_lookup.begin(); iter != m_lookup.end(); ++iter) {
-			auto k = iter->first;
-			strings.push_back(k);
-		}
+	enum Inputs {
+		NUM_INPUTS
+	};
 
-		return strings;
-	}
+	enum Outputs {
+		NUM_OUTPUTS
+	};
 
-	enum SamplerParams {
+	enum Params {
 		NODE_ID,
 		POSITION_ID,
 		POSITION,
@@ -49,22 +43,6 @@ public:
 
 private:
 	Envelope m_env;
-	std::unordered_map<std::string, int> m_lookup = {
-		{"node_id", NODE_ID},
-		{"position_id", POSITION_ID},
-		{"position", POSITION},
-		{"spread", SPREAD},
-		{"distance", DISTANCE},
-		{"num_voices", NUM_VOICES},
-		{"grainsize", GRAINSIZE},
-		{"grainsize_mod", GRAINSIZE_MOD},
-		{"spray", SPRAY},
-		{"pitch_id", PITCH_ID},
-		{"pitch", PITCH},
-		{"filename", FILENAME},
-		{"startstop_id", STARTSTOP_ID},
-		{"startstop", STARTSTOP},
-	};
 	float m_sampleRate;
 	AudioFile<float> audioFile;
 	size_t m_startPos;

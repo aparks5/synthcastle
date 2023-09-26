@@ -1,7 +1,7 @@
 #include "freeverb.h"
 
 Freeverb::Freeverb()
-	: Node(NodeType::FREEVERB, 0.f, NUM_PARAMS)
+	: Node(NodeType::FREEVERB, "freeverb", NUM_INPUTS, NUM_OUTPUTS, NUM_PARAMS)
 	, m_sampleRate(44100)
 {
 	auto fs = m_sampleRate;

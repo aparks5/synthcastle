@@ -13,6 +13,8 @@
 #include "trig.h"
 #include "oscillator.h"
 #include "delay.h"
+#include "relay.h"
+#include "value.h"
 
 #include "node_editor.h"
 #include "oscillator.h"
@@ -93,7 +95,7 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
 		postorder.pop();
 		const auto& pNode = graph->node(id);
 
-		switch (pNode->type) {
+		switch (pNode->getNodeType()) {
 		case NodeType::AUDIO_IN:
 		{
             value_stack.push(inputSample);
@@ -174,6 +176,22 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
 			}
         }
         break;
+        case NodeType::PROCESSOR:
+        {
+            for (auto& in : pNode->inputs) {
+                in = value_stack.top();
+                value_stack.pop();
+            }
+
+            if (idVisited[id] == 1) {
+                pNode->process();
+            }
+
+            cached.clear();
+            for (auto& out : pNode->outputs) {
+                cached.push_back(out);
+            }
+        }
         case NodeType::SEQ:
         {
 			// i should queue this til after eval
@@ -260,12 +278,12 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
             cached.push_back(pNode->params[Oscillator::OUTPUT]);
 		}
 		break;
-        case NodeType::RELAY:
+        case NodeType::PROCESSOR_OUTPUT:
         {
             // if there is a Relay it's attached to a process node
             // push its index to the stack to obtain the output?
             // just pull the value-th item from the cache
-			value_stack.push(cached[pNode->value]);
+            value_stack.push(cached[pNode->outputs[ProcessorOutput::OUTPUT]]);
         }
         break;
         case NodeType::CONSTANT:
@@ -339,13 +357,13 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
 			}
 		}
 		break;
-		case NodeType::VALUE:
+		case NodeType::PROCESSOR_INPUT:
 		{
              //if the edge does not have an edge connecting to another node, then just use the value
             // at this node. it means the node's input pin has not been connected to anything and
             // the value comes from the node's ui.
 			if (graph->num_edges_from_node(id) == 0ull) {
-				value_stack.push(pNode->value);
+				value_stack.push(pNode->outputs[ProcessorInput::OUTPUT]);
 			}
 		}
         break;

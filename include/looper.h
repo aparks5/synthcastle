@@ -15,21 +15,15 @@ public:
 	virtual ~Looper() {}
 	float process(float in) override;
 
-	int lookupParam(std::string str) override {
-		return m_lookup[str];
-	}
-	std::vector<std::string> paramStrings() override
-	{
-		std::vector<std::string> strings;
-		for (std::unordered_map<std::string, int>::iterator iter = m_lookup.begin(); iter != m_lookup.end(); ++iter) {
-			auto k = iter->first;
-			strings.push_back(k);
-		}
+	enum Inputs {
+		NUM_INPUTS
+	};
 
-		return strings;
-	}
+	enum Outputs {
+		NUM_OUTPUTS
+	};
 
-	enum SamplerParams {
+	enum Params {
 		NODE_ID,
 		INPUT_ID,
 		STOP,

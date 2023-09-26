@@ -283,7 +283,7 @@ void View::display()
         auto id = k;
         for (auto const& [edgenum, edge] : snap.edges) {
             if (viewbag.map.find(edge.from) != viewbag.map.end()) {
-                if (viewbag.map.at(edge.from).nodeType != NodeType::VALUE) {
+                if (viewbag.map.at(edge.from).nodeType != NodeType::PROCESSOR_INPUT) {
                     continue;
                 }
                 ImNodes::Link(edgenum, edge.from, edge.to);
@@ -321,7 +321,7 @@ void View::display()
                 NodeType endType = viewbag.map.at(endAttr).nodeType;
                 const bool bLinkValid = (startType != endType);
                 if (bLinkValid) {
-                    if (startType != NodeType::VALUE) {
+                    if (startType != NodeType::PROCESSOR_INPUT) {
                         std::swap(startAttr, endAttr);
                     }
                 }

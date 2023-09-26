@@ -10,7 +10,15 @@ public:
 	virtual ~Gain() {};
 	float process() override;
 
-	enum GainParams {
+	enum Inputs {
+		NUM_INPUTS
+	};
+
+	enum Outputs {
+		NUM_OUTPUTS
+	};
+
+	enum Params {
 		GAIN,
 		GAINMOD,
 		GAINMOD_ID,
@@ -30,8 +38,6 @@ public:
 		INPUT,
 		NUM_PARAMS
 	};
-
-	int lookupParam(std::string str) override;
 
 	void setGainf(float gain) { m_gain = gain; };
 	void setGaindB(float gaindB);

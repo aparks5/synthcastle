@@ -67,7 +67,10 @@ ViewBag Model::refresh()
 			const auto& pNode = m_graph->node(id);
 			auto paramStrings = pNode->paramStrings();
 			for (auto& str : paramStrings) {
-				auto param = pNode->lookupParam(str);
+				// TODO: repeat this for inputIndexByName and outputIndexByName?
+				// maybe not necessary since inputs are updated at construction, id's are unchanging
+				// and inputs and outputs are modified for every sample
+				auto param = pNode->paramIndexByName(str);
 				auto value = pNode->params[param];
 				if (m_cache.map.find(id) != m_cache.map.end()) {
 					m_cache.map[id].params[str] = value;
@@ -115,8 +118,7 @@ int Model::update(UpdateEvent update)
 	auto v = update.value;
 	auto node = m_graph->node(i);
 	// no controller should be able to update id's
-	auto p_idx = node->lookupParam(p);
-	// todo: restrict to valid values for a given param
+	auto p_idx = node->paramIndexByName(p);
 	if (p_idx != -1) {
 		node->params[p_idx] = update.value;
 		m_cache.map[i].params[p] = v;
@@ -166,14 +168,14 @@ int ConstantNodeCreator::create()
 {
 	// SO MUCH REPETITION AHHHH NEEDS REFACTORING
 	auto k = std::make_shared<Constant>();
-	auto in1 = std::make_shared<Value>();
-	auto in2 = std::make_shared<Value>();
-	auto in3 = std::make_shared<Value>();
-	auto in4 = std::make_shared<Value>();
-	auto out1 = std::make_shared<Relay>(0);
-	auto out2 = std::make_shared<Relay>(1);
-	auto out3 = std::make_shared<Relay>(2);
-	auto out4 = std::make_shared<Relay>(3);
+	auto in1 = std::make_shared<ProcessorInput>();
+	auto in2 = std::make_shared<ProcessorInput>();
+	auto in3 = std::make_shared<ProcessorInput>();
+	auto in4 = std::make_shared<ProcessorInput>();
+	auto out1 = std::make_shared<ProcessorOutput>(0);
+	auto out2 = std::make_shared<ProcessorOutput>(1);
+	auto out3 = std::make_shared<ProcessorOutput>(2);
+	auto out4 = std::make_shared<ProcessorOutput>(3);
 	// insert inputs in reverse order
 	auto in4id = m_g->insert_node(in4);
 	auto in3id = m_g->insert_node(in3);
@@ -194,23 +196,23 @@ int ConstantNodeCreator::create()
 	m_g->insert_edge(out3id, id);
 	m_g->insert_edge(out4id, id);
 	k->params[Constant::NODE_ID] = id;
-	k->params[Constant::INPUT1_ID] = in1id;
-	k->params[Constant::INPUT2_ID] = in2id;
-	k->params[Constant::INPUT3_ID] = in3id;
-	k->params[Constant::INPUT4_ID] = in4id;
-	k->params[Constant::OUTPUT1_ID] = out1id;
-	k->params[Constant::OUTPUT2_ID] = out2id;
-	k->params[Constant::OUTPUT3_ID] = out3id;
-	k->params[Constant::OUTPUT4_ID] = out4id;
+	k->inputs[Constant::INPUT1_ID] = in1id;
+	k->inputs[Constant::INPUT2_ID] = in2id;
+	k->inputs[Constant::INPUT3_ID] = in3id;
+	k->inputs[Constant::INPUT4_ID] = in4id;
+	k->outputs[Constant::OUTPUT1_ID] = out1id;
+	k->outputs[Constant::OUTPUT2_ID] = out2id;
+	k->outputs[Constant::OUTPUT3_ID] = out3id;
+	k->outputs[Constant::OUTPUT4_ID] = out4id;
 	cacheType(id, NodeType::CONSTANT);
-	cacheType(in1id, NodeType::VALUE);
-	cacheType(in2id, NodeType::VALUE);
-	cacheType(in3id, NodeType::VALUE);
-	cacheType(in4id, NodeType::VALUE);
-	cacheType(out1id, NodeType::RELAY);
-	cacheType(out2id, NodeType::RELAY);
-	cacheType(out3id, NodeType::RELAY);
-	cacheType(out4id, NodeType::RELAY);
+	cacheType(in1id, NodeType::PROCESSOR_INPUT);
+	cacheType(in2id, NodeType::PROCESSOR_INPUT);
+	cacheType(in3id, NodeType::PROCESSOR_INPUT);
+	cacheType(in4id, NodeType::PROCESSOR_INPUT);
+	cacheType(out1id, NodeType::PROCESSOR_OUTPUT);
+	cacheType(out2id, NodeType::PROCESSOR_OUTPUT);
+	cacheType(out3id, NodeType::PROCESSOR_OUTPUT);
+	cacheType(out4id, NodeType::PROCESSOR_OUTPUT);
 	for (auto& str : k->paramStrings()) {
 		cacheParam(id, str, 0.f);
 	}
@@ -231,14 +233,14 @@ int ConstantNodeCreator::create()
 int DistortNodeCreator::create()
 {
 	auto k = std::make_shared<Distort>();
-	auto in = std::make_shared<Value>();
+	auto in = std::make_shared<ProcessorInput>();
 	auto inid = m_g->insert_node(in);
 	auto id = m_g->insert_node(k);
 	m_g->insert_edge(id, inid);
 	k->params[Distort::NODE_ID] = id;
 	k->params[Distort::INPUT_ID] = inid;
 	cacheType(id, NodeType::DISTORT);
-	cacheType(inid, NodeType::VALUE);
+	cacheType(inid, NodeType::PROCESSOR_INPUT);
 	for (auto& str : k->paramStrings()) {
 		cacheParam(id, str, 0.f);
 	}
@@ -250,10 +252,10 @@ int DistortNodeCreator::create()
 int FreqShiftNodeCreator::create()
 {
 	auto k = std::make_shared<FrequencyShifter>();
-	auto in = std::make_shared<Value>();
-	auto freq = std::make_shared<Value>();
+	auto in = std::make_shared<ProcessorInput>();
+	auto freq = std::make_shared<ProcessorInput>();
 	// when adding outputs we should simply increment the relay index
-	auto out = std::make_shared<Relay>(0);
+	auto out = std::make_shared<ProcessorOutput>(0);
 
 	auto freqid = m_g->insert_node(freq);
 	auto inid = m_g->insert_node(in);
@@ -270,9 +272,9 @@ int FreqShiftNodeCreator::create()
 	k->params[FrequencyShifter::OUTPUT_ID] = outid;
 
 	cacheType(id, NodeType::FREQ_SHIFT);
-	cacheType(inid, NodeType::VALUE);
-	cacheType(freqid, NodeType::VALUE);
-	cacheType(outid, NodeType::RELAY);
+	cacheType(inid, NodeType::PROCESSOR_INPUT);
+	cacheType(freqid, NodeType::PROCESSOR_INPUT);
+	cacheType(outid, NodeType::PROCESSOR_OUTPUT);
 
 	for (auto& str : k->paramStrings()) {
 		cacheParam(id, str, 0.f);
@@ -303,11 +305,11 @@ int MidiInputNodeCreator::create()
 	// insert node into map with id
 	// assign out ids
 	// cache as relays
-	auto v1 = std::make_shared<Relay>(0);
-	auto v2 = std::make_shared<Relay>(1);
-	auto v3 = std::make_shared<Relay>(2);
-	auto v4 = std::make_shared<Relay>(3);
-	auto vel = std::make_shared<Relay>(4);
+	auto v1 = std::make_shared<ProcessorOutput>(0);
+	auto v2 = std::make_shared<ProcessorOutput>(1);
+	auto v3 = std::make_shared<ProcessorOutput>(2);
+	auto v4 = std::make_shared<ProcessorOutput>(3);
+	auto vel = std::make_shared<ProcessorOutput>(4);
 	auto id = m_g->insert_node(k);
 	auto v1id = m_g->insert_node(v1);
 	auto v2id = m_g->insert_node(v2);
@@ -326,11 +328,11 @@ int MidiInputNodeCreator::create()
 	k->params[MIDI::OUT_VOICE4_ID] = v4id;
 	k->params[MIDI::OUT_VELOCITY_ID] = velid;
 	cacheType(id, NodeType::MIDI_IN);
-	cacheType(v1id, NodeType::RELAY);
-	cacheType(v2id, NodeType::RELAY);
-	cacheType(v3id, NodeType::RELAY);
-	cacheType(v4id, NodeType::RELAY);
-	cacheType(velid, NodeType::RELAY);
+	cacheType(v1id, NodeType::PROCESSOR_OUTPUT);
+	cacheType(v2id, NodeType::PROCESSOR_OUTPUT);
+	cacheType(v3id, NodeType::PROCESSOR_OUTPUT);
+	cacheType(v4id, NodeType::PROCESSOR_OUTPUT);
+	cacheType(velid, NodeType::PROCESSOR_OUTPUT);
 
 	for (auto& str : k->paramStrings()) {
 		cacheParam(id, str, 0.f);
@@ -353,14 +355,14 @@ int MidiInputNodeCreator::create()
 int LooperNodeCreator::create()
 {
 	auto k = std::make_shared<Looper>();
-	auto in = std::make_shared<Value>();
+	auto in = std::make_shared<ProcessorInput>();
 	auto inid = m_g->insert_node(in);
 	auto id = m_g->insert_node(k);
 	k->params[Looper::NODE_ID] = id;
 	k->params[Looper::INPUT_ID] = inid;
 	m_g->insert_edge(id, inid);
 	cacheType(id, NodeType::LOOPER);
-	cacheType(inid, NodeType::VALUE);
+	cacheType(inid, NodeType::PROCESSOR_INPUT);
 
 	for (auto& str : k->paramStrings()) {
 		cacheParam(id, str, 0.f);
@@ -375,9 +377,9 @@ int LooperNodeCreator::create()
 int SamplerNodeCreator::create()
 {
 	auto k = std::make_shared<Sampler>();
-	auto in = std::make_shared<Value>();
-	auto pos = std::make_shared<Value>();
-	auto startstop = std::make_shared<Value>();
+	auto in = std::make_shared<ProcessorInput>();
+	auto pos = std::make_shared<ProcessorInput>();
+	auto startstop = std::make_shared<ProcessorInput>();
 	auto inid = m_g->insert_node(in);
 	auto posid = m_g->insert_node(pos);
 	auto startid = m_g->insert_node(startstop);
@@ -390,9 +392,9 @@ int SamplerNodeCreator::create()
 	m_g->insert_edge(id, posid);
 	m_g->insert_edge(id, inid);
 	cacheType(id, NodeType::SAMPLER);
-	cacheType(inid, NodeType::VALUE);
-	cacheType(posid, NodeType::VALUE);
-	cacheType(startid, NodeType::VALUE);
+	cacheType(inid, NodeType::PROCESSOR_INPUT);
+	cacheType(posid, NodeType::PROCESSOR_INPUT);
+	cacheType(startid, NodeType::PROCESSOR_INPUT);
 
 	for (auto& str : k->paramStrings()) {
 		cacheParam(id, str, 0.f);
@@ -408,7 +410,7 @@ int SamplerNodeCreator::create()
 int TrigNodeCreator::create()
 {
 	auto k = std::make_shared<Trig>();
-	auto out = std::make_shared<Relay>(0);
+	auto out = std::make_shared<ProcessorOutput>(0);
 	auto id = m_g->insert_node(k);
 	auto outid = m_g->insert_node(out);
 	m_g->insert_edge(outid, id);
@@ -416,7 +418,7 @@ int TrigNodeCreator::create()
 	k->params[Trig::NODE_ID] = id;
 	k->params[Trig::TRIGOUT_ID] = outid;
 	cacheType(id, NodeType::TRIG);
-	cacheType(outid, NodeType::RELAY);
+	cacheType(outid, NodeType::PROCESSOR_OUTPUT);
 	cacheParam(id, "trigout_id", outid);
 	cacheParam(id, "bpm", 0.f);
 	cacheParam(id, "trig", 0.f);
@@ -430,10 +432,10 @@ int TrigNodeCreator::create()
 int MixerNodeCreator::create()
 {
 	auto mix = std::make_shared<QuadMixer>();
-	auto a = std::make_shared<Value>(0.f);
-	auto b = std::make_shared<Value>(0.f);
-	auto c = std::make_shared<Value>(0.f);
-	auto d = std::make_shared<Value>(0.f);
+	auto a = std::make_shared<ProcessorInput>(0.f);
+	auto b = std::make_shared<ProcessorInput>(0.f);
+	auto c = std::make_shared<ProcessorInput>(0.f);
+	auto d = std::make_shared<ProcessorInput>(0.f);
 	auto aId = m_g->insert_node(a);
 	auto bId = m_g->insert_node(b);
 	auto cId = m_g->insert_node(c);
@@ -454,10 +456,10 @@ int MixerNodeCreator::create()
 	}
 
 	cacheType(id, NodeType::QUAD_MIXER);
-	cacheType(aId, NodeType::VALUE);
-	cacheType(bId, NodeType::VALUE);
-	cacheType(cId, NodeType::VALUE);
-	cacheType(dId, NodeType::VALUE);
+	cacheType(aId, NodeType::PROCESSOR_INPUT);
+	cacheType(bId, NodeType::PROCESSOR_INPUT);
+	cacheType(cId, NodeType::PROCESSOR_INPUT);
+	cacheType(dId, NodeType::PROCESSOR_INPUT);
 	cacheParam(id, "node_id", id);
 	cacheParam(id, "inputa_id", aId);
 	cacheParam(id, "inputb_id", bId);
@@ -469,9 +471,9 @@ int MixerNodeCreator::create()
 int SeqNodeCreator::create()
 {
 	auto k = std::make_shared<Seq>();
-	auto t = std::make_shared<Value>();
-	auto reset = std::make_shared<Value>();
-	auto out = std::make_shared<Relay>(0);
+	auto t = std::make_shared<ProcessorInput>();
+	auto reset = std::make_shared<ProcessorInput>();
+	auto out = std::make_shared<ProcessorOutput>(0);
 	auto tid = m_g->insert_node(t);
 	auto rid = m_g->insert_node(reset);
 	auto id = m_g->insert_node(k);
@@ -485,9 +487,9 @@ int SeqNodeCreator::create()
 	k->params[Seq::TRIGOUT_ID] = outid;
 	k->params[Seq::TRIGIN] = 0.f;
 	cacheType(id, NodeType::SEQ);
-	cacheType(tid, NodeType::VALUE);
-	cacheType(rid, NodeType::VALUE);
-	cacheType(outid, NodeType::RELAY);
+	cacheType(tid, NodeType::PROCESSOR_INPUT);
+	cacheType(rid, NodeType::PROCESSOR_INPUT);
+	cacheType(outid, NodeType::PROCESSOR_OUTPUT);
 	for (auto& str : k->paramStrings()) {
 		cacheParam(id, str, 0.f);
 	}
@@ -501,10 +503,10 @@ int SeqNodeCreator::create()
 int OscillatorNodeCreator::create()
 {
 	auto oscNode = std::make_shared<Oscillator>();
-	auto oscMod = std::make_shared<Value>(INVALID_PARAM_VALUE);
-	auto freq = std::make_shared<Value>(INVALID_PARAM_VALUE);
-	auto depthMod = std::make_shared<Value>(0.f);
-	auto out = std::make_shared<Relay>(0);
+	auto oscMod = std::make_shared<ProcessorInput>(INVALID_PARAM_VALUE);
+	auto freq = std::make_shared<ProcessorInput>(INVALID_PARAM_VALUE);
+	auto depthMod = std::make_shared<ProcessorInput>(0.f);
+	auto out = std::make_shared<ProcessorOutput>(0);
 	auto depthModId = m_g->insert_node(depthMod);
 	auto oscModId = m_g->insert_node(oscMod);
 	auto freqId = m_g->insert_node(freq);
@@ -521,10 +523,10 @@ int OscillatorNodeCreator::create()
 	m_g->insert_edge(outId, id);
 	// todo: refactor assignment and caching should happen in one call
 	cacheType(id, NodeType::OSCILLATOR);
-	cacheType(oscModId, NodeType::VALUE);
-	cacheType(freqId, NodeType::VALUE);
-	cacheType(depthModId, NodeType::VALUE);
-	cacheType(outId, NodeType::RELAY);
+	cacheType(oscModId, NodeType::PROCESSOR_INPUT);
+	cacheType(freqId, NodeType::PROCESSOR_INPUT);
+	cacheType(depthModId, NodeType::PROCESSOR_INPUT);
+	cacheType(outId, NodeType::PROCESSOR_OUTPUT);
 	cacheParam(id, "moddepth_id", depthModId);
 	cacheParam(id, "modfreq_id", oscModId);
 	cacheParam(id, "output_id", outId);
@@ -544,8 +546,8 @@ int OscillatorNodeCreator::create()
 int OutputNodeCreator::create()
 {
 	auto outputNode = std::make_shared<Output>();
-	auto leftNode = std::make_shared<Value>(0.f);
-	auto rightNode = std::make_shared<Value>(0.f);
+	auto leftNode = std::make_shared<ProcessorInput>(0.f);
+	auto rightNode = std::make_shared<ProcessorInput>(0.f);
 	auto rightNodeId = m_g->insert_node(rightNode);
 	auto leftNodeId = m_g->insert_node(leftNode);
 	auto outputId = m_g->insert_node(outputNode);
@@ -556,8 +558,8 @@ int OutputNodeCreator::create()
 	outputNode->params[Output::INPUT_R_ID] = rightNodeId;
 	outputNode->params[Output::INPUT_L_ID] = leftNodeId;
 	cacheType(outputId, NodeType::OUTPUT);
-	cacheType(leftNodeId, NodeType::VALUE);
-	cacheType(rightNodeId, NodeType::VALUE);
+	cacheType(leftNodeId, NodeType::PROCESSOR_INPUT);
+	cacheType(rightNodeId, NodeType::PROCESSOR_INPUT);
 	cacheParam(outputId, "left_id", leftNodeId);
 	cacheParam(outputId, "right_id", rightNodeId);
 	cacheParam(outputId, "display_left", 0.f);
@@ -572,12 +574,12 @@ int GainNodeCreator::create()
 	// process
 	auto gainNode = std::make_shared<Gain>();
 	// inputs
-	auto gainIn = std::make_shared<Value>(0.f);
-	auto gainMod = std::make_shared<Value>(1.f);
-	auto panMod = std::make_shared<Value>(0.f);
+	auto gainIn = std::make_shared<ProcessorInput>(0.f);
+	auto gainMod = std::make_shared<ProcessorInput>(1.f);
+	auto panMod = std::make_shared<ProcessorInput>(0.f);
 	// outputs
-	auto leftNode = std::make_shared<Relay>(0);
-	auto rightNode = std::make_shared<Relay>(1);
+	auto leftNode = std::make_shared<ProcessorOutput>(0);
+	auto rightNode = std::make_shared<ProcessorOutput>(1);
 	// insert inputs -- reverse order
 	auto panModId = m_g->insert_node(panMod);
 	auto gainModId = m_g->insert_node(gainMod);
@@ -601,11 +603,11 @@ int GainNodeCreator::create()
 	m_g->insert_edge(rightId, gainId);
 	// cache types
 	cacheType(gainId, NodeType::GAIN);
-	cacheType(panModId, NodeType::VALUE);
-	cacheType(gainInId, NodeType::VALUE);
-	cacheType(gainModId, NodeType::VALUE);
-	cacheType(leftId, NodeType::RELAY);
-	cacheType(rightId, NodeType::RELAY);
+	cacheType(panModId, NodeType::PROCESSOR_INPUT);
+	cacheType(gainInId, NodeType::PROCESSOR_INPUT);
+	cacheType(gainModId, NodeType::PROCESSOR_INPUT);
+	cacheType(leftId, NodeType::PROCESSOR_OUTPUT);
+	cacheType(rightId, NodeType::PROCESSOR_OUTPUT);
 	// cache params
 	cacheParam(gainId, "input_id", gainInId);
 	cacheParam(gainId, "gainmod_id", gainModId);
@@ -626,9 +628,9 @@ int EnvelopeNodeCreator::create()
 {
 	auto node = std::make_shared<Envelope>();
 	// all inputs are Value nodes
-	auto in = std::make_shared<Value>();
-	auto trig = std::make_shared<Value>();
-	auto out = std::make_shared<Relay>(0);
+	auto in = std::make_shared<ProcessorInput>();
+	auto trig = std::make_shared<ProcessorInput>();
+	auto out = std::make_shared<ProcessorOutput>(0);
 	// insert input params in reverse order
 	auto trig_id = m_g->insert_node(trig);
 	auto in_id = m_g->insert_node(in);
@@ -645,9 +647,9 @@ int EnvelopeNodeCreator::create()
 	m_g->insert_edge(outid, id);
 	// update cache
 	cacheType(id, NodeType::ENVELOPE);
-	cacheType(trig_id, NodeType::VALUE);
-	cacheType(in_id, NodeType::VALUE);
-	cacheType(outid, NodeType::RELAY);
+	cacheType(trig_id, NodeType::PROCESSOR_INPUT);
+	cacheType(in_id, NodeType::PROCESSOR_INPUT);
+	cacheType(outid, NodeType::PROCESSOR_OUTPUT);
 	cacheParam(id, "node_id", id);
 	cacheParam(id, "input_id", in_id);
 	cacheParam(id, "trig_id", trig_id);
@@ -665,7 +667,7 @@ int EnvelopeNodeCreator::create()
 int DelayNodeCreator::create()
 {
 	auto node = std::make_shared<Delay>();
-	auto in = std::make_shared<Value>(0.f);
+	auto in = std::make_shared<ProcessorInput>(0.f);
 	auto inid = m_g->insert_node(in);
 	auto id = m_g->insert_node(node);
 	node->params[Delay::NODE_ID] = id;
@@ -673,7 +675,7 @@ int DelayNodeCreator::create()
 	m_g->insert_edge(id, inid);
 	// update cache
 	cacheType(id, NodeType::DELAY);
-	cacheType(inid, NodeType::VALUE);
+	cacheType(inid, NodeType::PROCESSOR_INPUT);
 	for (auto& str : node->paramStrings()) {
 		cacheParam(id, str, 0.f);
 	}
@@ -691,9 +693,9 @@ int DelayNodeCreator::create()
 int FilterNodeCreator::create()
 {
 	auto node = std::make_shared<Filter>();
-	auto in = std::make_shared<Value>(0.f);
-	auto mod = std::make_shared<Value>(0.f);
-	auto depth = std::make_shared<Value>(0.f);
+	auto in = std::make_shared<ProcessorInput>(0.f);
+	auto mod = std::make_shared<ProcessorInput>(0.f);
+	auto depth = std::make_shared<ProcessorInput>(0.f);
 	auto dId = m_g->insert_node(depth);
 	auto mId = m_g->insert_node(mod);
 	auto inId = m_g->insert_node(in);
@@ -706,9 +708,9 @@ int FilterNodeCreator::create()
 	m_g->insert_edge(id, mId);
 	m_g->insert_edge(id, inId);
 	cacheType(id, NodeType::FILTER);
-	cacheType(inId, NodeType::VALUE);
-	cacheType(dId, NodeType::VALUE);
-	cacheType(mId, NodeType::VALUE);
+	cacheType(inId, NodeType::PROCESSOR_INPUT);
+	cacheType(dId, NodeType::PROCESSOR_INPUT);
+	cacheType(mId, NodeType::PROCESSOR_INPUT);
 	cacheParam(id, "input_id", inId);
 	cacheParam(id, "freqmod_id", mId);
 	cacheParam(id, "moddepth_id", dId);

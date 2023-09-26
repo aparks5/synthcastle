@@ -3,16 +3,24 @@
 #include "constants.h"
 
 Envelope::Envelope()
-	: Node(NodeType::ENVELOPE, 0, NUM_PARAMS)
+	: Node(NodeType::ENVELOPE, "envelope", NUM_INPUTS, NUM_OUTPUTS, NUM_PARAMS)
 	, m_stage(EnvelopeStage::OFF)
 	, m_gain(0)
 	, m_bTriggered(false)
 {
-}
+	paramMap = {
+		{"node_id", NODE_ID},
+		{"input_id", INPUT_ID},
+		{"output_id", OUTPUT_ID},
+		{"output", OUTPUT},
+		{"trigger_id", TRIG_ID},
+		{"trigger", TRIG},
+		{"attack_ms", ATTACK_MS},
+		{"decay_ms", DECAY_MS},
+		{"sustain_db", SUSTAIN_DB},
+		{"release_ms", RELEASE_MS}
+	};
 
-int Envelope::lookupParam(std::string str)
-{
-	return m_lookup[str];
 }
 
 // TODO: envelope should just return a value, and then use that to convert to dB or apply to filter cutoff etc.
@@ -20,6 +28,7 @@ int Envelope::lookupParam(std::string str)
 // it should not be coupled to Gain in its class definition
 float Envelope::process(float in)
 {
+	// latching vs. instantaneous modes selectable?
 	if ((params[TRIG] != 0)) { // && (!m_bTriggered)) {
 		m_stage = EnvelopeStage::ATTACK;
 		m_bTriggered = true;

@@ -37,7 +37,14 @@ class Envelope : public Node
 public:
 	Envelope();
 
-	enum EnvParams {
+	enum Inputs {
+		NUM_INPUTS
+	};
+
+	enum Outputs {
+		NUM_OUTPUTS
+	};
+	enum Params {
 		NODE_ID,
 		INPUT_ID,
 		OUTPUT_ID,
@@ -55,22 +62,8 @@ public:
 	void reset();
 	void noteOn() { m_bNoteOn = true; m_stage = EnvelopeStage::ATTACK; }
 	void noteOff() { m_bNoteOn = false; m_stage = EnvelopeStage::RELEASE; }
-	int lookupParam(std::string str) override;
 
 private:
-	std::unordered_map<std::string, int> m_lookup =
-	{
-		{"node_id", NODE_ID},
-		{"input_id", INPUT_ID},
-		{"output_id", OUTPUT_ID},
-		{"output", OUTPUT},
-		{"trigger_id", TRIG_ID},
-		{"trigger", TRIG},
-		{"attack_ms", ATTACK_MS},
-		{"decay_ms", DECAY_MS},
-		{"sustain_db", SUSTAIN_DB},
-		{"release_ms", RELEASE_MS}
-	};
 	EnvelopeParams m_params;
 	EnvelopeStage m_stage;
 	float m_gain;

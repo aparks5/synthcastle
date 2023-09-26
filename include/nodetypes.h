@@ -16,6 +16,9 @@ enum NodeType
 	MIDI_IN,
 	OSCILLATOR,
 	OUTPUT,
+	PROCESSOR,
+	PROCESSOR_INPUT,
+	PROCESSOR_OUTPUT,
 	QUAD_MIXER,
 	RELAY,  // used for routing multi output
 	SAMPLER,

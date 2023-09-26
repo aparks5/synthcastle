@@ -3,7 +3,7 @@
 #include "imnodes.h"
 
 Oscillator::Oscillator()
-    : Node(NodeType::OSCILLATOR, 0., NUM_PARAMS) 
+    : Node(NodeType::OSCILLATOR, "oscillator", NUM_INPUTS, NUM_OUTPUTS, NUM_PARAMS)
 	, m_sampleRate(44100)
 {
 	// todo: assert waveform enum and order of adding is correct
@@ -17,18 +17,13 @@ Oscillator::Oscillator()
 	}
 }
 
-int Oscillator::lookupParam(std::string str)
-{
-	return m_lookup[str];
-}
-
 void Oscillator::update()
 {
-	auto modfreq = params[Oscillator::MODFREQ];
-	auto moddepth = params[Oscillator::MODDEPTH];
-	auto freq = params[Oscillator::FREQ]; // scale 0 to 1 to 0 to 22050
-	auto coarse = params[Oscillator::TUNING_COARSE];
-	auto fine = params[Oscillator::TUNING_FINE];
+	auto modfreq = params[MODFREQ];
+	auto moddepth = params[MODDEPTH];
+	auto freq = params[FREQ]; // scale 0 to 1 to 0 to 22050
+	auto coarse = params[TUNING_COARSE];
+	auto fine = params[TUNING_FINE];
 
 	freq = freq * semitoneToRatio(coarse) * semitoneToRatio(fine);
 
@@ -44,7 +39,7 @@ void Oscillator::update()
 
 float Oscillator::process()
 {
-	float out = m_waveforms[(size_t)(params[OscillatorParams::WAVEFORM])]->process();
+	float out = m_waveforms[(size_t)(params[WAVEFORM])]->process();
 	params[OUTPUT] = out;
 	return 0;
 }

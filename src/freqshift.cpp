@@ -2,7 +2,7 @@
 #include "constants.h"
 
 FrequencyShifter::FrequencyShifter()
-	: Node(NodeType::FREQ_SHIFT, 0.f, NUM_PARAMS)
+	: Node(NodeType::FREQ_SHIFT, "freqshift", NUM_INPUTS, NUM_OUTPUTS, NUM_PARAMS)
 	, m_fs(44100)
 {
 }

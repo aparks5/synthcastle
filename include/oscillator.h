@@ -20,9 +20,16 @@ public:
 	Oscillator();
 	virtual ~Oscillator() {};
 	float process() override;
-	int lookupParam(std::string str) override;
 
-	enum OscillatorParams {
+	enum Inputs {
+		NUM_INPUTS
+	};
+
+	enum Outputs {
+		NUM_OUTPUTS
+	};
+
+	enum Params {
 		NODE_ID,
 		FREQ_ID,
 		FREQ,
