@@ -188,7 +188,13 @@ int ConstantNodeCreator::create()
 
 	auto processorNodeId = m_g->insert_node(processorNode); 
 	cacheType(processorNodeId, NodeType::PROCESSOR);
+	cacheName(processorNodeId, processorNode->getName());
 	cacheParam(processorNodeId, "node_id", processorNodeId);
+
+
+	for (auto& str : processorNode->inputStrings()) {
+		cacheInput(processorNodeId, str, 0.f);
+	}
 
 	// edges also need reverse order
 	for (auto& id : inputNodeIds) {
@@ -198,8 +204,9 @@ int ConstantNodeCreator::create()
 
 	// index in-order
 	reverse(inputNodeIds.begin(), inputNodeIds.end());
+	int in = 0;
 	for (auto& id : inputNodeIds) {
-		auto str = processorNode->inputIdToString(id);
+		auto str = processorNode->inputIdToString(in++);
 		cacheParam(processorNodeId, str, id);
 	}
 
@@ -218,10 +225,15 @@ int ConstantNodeCreator::create()
 		outputNodeIds.push_back(id);
 	}
 
+	for (auto& str : processorNode->outputStrings()) {
+		cacheOutput(processorNodeId, str, 0.f);
+	}
+
+	int out = 0;
 	for (auto& outputNodeId : outputNodeIds) {
 		m_g->insert_edge(outputNodeId, processorNodeId);
 		cacheType(outputNodeId, NodeType::PROCESSOR_OUTPUT);
-		auto str = processorNode->outputIdToString(outputNodeId);
+		auto str = processorNode->outputIdToString(out++);
 		cacheParam(processorNodeId, str, outputNodeId);
 	}
 
@@ -293,7 +305,7 @@ int AudioInputNodeCreator::create()
 {
 	auto k = std::make_shared<AudioInput>();
 	auto id = m_g->insert_node(k);
-	k->params[Constant::NODE_ID] = id;
+	k->params[AudioInput::NODE_ID] = id;
 	cacheType(id, NodeType::AUDIO_IN);
 	return id;
 }
@@ -733,14 +745,31 @@ void NodeCreationCommand::cacheType(int id, NodeType t)
 	m_v.map[id].nodeType = t;
 }
 
-void NodeCreationCommand::cacheParam(int id, std::string param, float value) {
+void NodeCreationCommand::cacheName(int id, std::string str)
+{
 	if (m_v.map.find(id) == m_v.map.end()) {
 		NodeSnapshot snap;
 		m_v.map[id] = snap;
 	}
 
-	m_v.map[id].params[param] = value;
+	m_v.map[id].name = str;
+}
 
+
+
+void NodeCreationCommand::cacheParam(int id, std::string param, float value)
+{
+	m_v.map[id].params[param] = value;
+}
+
+void NodeCreationCommand::cacheInput(int id, std::string in, float value)
+{
+	m_v.map[id].inputs[in] = value;
+}
+
+void NodeCreationCommand::cacheOutput(int id, std::string out, float value)
+{
+	m_v.map[id].outputs[out] = value;
 }
 
 void NodeCreationCommand::cacheString(int id, std::string param, std::string str) {

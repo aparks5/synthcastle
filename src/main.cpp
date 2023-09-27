@@ -532,16 +532,16 @@ int main(int, char**)
     int inputIndex = Pa_GetDefaultInputDevice();
     inputParameters.device = inputIndex;
 
-    // look for ASIO device if we can find one
-    for (auto& item : infoVertex) {
-        printf("host: %s\n", item->name);
-		if (item->type == paWASAPI) {
-			inputIndex = item->defaultInputDevice;
-			index = item->defaultOutputDevice;
-			inputParameters.device = inputIndex;
-			outputParameters.device = index;
-        }
-    }
+  //  // look for WASAPI device if we can find one
+  //  for (auto& item : infoVertex) {
+  //      printf("host: %s\n", item->name);
+		//if (item->type == paWASAPI) {
+		//	inputIndex = item->defaultInputDevice;
+		//	index = item->defaultOutputDevice;
+		//	inputParameters.device = inputIndex;
+		//	outputParameters.device = index;
+  //      }
+  //  }
 
 	inputParameters.channelCount = 2;       // mono input
 	inputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */

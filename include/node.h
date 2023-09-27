@@ -21,6 +21,7 @@ public:
 	virtual ~Node() {};
 
 	NodeType getNodeType() const { return nodeType; }
+	std::string getName() const { return name; }
 
 	std::vector<float> inputs;
 	std::vector<float> outputs;
@@ -67,6 +68,28 @@ public:
 		return strings;
 	}
 
+	std::vector<std::string> inputStrings() 
+	{
+		std::vector<std::string> strings;
+		for (std::unordered_map<std::string, int>::iterator iter = inputMap.begin(); iter != inputMap.end(); ++iter) {
+			auto k = iter->first;
+			strings.push_back(k);
+		}
+
+		return strings;
+	}
+
+	std::vector<std::string> outputStrings() 
+	{
+		std::vector<std::string> strings;
+		for (std::unordered_map<std::string, int>::iterator iter = outputMap.begin(); iter != outputMap.end(); ++iter) {
+			auto k = iter->first;
+			strings.push_back(k);
+		}
+
+		return strings;
+	}
+
 	std::vector<std::string> inputIds() const
 	{
 		return inputIdStrings;
@@ -79,7 +102,7 @@ public:
 
 	std::string inputIdToString(int id) const
 	{
-		if (id > 0 && id < inputIdStrings.size()) {
+		if (id >= 0 && id < inputIdStrings.size()) {
 			return inputIdStrings[id];
 		}
 		else {
@@ -89,7 +112,7 @@ public:
 
 	std::string outputIdToString(int id) const
 	{
-		if (id > 0 && id < outputIdStrings.size()) {
+		if (id >= 0 && id < outputIdStrings.size()) {
 			return outputIdStrings[id];
 		}
 		else {

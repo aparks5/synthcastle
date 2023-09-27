@@ -15,8 +15,11 @@ protected:
 	std::shared_ptr<NodeGraph> m_g;
 	ViewBag& m_v;
 	void cacheParam(int id, std::string param, float value);
+	void cacheInput(int id, std::string in, float value);
+	void cacheOutput(int id, std::string out, float value);
 	void cacheString(int id, std::string param, std::string str);
 	void cacheType(int id, NodeType t);
+	void cacheName(int id, std::string name);
 	std::pair<float,float> evaluate();
 };
 

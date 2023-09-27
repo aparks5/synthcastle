@@ -19,6 +19,9 @@ struct EdgeSnapshot
 
 struct NodeSnapshot{
 	NodeType nodeType;
+	std::string name;
+	std::unordered_map<std::string, float> inputs;
+	std::unordered_map<std::string, float> outputs;
 	std::unordered_map<std::string, float> params;
 	std::unordered_map<std::string, std::string> stringParams;
 	std::unordered_map<int, EdgeSnapshot> edges;
