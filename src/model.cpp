@@ -1,6 +1,8 @@
 #include "model.h"
 #include "util.h"
 
+#include <algorithm>
+
 #include "audioinput.h"
 #include "constant.h"
 #include "delay.h"
@@ -164,70 +166,70 @@ int Model::create(std::string str)
 	return -1;
 }
 
+// templated? factory pass in nodes?
 int ConstantNodeCreator::create()
 {
-	// SO MUCH REPETITION AHHHH NEEDS REFACTORING
-	auto k = std::make_shared<Constant>();
-	auto in1 = std::make_shared<ProcessorInput>();
-	auto in2 = std::make_shared<ProcessorInput>();
-	auto in3 = std::make_shared<ProcessorInput>();
-	auto in4 = std::make_shared<ProcessorInput>();
-	auto out1 = std::make_shared<ProcessorOutput>(0);
-	auto out2 = std::make_shared<ProcessorOutput>(1);
-	auto out3 = std::make_shared<ProcessorOutput>(2);
-	auto out4 = std::make_shared<ProcessorOutput>(3);
-	// insert inputs in reverse order
-	auto in4id = m_g->insert_node(in4);
-	auto in3id = m_g->insert_node(in3);
-	auto in2id = m_g->insert_node(in2);
-	auto in1id = m_g->insert_node(in1);
-	auto id = m_g->insert_node(k); // outputs inserted AFTER process
-	// first out gen'd auto
-	auto out1id = m_g->insert_node(out1);
-	auto out2id = m_g->insert_node(out2);
-	auto out3id = m_g->insert_node(out3);
-	auto out4id = m_g->insert_node(out4);
-	m_g->insert_edge(id, in4id); // outputs in reverse order?
-	m_g->insert_edge(id, in3id); // outputs in reverse order?
-	m_g->insert_edge(id, in2id); // outputs in reverse order?
-	m_g->insert_edge(id, in1id); // outputs in reverse order?
-	m_g->insert_edge(out1id, id);
-	m_g->insert_edge(out2id, id);
-	m_g->insert_edge(out3id, id);
-	m_g->insert_edge(out4id, id);
-	k->params[Constant::NODE_ID] = id;
-	k->inputs[Constant::INPUT1_ID] = in1id;
-	k->inputs[Constant::INPUT2_ID] = in2id;
-	k->inputs[Constant::INPUT3_ID] = in3id;
-	k->inputs[Constant::INPUT4_ID] = in4id;
-	k->outputs[Constant::OUTPUT1_ID] = out1id;
-	k->outputs[Constant::OUTPUT2_ID] = out2id;
-	k->outputs[Constant::OUTPUT3_ID] = out3id;
-	k->outputs[Constant::OUTPUT4_ID] = out4id;
-	cacheType(id, NodeType::CONSTANT);
-	cacheType(in1id, NodeType::PROCESSOR_INPUT);
-	cacheType(in2id, NodeType::PROCESSOR_INPUT);
-	cacheType(in3id, NodeType::PROCESSOR_INPUT);
-	cacheType(in4id, NodeType::PROCESSOR_INPUT);
-	cacheType(out1id, NodeType::PROCESSOR_OUTPUT);
-	cacheType(out2id, NodeType::PROCESSOR_OUTPUT);
-	cacheType(out3id, NodeType::PROCESSOR_OUTPUT);
-	cacheType(out4id, NodeType::PROCESSOR_OUTPUT);
-	for (auto& str : k->paramStrings()) {
-		cacheParam(id, str, 0.f);
+	auto processorNode = std::make_shared<Constant>();
+
+	std::stack<std::shared_ptr<ProcessorInput>> inputNodes;
+
+	for (auto& in : processorNode->inputs) {
+		auto inputNode = std::make_shared<ProcessorInput>();
+		inputNodes.push(inputNode);
 	}
 
-	cacheParam(id, "node_id", id);
-	cacheParam(id, "input1_id", in1id);
-	cacheParam(id, "input2_id", in2id);
-	cacheParam(id, "input3_id", in3id);
-	cacheParam(id, "input4_id", in4id);
-	cacheParam(id, "output1_id", out1id);
-	cacheParam(id, "output2_id", out2id);
-	cacheParam(id, "output3_id", out3id);
-	cacheParam(id, "output4_id", out4id);
+	// insert inputs in reverse order
+	std::vector<int> inputNodeIds;
+	while (!inputNodes.empty()) {
+		auto id = m_g->insert_node(inputNodes.top());
+		inputNodeIds.push_back(id);
+		inputNodes.pop();
+	}
 
-	return id;
+	auto processorNodeId = m_g->insert_node(processorNode); 
+	cacheType(processorNodeId, NodeType::PROCESSOR);
+	cacheParam(processorNodeId, "node_id", processorNodeId);
+
+	// edges also need reverse order
+	for (auto& id : inputNodeIds) {
+		m_g->insert_edge(id, processorNodeId);
+		cacheType(id, NodeType::PROCESSOR_INPUT);
+	}
+
+	// index in-order
+	reverse(inputNodeIds.begin(), inputNodeIds.end());
+	for (auto& id : inputNodeIds) {
+		auto str = processorNode->inputIdToString(id);
+		cacheParam(processorNodeId, str, id);
+	}
+
+	auto inputIdStrings = processorNode->inputIds();
+
+	// handle outputs 
+	std::vector<std::shared_ptr<ProcessorOutput>> outputNodes;
+	for (size_t idx = 0; idx < processorNode->outputs.size(); idx++) {
+		auto outputNode = std::make_shared<ProcessorOutput>(idx);
+		outputNodes.push_back(outputNode);
+	}
+
+	std::vector<int> outputNodeIds;
+	for (auto& outputNode : outputNodes) {
+		auto id = m_g->insert_node(outputNode);
+		outputNodeIds.push_back(id);
+	}
+
+	for (auto& outputNodeId : outputNodeIds) {
+		m_g->insert_edge(outputNodeId, processorNodeId);
+		cacheType(outputNodeId, NodeType::PROCESSOR_OUTPUT);
+		auto str = processorNode->outputIdToString(outputNodeId);
+		cacheParam(processorNodeId, str, outputNodeId);
+	}
+
+	for (auto& str : processorNode->paramStrings()) {
+		cacheParam(processorNodeId, str, 0.f);
+	}
+
+	return processorNodeId;
 }
 
 int DistortNodeCreator::create()
@@ -254,7 +256,6 @@ int FreqShiftNodeCreator::create()
 	auto k = std::make_shared<FrequencyShifter>();
 	auto in = std::make_shared<ProcessorInput>();
 	auto freq = std::make_shared<ProcessorInput>();
-	// when adding outputs we should simply increment the relay index
 	auto out = std::make_shared<ProcessorOutput>(0);
 
 	auto freqid = m_g->insert_node(freq);

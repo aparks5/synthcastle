@@ -18,29 +18,26 @@ public:
 		params.resize(numParams);
 	}
 
+	virtual ~Node() {};
 
 	NodeType getNodeType() const { return nodeType; }
 
 	std::vector<float> inputs;
 	std::vector<float> outputs;
 	std::vector<float> params;
-
-	// for samplers, sometimes we need paths
 	std::unordered_map<std::string, std::string> stringParams;
 
-	virtual ~Node() {};
 	virtual float process(float in) { return 0; }
 	//virtual void process() {}; // < this is what we want for all nodes that adhere to the ins/params/outs pattern
-	// some nodes are output only e.g. oscillators/lfos
 	virtual float process() { return 0; }
 	virtual void display() {};
 	virtual void update() {};
 
-	std::string paramStringByName(std::string str) {
+	std::string paramStringByName(std::string str)
+	{
 		if (stringParams.find(str) != stringParams.end()) {
 			return stringParams[str];
 		}
-
 		return "";
 	}
 
@@ -70,13 +67,43 @@ public:
 		return strings;
 	}
 
+	std::vector<std::string> inputIds() const
+	{
+		return inputIdStrings;
+	}
+
+	std::vector<std::string> outputIds() const
+	{
+		return outputIdStrings;
+	}
+
+	std::string inputIdToString(int id) const
+	{
+		if (id > 0 && id < inputIdStrings.size()) {
+			return inputIdStrings[id];
+		}
+		else {
+			return "";
+		}
+	}
+
+	std::string outputIdToString(int id) const
+	{
+		if (id > 0 && id < outputIdStrings.size()) {
+			return outputIdStrings[id];
+		}
+		else {
+			return "";
+		}
+	}
+
 protected:
 	NodeType nodeType;
 	std::string name;
 	std::unordered_map<std::string, int> inputMap;
 	std::unordered_map<std::string, int> paramMap;
 	std::unordered_map<std::string, int> outputMap;
-
-private:
+    std::vector<std::string> inputIdStrings;
+    std::vector<std::string> outputIdStrings;
 	
 };
