@@ -19,45 +19,30 @@ class Oscillator : public Node
 public:
 	Oscillator();
 	virtual ~Oscillator() {};
-	float process() override;
+	void process() noexcept override;
 
 	enum Inputs {
+		MODFREQ,
+		MODDEPTH,
 		NUM_INPUTS
 	};
 
 	enum Outputs {
+		OUTPUT,
 		NUM_OUTPUTS
 	};
 
 	enum Params {
 		NODE_ID,
 		FREQ_ID,
-		FREQ,
-		OUTPUT_ID,
 		MODFREQ_ID,
-		MODFREQ,
 		MODDEPTH_ID,
-		MODDEPTH,
-		OUTPUT,
+		OUTPUT_ID,
+		FREQ,
 		TUNING_FINE,
 		TUNING_COARSE,
 		WAVEFORM,
 		NUM_PARAMS
-	};
-
-	std::unordered_map<std::string, int> m_lookup = {
-		{"node_id", NODE_ID},
-		{"freq_id", FREQ_ID},
-		{"freq", FREQ},
-		{"output_id", OUTPUT_ID},
-		{"output", OUTPUT},
-		{"modfreq_id", MODFREQ_ID},
-		{"modfreq", MODFREQ},
-		{"moddepth_id", MODDEPTH_ID},
-		{"moddepth", MODDEPTH},
-		{"tuning_fine", TUNING_FINE},
-		{"tuning_coarse", TUNING_COARSE},
-		{"waveform", WAVEFORM}
 	};
 
 	enum WaveForms {

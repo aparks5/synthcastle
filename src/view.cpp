@@ -41,7 +41,6 @@ View::View()
 {
 
     m_displays[NodeType::AUDIO_IN] = std::make_shared<AudioInputDisplayCommand>();
-    m_displays[NodeType::CONSTANT] = std::make_shared<ConstantDisplayCommand>();
     m_displays[NodeType::DELAY] = std::make_shared<DelayDisplayCommand>();
     m_displays[NodeType::DISTORT] = std::make_shared<DistortDisplayCommand>();
     m_displays[NodeType::ENVELOPE] = std::make_shared<EnvelopeDisplayCommand>();
@@ -51,11 +50,14 @@ View::View()
     m_displays[NodeType::LOOPER] = std::make_shared<LooperDisplayCommand>();
     m_displays[NodeType::MIDI_IN] = std::make_shared<MidiInputDisplayCommand>();
     m_displays[NodeType::OUTPUT] = std::make_shared<OutputDisplayCommand>();
-    m_displays[NodeType::OSCILLATOR] = std::make_shared<OscillatorDisplayCommand>();
     m_displays[NodeType::QUAD_MIXER] = std::make_shared<MixerDisplayCommand>();
     m_displays[NodeType::SAMPLER] = std::make_shared<SamplerDisplayCommand>();
     m_displays[NodeType::SEQ] = std::make_shared<SeqDisplayCommand>();
     m_displays[NodeType::TRIG] = std::make_shared<TrigDisplayCommand>();
+
+    m_displaysByName["constant"] = std::make_shared<ConstantDisplayCommand>();
+    m_displaysByName["oscillator"] = std::make_shared<OscillatorDisplayCommand>();
+
     const char* glsl_version = initSDL();
     SDL_GL_MakeCurrent(m_window, m_glContext);
     SDL_GL_SetSwapInterval(1); // Enable vsync
@@ -88,6 +90,10 @@ void View::addListener(std::shared_ptr<ViewListener> listener) {
     for (auto const& [k,v] : m_displays) {
         v->addListener(listener);
     }
+    for (auto const& [k,v] : m_displaysByName) {
+        v->addListener(listener);
+    }
+
 }
 
 View::~View()
@@ -275,8 +281,8 @@ void View::display()
         if (m_displays.find(v.nodeType) != m_displays.end()) {
             m_displays[v.nodeType]->display(k, v);
         }
-        else if (v.name == "constant") {
-            m_displays[NodeType::CONSTANT]->display(k, v);
+        else if (m_displaysByName.find(v.name) != m_displaysByName.end()) {
+            m_displaysByName[v.name]->display(k, v);
         }
     }
 
@@ -1137,11 +1143,8 @@ void EnvelopeDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImGui::PopItemWidth();
 }
 
-
-
 void OscillatorDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 {
-
 	auto params = snapshot.params;
     ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(233,127,2, 255));
     ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(233,127,2, 230));

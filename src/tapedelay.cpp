@@ -43,6 +43,6 @@ float TapeDelay::operator()(float in)
 
 	//m_delay.update(m_delayTimeMs + (m_lfo.process() * 2.f), 0.8);
 
-	return m_delay.process(temp);
+	return 0; //  m_delay.process(temp);
 }
 

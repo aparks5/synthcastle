@@ -75,7 +75,9 @@ float Voice::operator()()
 	m_moogFilter.apply(&output, 1);
 
 	// VCA 
-	output = m_env.process(output);
+	m_env.inputs[Envelope::INPUT] = output;
+	m_env.process();
+	output = m_env.outputs[Envelope::OUTPUT];
 	Gain gain;
 
 	// OUTPUTGAIN

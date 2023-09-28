@@ -12,21 +12,22 @@ class Delay : public Node
 public:
 	Delay();
 	virtual ~Delay() {};
-	float process(float in) override;
+	void process() noexcept override;
 
 	enum Inputs {
-		INPUT_ID,
+		INPUT,
 		NUM_INPUTS
 	};
 
 	enum Outputs {
-		OUTPUT_ID,
 		OUTPUT,
 		NUM_OUTPUTS
 	};
 
 	enum Params {
 		NODE_ID,
+		INPUT_ID,
+		OUTPUT_ID,
 		DELAY_MS_ID,
 		FEEDBACK_RATIO_ID,
 		RESET_ID,

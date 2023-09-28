@@ -62,6 +62,7 @@ private:
 	ImNodesEditorContext* m_pEditorContext;
 	std::shared_ptr<ViewListener> m_listener;
 	std::unordered_map<NodeType, std::shared_ptr<NodeDisplayCommand>> m_displays;
+	std::unordered_map<std::string, std::shared_ptr<NodeDisplayCommand>> m_displaysByName;
 	ViewBag m_bag;
 
 	ImVec2 m_cachedClickPos;

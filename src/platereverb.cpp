@@ -77,7 +77,10 @@ float PlateReverb::operator()(float in)
 	(*m_modulatedDiffusor[static_cast<size_t>(ModulatedAllpasses::MODAP672)]).update(22.58 + (1.f * m_diffusionLFO1.process()));
 	(*m_modulatedDiffusor[static_cast<size_t>(ModulatedAllpasses::MODAP672)])(out);
 
-	float tmpRead = (*m_delays[0]).process(out);
+
+	(*m_delays[0]).inputs[Delay::INPUT] = out;
+	(*m_delays[0]).process();
+	float tmpRead = (*m_delays[0]).outputs[Delay::OUTPUT];
 	out = tmpRead;
 
 
@@ -85,7 +88,9 @@ float PlateReverb::operator()(float in)
 
 	out = (*m_decayDiffusor[0])(out);
 
-	tmpRead = (*m_delays[1]).process(out);
+	(*m_delays[1]).inputs[Delay::INPUT] = out;
+	(*m_delays[1]).process();
+	tmpRead = (*m_delays[1]).outputs[Delay::OUTPUT];
 	out = tmpRead;
 
 	m_decayDiffusion1FeedbackSample = out * m_params.decay;
@@ -93,7 +98,9 @@ float PlateReverb::operator()(float in)
 	(*m_modulatedDiffusor[static_cast<size_t>(ModulatedAllpasses::MODAP908)]).update(30.51 + (1.f * m_diffusionLFO1.process()));
 	(*m_modulatedDiffusor[static_cast<size_t>(ModulatedAllpasses::MODAP908)])(out);
 
-	tmpRead = (*m_delays[2]).process(out);
+	(*m_delays[2]).inputs[Delay::INPUT] = out;
+	(*m_delays[2]).process();
+	tmpRead = (*m_delays[2]).outputs[Delay::OUTPUT];
 	out = tmpRead;
 
 	out = (*m_lowpasses[1])(out);
@@ -102,7 +109,10 @@ float PlateReverb::operator()(float in)
 
 	out = (*m_decayDiffusor[1])(out);
 
-	tmpRead = (*m_delays[3]).process(out);
+	(*m_delays[3]).inputs[Delay::INPUT] = out;
+    (*m_delays[3]).process();
+	tmpRead = (*m_delays[3]).outputs[Delay::OUTPUT];
+
 	out = tmpRead;
 
 	m_decayDiffusion2FeedbackSample = out * m_params.decay;

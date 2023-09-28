@@ -8,53 +8,41 @@ class Gain : public Node
 public:
 	Gain();
 	virtual ~Gain() {};
-	float process() override;
+	void process() noexcept override;
 
 	enum Inputs {
+		INPUT,
+		GAINMOD,
+		PANMOD,
 		NUM_INPUTS
 	};
 
 	enum Outputs {
+		OUTPUT_LEFT,
+		OUTPUT_RIGHT,
 		NUM_OUTPUTS
 	};
 
 	enum Params {
-		GAIN,
-		GAINMOD,
+		INPUT_ID,
 		GAINMOD_ID,
-		GAINMOD_DEPTH,
 		GAIN_ID,
 		LEFT_ID,
-		LEFTOUT,
 		RIGHT_ID,
-		RIGHTOUT,
-		PAN,
-		PANMOD,
 		PANMOD_ID,
-		PANMOD_DEPTH,
 		OUTPUT_ID,
 		NODE_ID,
-		INPUT_ID,
-		INPUT,
+		GAIN,
+		GAINMOD_DEPTH,
+		PAN,
+		PANMOD_DEPTH,
 		NUM_PARAMS
 	};
 
 	void setGainf(float gain) { m_gain = gain; };
 	void setGaindB(float gaindB);
 
+protected:
 private:
-	std::unordered_map<std::string, int> m_lookup = {
-			{"gain", GAIN},
-			{"input_id", INPUT_ID},
-			{"left_id", LEFT_ID},
-			{"right_id", RIGHT_ID},
-			{"gainmod", GAINMOD},
-			{"gainmod_depth", GAINMOD_DEPTH},
-			{"pan", PAN},
-			{"panmod_id", PANMOD_ID},
-			{"panmod_depth", PANMOD_DEPTH},
-			{"leftout", LEFTOUT},
-			{"rightout", RIGHTOUT},
-	};
 	float m_gain;
 };

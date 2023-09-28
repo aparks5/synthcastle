@@ -82,7 +82,7 @@ void MIDI::midiCallback(double deltatime, std::vector<unsigned char>* message, v
 
 
 
-float MIDI::process()
+void MIDI::process() noexcept
 {
 
 	if (params[SELECTED_PORT] != m_portId) {
@@ -140,14 +140,10 @@ float MIDI::process()
 		}
 	}
 
-	params[OUT_VOICE1] = m_voices[0];
-	params[OUT_VOICE2] = m_voices[1];
-	params[OUT_VOICE3] = m_voices[2];
-	params[OUT_VOICE4] = m_voices[3];
-
-
-
-	return 0;
-
+	outputs[OUT_VOICE1] = m_voices[0];
+	outputs[OUT_VOICE2] = m_voices[1];
+	outputs[OUT_VOICE3] = m_voices[2];
+	outputs[OUT_VOICE4] = m_voices[3];
+	outputs[OUT_VELOCITY] = params[VELOCITY];
 }
 

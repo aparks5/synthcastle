@@ -35,7 +35,9 @@ float FeedbackDelayNetwork::operator()(float in)
 		out += accum;
 		accum += in;
 
-		m_lowpassDelayElements[idx] = (m_delays[idx].process(accum)*0.8) + (0.2 * m_lowpassDelayElements[idx]);
+		m_delays[idx].inputs[Delay::INPUT] = (accum*0.8) + (0.2 * m_lowpassDelayElements[idx]);
+		m_delays[idx].process();
+		m_lowpassDelayElements[idx] = m_delays[idx].outputs[Delay::OUTPUT];
 	}
 
 	return out;

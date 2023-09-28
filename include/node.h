@@ -28,9 +28,7 @@ public:
 	std::vector<float> params;
 	std::unordered_map<std::string, std::string> stringParams;
 
-	virtual float process(float in) { return 0; }
-	//virtual void process() {}; // < this is what we want for all nodes that adhere to the ins/params/outs pattern
-	virtual float process() { return 0; }
+	virtual void process() noexcept {};
 	virtual void display() {};
 	virtual void update() {};
 

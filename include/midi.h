@@ -13,7 +13,7 @@ class MIDI : public Node
 public:
 	MIDI();
 	virtual ~MIDI() {}
-	float process() override;
+	void process() noexcept override;
 
 	struct MIDIUserData
 	{
@@ -32,6 +32,11 @@ public:
 
 	enum Outputs
 	{
+		OUT_VOICE1,
+		OUT_VOICE2,
+		OUT_VOICE3,
+		OUT_VOICE4,
+		OUT_VELOCITY,
 		NUM_OUTPUTS
 	};
 
@@ -44,13 +49,9 @@ public:
 		OUT_VOICE2_ID,
 		OUT_VOICE3_ID,
 		OUT_VOICE4_ID,
-		OUT_VOICE1,
-		OUT_VOICE2,
-		OUT_VOICE3,
-		OUT_VOICE4,
+		OUT_VELOCITY_ID,
 	    NOTE,
 		VELOCITY,
-		OUT_VELOCITY_ID,
 		NUM_PARAMS
 	};
 

@@ -12,7 +12,7 @@ class Sampler : public Node
 {
 public:
 	Sampler();
-	float process() override;
+	void process() noexcept override;
 	void update() override;
 
 	enum Inputs {

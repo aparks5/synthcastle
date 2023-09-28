@@ -28,7 +28,9 @@ void Allpass::update(float delayTimeMs)
 
 float Allpass::operator()(float in)
 {
-	float out = m_delay.process(in);
+	m_delay.inputs[Delay::INPUT] = in;
+	m_delay.process();
+	float out = m_delay.outputs[Delay::OUTPUT];
 	// feed-forward path
 	out -= (in * m_feedbackRatio);
 	m_output = out;

@@ -6,12 +6,16 @@ Output::Output()
 {
 }
 
-float Output::process()
+void Output::process() noexcept
 {
+
 	if (params[MUTE] == 1) {
-	     return 0;
+		outputs[OUTPUT_LEFT] = 0;
+		outputs[OUTPUT_RIGHT] = 0;
 	}
-	// change outputs[OUTPUT] to value?
-    return 0;
+	else {
+		outputs[OUTPUT_LEFT] = inputs[INPUT_LEFT];
+		outputs[OUTPUT_RIGHT] = inputs[INPUT_RIGHT];
+	}
 }
 

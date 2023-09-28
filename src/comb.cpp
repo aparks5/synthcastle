@@ -15,7 +15,10 @@ Comb::Comb(size_t fs, float delayMs, float feedbackRatio)
 
 float Comb::operator()(float in)
 {
-	float out = m_delay.process(in + (m_feedbackRatio * m_lowpassDelayElement));
+	m_delay.inputs[Delay::INPUT] = (in + (m_feedbackRatio * m_lowpassDelayElement));
+	m_delay.process();
+	float out = m_delay.outputs[Delay::OUTPUT];
+
 	m_lowpassDelayElement = (out * m_damping2) + (m_damping * m_lowpassDelayElement);
 	m_output = out;
 

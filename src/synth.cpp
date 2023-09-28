@@ -105,7 +105,7 @@ float Synth::operator()()
 		fxCount++;
 	}
 	if (m_fxParams.bEnableDelay2) {
-		output += delay2.process(output);
+		//output += delay2.process(output);
 		fxCount++;
 	}
 	if (m_fxParams.bEnableReverb) {

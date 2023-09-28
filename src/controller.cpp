@@ -12,7 +12,6 @@ Controller::Controller(std::shared_ptr<Model> model)
 		m_circBuff.buffer.push_back(myRow);
 	}
 	m_circBuff.m_writeIdx = 0;
-
 }
 
 ViewBag Controller::snapshot() const
@@ -28,9 +27,14 @@ ViewBag Controller::snapshot() const
 void Controller::notify(EventType event, const void* data) {
 }
 
-void Controller::queueCreation(std::string nodeType)
+std::vector<std::string> Controller::queryNodeNames() const
 {
-	m_creationQueue.push(nodeType);
+	return m_model->queryNodeNames();
+}
+
+void Controller::queueCreation(std::string nodeName)
+{
+	m_creationQueue.push(nodeName);
 }
 
 void Controller::queueDestroyLink(int link_id)
@@ -70,9 +74,9 @@ void Controller::queueUpdate(int id, std::string param, std::string str)
 	m_stringUpdates.push(update);
 }
 
-int Controller::createNode(std::string nodeType)
+int Controller::createNode(std::string nodeName)
 {
-	return m_model->create(nodeType);
+	return m_model->create(nodeName);
 }
 
 void Controller::createLink(int from, int to)
@@ -83,11 +87,6 @@ void Controller::createLink(int from, int to)
 void Controller::deleteLink(int link_id)
 {
 	m_model->deleteLink(link_id);
-}
-
-std::vector<std::string> Controller::queryNodeNames() const
-{
-	return m_model->queryNodeNames();
 }
 
 void Controller::update()

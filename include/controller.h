@@ -16,7 +16,7 @@ public:
 	virtual ~Controller() {}
 	void notify(EventType event, const void* data) override;
 	std::tuple<float, float> evaluate();
-	void queueCreation(std::string nodeType) override;
+	void queueCreation(std::string nodeName) override;
 	void queueLink(int from, int to) override;
 	void queueDestroyLink(int link_id) override;
 	void queueUpdate(int id, std::string param, float val) override;
@@ -26,7 +26,7 @@ public:
 
 	void createLink(int from, int to);
 	void deleteLink(int link_id);
-	int createNode(std::string nodeTypeString);
+	int createNode(std::string nodeName);
 	ViewBag snapshot() const override; 
 	void update() override; // not accessible to View 
 	// because this is not part of the ViewListener interface

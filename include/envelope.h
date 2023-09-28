@@ -38,19 +38,20 @@ public:
 	Envelope();
 
 	enum Inputs {
+		INPUT,
+		TRIG,
 		NUM_INPUTS
 	};
 
 	enum Outputs {
+		OUTPUT,
 		NUM_OUTPUTS
 	};
 	enum Params {
 		NODE_ID,
 		INPUT_ID,
 		OUTPUT_ID,
-		OUTPUT,
 		TRIG_ID,
-		TRIG,
 		ATTACK_MS,
 		DECAY_MS,
 		SUSTAIN_DB,
@@ -58,7 +59,7 @@ public:
 		NUM_PARAMS,
 	};
 
-	float process(float in) override;
+	void process() noexcept override;
 	void reset();
 	void noteOn() { m_bNoteOn = true; m_stage = EnvelopeStage::ATTACK; }
 	void noteOff() { m_bNoteOn = false; m_stage = EnvelopeStage::RELEASE; }

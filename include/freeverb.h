@@ -12,19 +12,22 @@ class Freeverb : public Node
 public:
 	Freeverb();
 	virtual ~Freeverb() {}
-	float process(float in) override;
+	void process() noexcept override;
 
 	enum Inputs {
+		INPUT,
 		NUM_INPUTS
 	};
 
 	enum Outputs {
+		OUTPUT,
 		NUM_OUTPUTS
 	};
 
 	enum FreeverbParams {
 		NODE_ID,
 		INPUT_ID,
+		OUTPUT_ID,
 		WETDRY,
 		NUM_PARAMS,
 	};

@@ -8,24 +8,24 @@ class Output : public Node
 public:
 	Output();
 	virtual ~Output() {};
-	float process() override;
+	void process() noexcept override;
 
 	enum Inputs {
-		INPUT_L_ID,
-		INPUT_R_ID,
-		INPUT_L,
-		INPUT_R,
+		INPUT_LEFT,
+		INPUT_RIGHT,
 		NUM_INPUTS
 	};
 
 	enum Outputs {
-		OUTPUT_L,
-		OUTPUT_R,
+		OUTPUT_LEFT,
+		OUTPUT_RIGHT,
 		NUM_OUTPUTS
 	};
 
 	enum Params {
 		NODE_ID,
+		INPUT_L_ID,
+		INPUT_R_ID,
 		MUTE,
 		DISPLAY_L,
 		DISPLAY_R,

@@ -31,8 +31,10 @@ Looper::Looper()
 	stringParams["path"] = "";
 } 
 
-float Looper::process(float in)
+void Looper::process() noexcept
 {
+
+	float in = inputs[INPUT];
 
 	if (m_bRecording) {
 		m_buffer.push_back(in);
@@ -81,7 +83,7 @@ float Looper::process(float in)
 		m_maxBufferSize = 0;
 		std::fill(m_loop.begin(), m_loop.end(), 0);
 		std::fill(m_buffer.begin(), m_buffer.end(), 0);
-		return 0;
+		//out = 0.f;
 	}
 
 	// loop point begin / end should be 0 to 1 scaled to duration
@@ -99,12 +101,16 @@ float Looper::process(float in)
 	int nearest = (int)m_accum;
 	float remainder = fmodf(m_accum, nearest);
 
+	float out = 0.f;
+
 	if ((nearest >= 1) && (nearest <= m_loop.size())) {
 		// insert drywet here
-		return (0.707*in) + (0.707*linearInterpolate(m_loop[nearest - 1], m_loop[nearest], remainder));
+		out = (0.707*in) + (0.707*linearInterpolate(m_loop[nearest - 1], m_loop[nearest], remainder));
 	} 
 	else if (m_loop.size() == 0) {
-		return 0;
+		out = 0;
 	}
+
+	outputs[OUTPUT] = out;
 }
 

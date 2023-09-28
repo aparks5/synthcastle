@@ -3,7 +3,7 @@
 #include "constants.h"
 
 Envelope::Envelope()
-	: Node(NodeType::ENVELOPE, "envelope", NUM_INPUTS, NUM_OUTPUTS, NUM_PARAMS)
+	: Node(NodeType::PROCESSOR, "envelope", NUM_INPUTS, NUM_OUTPUTS, NUM_PARAMS)
 	, m_stage(EnvelopeStage::OFF)
 	, m_gain(0)
 	, m_bTriggered(false)
@@ -23,18 +23,16 @@ Envelope::Envelope()
 
 }
 
-// TODO: envelope should just return a value, and then use that to convert to dB or apply to filter cutoff etc.
-// as it is written it is only an amplitude envelope
-// it should not be coupled to Gain in its class definition
-float Envelope::process(float in)
+void Envelope::process() noexcept
 {
+	float in = inputs[INPUT];
 	// latching vs. instantaneous modes selectable?
-	if ((params[TRIG] != 0)) { // && (!m_bTriggered)) {
+	if ((inputs[TRIG] != 0)) { // && (!m_bTriggered)) {
 		m_stage = EnvelopeStage::ATTACK;
 		m_bTriggered = true;
 	}
 
-	if ((params[TRIG] == 0)) {
+	if ((inputs[TRIG] == 0)) {
 		//printf("no trigger\n");
 		m_bTriggered = false;
 		if (m_stage != EnvelopeStage::RELEASE) {
@@ -42,15 +40,15 @@ float Envelope::process(float in)
 		}
 	}
 
-	EnvelopeParams env(params[ATTACK_MS],
+	EnvelopeParams env(
+		params[ATTACK_MS],
 		params[DECAY_MS],
 		params[SUSTAIN_DB],
 		params[RELEASE_MS]);
 
 	switch (m_stage) {
-
 	case EnvelopeStage::ATTACK:
-
+	{
 		if (env.attackTimeSamps != 0) {
 			m_gain += static_cast<double>(1.f / env.attackTimeSamps);
 		}
@@ -62,11 +60,12 @@ float Envelope::process(float in)
 			m_gain = 1;
 			m_stage = EnvelopeStage::DECAY;
 		}
-	
-		break;
+	}
+	break;
 	case EnvelopeStage::DECAY:
+	{
 		if (env.decayTimeSamps > 0) {
-			m_gain -= static_cast<float>((1.f /  env.decayTimeSamps) * pow(10, 1.f * env.sustainLeveldB / 20));
+			m_gain -= static_cast<float>((1.f / env.decayTimeSamps) * pow(10, 1.f * env.sustainLeveldB / 20));
 			if (m_gain < 0) {
 				m_gain = 0;
 				m_stage = EnvelopeStage::RELEASE;
@@ -77,11 +76,15 @@ float Envelope::process(float in)
 			m_stage = EnvelopeStage::SUSTAIN;
 		}
 
-		break;
+	}
+	break;
 	case EnvelopeStage::SUSTAIN:
+	{
 		m_gain = pow(10, 1.f * env.sustainLeveldB / 20);
-		break;
+	}
+	break;
 	case EnvelopeStage::RELEASE:
+	{
 		if (env.releaseTimeSamps > 0) {
 			m_gain -= static_cast<double>(1.f / env.releaseTimeSamps);
 			m_gain = (m_gain <= 0) ? 0 : m_gain;
@@ -93,20 +96,17 @@ float Envelope::process(float in)
 		if (m_gain <= 0) {
 			m_stage = EnvelopeStage::OFF;
 		}
-
-		break;
+	}
+	break;
 	case EnvelopeStage::OFF:
-
+	{
 		m_gain -= static_cast<double>(1.f / (0.001f * SAMPLE_RATE));
 		if (m_gain <= 0.f) {
 			m_gain = 0.f;
 		}
-
-
-		break;
+	}
+	break;
 	}
 
-	params[OUTPUT] = in * m_gain;
-
-	return 0;
+	outputs[OUTPUT] = in * m_gain;
 }

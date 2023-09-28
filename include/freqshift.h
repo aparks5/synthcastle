@@ -8,26 +8,26 @@ class FrequencyShifter : public Node
 public:
 	FrequencyShifter();
 	virtual ~FrequencyShifter() {}
-	float process() override;
+	void process() noexcept override;
 
 	enum Inputs {
+		INPUT,
 		NUM_INPUTS
 	};
 
 	enum Outputs {
+		OUTPUT,
 		NUM_OUTPUTS
 	};
 
 	enum Params {
 		NODE_ID,
 		INPUT_ID,
-		INPUT,
 		FREQ_ID,
+		OUTPUT_ID,
 		FREQ,
 		MODFREQ,
 		DRYWET,
-		OUTPUT_ID,
-		OUTPUT,
 		NUM_PARAMS
 	};
 

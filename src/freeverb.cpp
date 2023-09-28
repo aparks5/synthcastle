@@ -35,8 +35,10 @@ Freeverb::Freeverb()
 }
 
 
-float Freeverb::process(float in)
+void Freeverb::process() noexcept
 {
+	float in = inputs[INPUT];
+
 	float dry = in;
 	float earlyReflections = 0.f;
 	// comb filters in parallel
@@ -49,5 +51,5 @@ float Freeverb::process(float in)
 	output = m_allpassFilters[1](output);
 	output = m_allpassFilters[2](output);
 	output = m_allpassFilters[3](output);
-	return params[WETDRY]*output;
+	outputs[OUTPUT] = (params[WETDRY] * output) + ((1 - params[WETDRY]) * in);
 }

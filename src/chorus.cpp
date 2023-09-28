@@ -26,7 +26,9 @@ void Chorus::update()
 float Chorus::operator()(float in)
 {
 	update();
-	float out = delay.process(in);
+	delay.inputs[Delay::INPUT] = in;
+	delay.process();
+	float out = delay.outputs[Delay::OUTPUT];
 	m_output = out;
 	return out;
 }

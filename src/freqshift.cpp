@@ -2,19 +2,20 @@
 #include "constants.h"
 
 FrequencyShifter::FrequencyShifter()
-	: Node(NodeType::FREQ_SHIFT, "freqshift", NUM_INPUTS, NUM_OUTPUTS, NUM_PARAMS)
+	: Node(NodeType::PROCESSOR, "freqshift", NUM_INPUTS, NUM_OUTPUTS, NUM_PARAMS)
 	, m_fs(44100)
 {
 }
 
-float FrequencyShifter::process()
+void FrequencyShifter::process() noexcept
 {
+	float in = inputs[INPUT];
+
 	double inc = 1. / m_fs;
 	static double accum = 0;
 	if (accum >= m_fs) {
 		accum = 0;
 	}
-	auto in = params[INPUT];
 	float freq = params[FREQ];
 	float out = 0.f;
 
@@ -27,10 +28,9 @@ float FrequencyShifter::process()
 	accum += inc;
 
 	out = realshift - imagshift;
-	params[OUTPUT] = (params[DRYWET] * out) + (
+	outputs[OUTPUT] = (params[DRYWET] * out) + (
 		(1 - params[DRYWET]) * in);
 
-	return 0;
 
 }
 

@@ -47,12 +47,16 @@ float PitchShift::operator()(float in) {
 	//m_delay.update((delay1Modulation * m_windowTime) + 10, 0.67f);
 	//m_delayInv.update((delay2Modulation * m_windowTime) + 10, 0.67f);
 
-	float temp = m_delay.process(in);
+	m_delay.inputs[Delay::INPUT] = in;
+	m_delay.process();
+	float temp = m_delay.outputs[Delay::OUTPUT];
 	// restrict cosine from -.25 to .25
 	float env = cosf(2*M_PI * ((delay1Modulation - 0.5f) * 0.5f));
 	temp *= env;
 	
-	float tempInv = m_delayInv.process(in);
+	m_delayInv.inputs[Delay::INPUT] = in;
+	m_delayInv.process();
+	float tempInv = m_delayInv.outputs[Delay::OUTPUT];
 	float envInv = cosf(2*M_PI * ((delay2Modulation - 0.5f) * 0.5f));
 	tempInv *= envInv;
 

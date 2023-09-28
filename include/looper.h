@@ -13,19 +13,22 @@ class Looper : public Node
 public:
 	Looper();
 	virtual ~Looper() {}
-	float process(float in) override;
+	void process() noexcept override;
 
 	enum Inputs {
+		INPUT,
 		NUM_INPUTS
 	};
 
 	enum Outputs {
+		OUTPUT,
 		NUM_OUTPUTS
 	};
 
 	enum Params {
 		NODE_ID,
 		INPUT_ID,
+		OUTPUT_ID,
 		STOP,
 		RECORD,
 		ERASE,

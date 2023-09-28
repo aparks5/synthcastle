@@ -57,7 +57,7 @@ void Sampler::update()
 	}
 }
 
-float Sampler::process()
+void Sampler::process() noexcept
 {
 	if (params[STARTSTOP] >= 0.4) {
 		params[STARTSTOP] = 0;
@@ -81,12 +81,19 @@ float Sampler::process()
 		m_loopPoint = 0; // just return 0 instead of looping
 	}
 
+	// TODO: the rest of this function is a mess starting here
 	if (params[PITCH] == 0) {
-		return m_env.process(0);
+		m_env.inputs[Envelope::INPUT] = 0;
+		m_env.process();
+		outputs[OUTPUT] = m_env.outputs[Envelope::OUTPUT];
+		return;
 	}
 
 	if (params[PITCH] < 0.15) {
-		return m_env.process(0);
+		m_env.inputs[Envelope::INPUT] = 0;
+		m_env.process();
+		outputs[OUTPUT] = m_env.outputs[Envelope::OUTPUT];
+		return;
 	}
 	else {
 		m_rate = params[PITCH];
@@ -103,17 +110,27 @@ float Sampler::process()
 	}
 
 	if (m_accum > (audioFile.getNumSamplesPerChannel() - 1)) {
-		return m_env.process(0.f);
+		m_env.inputs[Envelope::INPUT] = 0;
+		m_env.process();
+		outputs[OUTPUT] = m_env.outputs[Envelope::OUTPUT];
+		return;
 	}
 	else {
 		int nearest = (int)m_accum;
 		float remainder = fmodf(m_accum, nearest);
 
 		if (nearest >= 1) {
-			return m_env.process(linearInterpolate(audioFile.samples[0][nearest - 1], audioFile.samples[0][nearest], remainder));
+			m_env.inputs[Envelope::INPUT] = linearInterpolate(audioFile.samples[0][nearest - 1], audioFile.samples[0][nearest], remainder);
+			m_env.process();
+			outputs[OUTPUT] = m_env.outputs[Envelope::OUTPUT];
+			return;
+		
 		} 
 		else {
-			return m_env.process(audioFile.samples[0][0]);
+			m_env.inputs[Envelope::INPUT] = audioFile.samples[0][0];
+			m_env.process();
+			outputs[OUTPUT] = m_env.outputs[Envelope::OUTPUT];
+			return;
 		}
 	}
 }

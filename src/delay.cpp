@@ -4,7 +4,7 @@
 #include <vector>
 
 Delay::Delay()
-	: Node(DELAY, "delay", NUM_INPUTS, NUM_OUTPUTS, NUM_PARAMS)
+	: Node(NodeType::PROCESSOR, "delay", NUM_INPUTS, NUM_OUTPUTS, NUM_PARAMS)
 	, m_sampleRate(44100)
 	, m_maxDelaySeconds(3.0)
 	, m_delayMs(0)
@@ -47,6 +47,13 @@ Delay::Delay()
 		{"delay_type", DELAY_TYPE}
 	};
 
+	inputMap = {
+		{"input", INPUT},
+	};
+
+	outputMap = {
+		{"output", OUTPUT}
+	};
 
 }
 
@@ -69,9 +76,10 @@ void Delay::reset()
 	std::fill(m_circBuff.begin(), m_circBuff.end(), 0.f);
 }
 
-float Delay::process(float in) 
+void Delay::process() noexcept
 {
 
+	float in = inputs[INPUT];
 	// update params if needed
 	if (params[MODRATE_HZ] != m_cacheLFORateHz) {
 		m_cacheLFORateHz = params[MODRATE_HZ];
@@ -110,7 +118,8 @@ float Delay::process(float in)
 	}
 
 	if (static_cast<size_t>(m_delayMs / 1000.f * m_sampleRate) == 0) {
-		return m_circBuff[m_writeIdx];
+		outputs[OUTPUT] = m_circBuff[m_writeIdx];
+		return;
 	}
 
 	// for 0 delay, interpolate the input with the prev output
@@ -142,7 +151,6 @@ float Delay::process(float in)
 	in = tanh(in);
 	// todo: modulate delay time based on character or params
 
-
 	// lastly, write to buffer
 	m_circBuff[m_writeIdx] = in + (m_feedbackRatio * m_feedbackOut);
 
@@ -151,6 +159,5 @@ float Delay::process(float in)
 		m_writeIdx = 0;
 	}
 
-
-	return (0.707 * ((drywet * dry) + ((1 - drywet) * out)));
+	outputs[OUTPUT] = (0.707 * ((drywet * dry) + ((1 - drywet) * out)));
 }
