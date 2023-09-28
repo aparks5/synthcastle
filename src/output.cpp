@@ -2,7 +2,7 @@
 #include "imnodes.h"
 
 Output::Output()
-    : Node(NodeType::OUTPUT, "output", NUM_INPUTS, NUM_PARAMS, NUM_OUTPUTS)
+    : Node(NodeType::OUTPUT, "output", NUM_INPUTS, NUM_OUTPUTS, NUM_PARAMS)
 {
 }
 

@@ -822,7 +822,7 @@ void ConstantDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     {
         std::string p = "value1";
         std::string title = "V1";
-        auto v = snapshot.outputs.at(p);
+        auto v = snapshot.params.at(p);
         ImGui::DragFloat(title.c_str(), &v, 0.1f, 0, 1.);
         update(id, snapshot, p, v);
     }
@@ -830,7 +830,7 @@ void ConstantDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     {
         std::string p = "value2";
         std::string title = "V2";
-        auto v = snapshot.outputs.at(p);
+        auto v = snapshot.params.at(p);
         ImGui::DragFloat(title.c_str(), &v, 0.1f, 0, 1.);
         update(id, snapshot, p, v);
     }
@@ -838,7 +838,7 @@ void ConstantDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     {
         std::string p = "value3";
         std::string title = "V3";
-        auto v = snapshot.outputs.at(p);
+        auto v = snapshot.params.at(p);
         ImGui::DragFloat(title.c_str(), &v, 0.1f, 0, 1.);
         update(id, snapshot, p, v);
     }
@@ -846,7 +846,7 @@ void ConstantDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     {
         std::string p = "value4";
         std::string title = "V4";
-        auto v = snapshot.outputs.at(p);
+        auto v = snapshot.params.at(p);
         ImGui::DragFloat(title.c_str(), &v, 0.1f, 0, 1.);
         update(id, snapshot, p, v);
     }

@@ -189,7 +189,6 @@ int ConstantNodeCreator::create()
 	auto processorNodeId = m_g->insert_node(processorNode); 
 	cacheType(processorNodeId, NodeType::PROCESSOR);
 	cacheName(processorNodeId, processorNode->getName());
-	cacheParam(processorNodeId, "node_id", processorNodeId);
 
 
 	for (auto& str : processorNode->inputStrings()) {
@@ -198,7 +197,7 @@ int ConstantNodeCreator::create()
 
 	// edges also need reverse order
 	for (auto& id : inputNodeIds) {
-		m_g->insert_edge(id, processorNodeId);
+		m_g->insert_edge(processorNodeId, id);
 		cacheType(id, NodeType::PROCESSOR_INPUT);
 	}
 
@@ -240,6 +239,9 @@ int ConstantNodeCreator::create()
 	for (auto& str : processorNode->paramStrings()) {
 		cacheParam(processorNodeId, str, 0.f);
 	}
+
+
+	cacheParam(processorNodeId, "node_id", processorNodeId);
 
 	return processorNodeId;
 }

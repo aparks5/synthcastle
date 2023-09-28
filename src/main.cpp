@@ -59,7 +59,7 @@ struct AudioData
 
 };
 
-static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeGraph> graph)
+static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeGraph> graph) noexcept
 {
 
     if (!graph.get()) {
@@ -73,7 +73,7 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
 	}
 
 	std::stack<int> postorder;
-	dfs_traverse(graph, [&postorder](const int node_id) -> void { postorder.push(node_id); });
+	//dfs_traverse(graph, [&postorder](const int node_id) -> void { postorder.push(node_id); });
 
 	std::stack<float> value_stack;
     // traverse all nodes and say none of them have been visited yet
@@ -81,6 +81,8 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
     // i don't want to have to do two traversals
 	//std::stack<int> postorder;
 	dfs_traverse(graph, [&postorder](const int node_id) -> void { postorder.push(node_id); });
+
+    size_t nodeCount = postorder.size();
 
     // make a hashmap of ids and count visited
     std::unordered_map<int, int> idVisited;
@@ -178,8 +180,9 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
         break;
         case NodeType::PROCESSOR:
         {
-            for (auto& in : pNode->inputs) {
-                in = value_stack.top();
+			for (size_t idx = 0; idx < pNode->inputs.size(); idx++) {
+                auto val = value_stack.top();
+                pNode->inputs[idx] = val;
                 value_stack.pop();
             }
 
@@ -192,6 +195,7 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
                 cached.push_back(out);
             }
         }
+        break;
         case NodeType::SEQ:
         {
 			// i should queue this til after eval
@@ -286,36 +290,6 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
             value_stack.push(cached[pNode->outputs[ProcessorOutput::OUTPUT]]);
         }
         break;
-        case NodeType::CONSTANT:
-        {
-            // pop inputs in input order
-            // only consume when evaluating for the first time
-            // we expect a relay
-
-			auto in1 = value_stack.top();
-			value_stack.pop();
-			auto in2 = value_stack.top();
-			value_stack.pop();
-			auto in3 = value_stack.top();
-			value_stack.pop();
-			auto in4 = value_stack.top();
-			value_stack.pop();
-
-			if (idVisited[id] == 1) {
-                cached.clear();
-				pNode->params[Constant::INPUT1] = in1;
-				pNode->params[Constant::INPUT2] = in2;
-				pNode->params[Constant::INPUT3] = in3;
-				pNode->params[Constant::INPUT4] = in4;
-				pNode->process();
-                cached.push_back(pNode->params[Constant::VALUE1]);
-                cached.push_back(pNode->params[Constant::VALUE2]);
-                cached.push_back(pNode->params[Constant::VALUE3]);
-                cached.push_back(pNode->params[Constant::VALUE4]);
-                break;
-			}
-        }
-        break;
 		case NodeType::DISTORT:
 		{
 			auto in = value_stack.top();
@@ -385,7 +359,10 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
                     value_stack.pop(); 
 					return std::make_tuple(left, right);
                 }
-			}
+            }
+            else {
+                return std::make_tuple(0., 0.);
+            }
 		}
 		break;
 		default:
