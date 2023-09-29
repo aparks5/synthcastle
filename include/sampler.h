@@ -16,27 +16,28 @@ public:
 	void update() override;
 
 	enum Inputs {
+		PITCH,
+		POSITION,
+		STARTSTOP, // 1 to start, 0 to stop
 		NUM_INPUTS
 	};
 
 	enum Outputs {
+		OUTPUT,
 		NUM_OUTPUTS
 	};
 
 	enum Params {
 		NODE_ID,
+		PITCH_ID,
 		POSITION_ID,
-		POSITION,
+		STARTSTOP_ID,
 		SPREAD, // how far the position CV can go 
 		SPRAY, // s&h lfo on position
 		GRAINSIZE, // how far after the start position to start looping
 		GRAINSIZE_MOD, // lfo for grain size
 		DISTANCE, // how long in between grains
 		NUM_VOICES, // how many simultaneous grains
-		PITCH_ID,
-		PITCH, 
-		STARTSTOP_ID,
-		STARTSTOP, // 1 to start, 0 to stop
 		FILENAME,
 		NUM_PARAMS
 	};

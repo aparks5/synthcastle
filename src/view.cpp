@@ -39,24 +39,22 @@ View::View()
     , m_bSetPosOfLatestNode(false)
     , m_cachedViewBagSize(0)
 {
-
-    m_displays[NodeType::AUDIO_IN] = std::make_shared<AudioInputDisplayCommand>();
-    m_displays[NodeType::DELAY] = std::make_shared<DelayDisplayCommand>();
-    m_displays[NodeType::DISTORT] = std::make_shared<DistortDisplayCommand>();
-    m_displays[NodeType::ENVELOPE] = std::make_shared<EnvelopeDisplayCommand>();
-    m_displays[NodeType::FILTER] = std::make_shared<FilterDisplayCommand>();
-    m_displays[NodeType::FREQ_SHIFT] = std::make_shared<FreqShiftDisplayCommand>();
-    m_displays[NodeType::GAIN] = std::make_shared<GainDisplayCommand>();
-    m_displays[NodeType::LOOPER] = std::make_shared<LooperDisplayCommand>();
-    m_displays[NodeType::MIDI_IN] = std::make_shared<MidiInputDisplayCommand>();
-    m_displays[NodeType::OUTPUT] = std::make_shared<OutputDisplayCommand>();
-    m_displays[NodeType::QUAD_MIXER] = std::make_shared<MixerDisplayCommand>();
-    m_displays[NodeType::SAMPLER] = std::make_shared<SamplerDisplayCommand>();
-    m_displays[NodeType::SEQ] = std::make_shared<SeqDisplayCommand>();
-    m_displays[NodeType::TRIG] = std::make_shared<TrigDisplayCommand>();
-
-    m_displaysByName["constant"] = std::make_shared<ConstantDisplayCommand>();
-    m_displaysByName["oscillator"] = std::make_shared<OscillatorDisplayCommand>();
+    m_displays["audio_input"] = std::make_shared<AudioInputDisplayCommand>();
+    m_displays["constant"] = std::make_shared<ConstantDisplayCommand>();
+    m_displays["delay"] = std::make_shared<DelayDisplayCommand>();
+    m_displays["distort"] = std::make_shared<DistortDisplayCommand>();
+    m_displays["envelope"] = std::make_shared<EnvelopeDisplayCommand>();
+    m_displays["filter"] = std::make_shared<FilterDisplayCommand>();
+    m_displays["freqshift"] = std::make_shared<FreqShiftDisplayCommand>();
+    m_displays["gain"] = std::make_shared<GainDisplayCommand>();
+    m_displays["looper"] = std::make_shared<LooperDisplayCommand>();
+    m_displays["midi"] = std::make_shared<MidiInputDisplayCommand>();
+    m_displays["oscillator"] = std::make_shared<OscillatorDisplayCommand>();
+    m_displays["output"] = std::make_shared<OutputDisplayCommand>();
+    m_displays["mixer"] = std::make_shared<MixerDisplayCommand>();
+    m_displays["sampler"] = std::make_shared<SamplerDisplayCommand>();
+    m_displays["seq"] = std::make_shared<SeqDisplayCommand>();
+    m_displays["trig"] = std::make_shared<TrigDisplayCommand>();
 
     const char* glsl_version = initSDL();
     SDL_GL_MakeCurrent(m_window, m_glContext);
@@ -90,10 +88,6 @@ void View::addListener(std::shared_ptr<ViewListener> listener) {
     for (auto const& [k,v] : m_displays) {
         v->addListener(listener);
     }
-    for (auto const& [k,v] : m_displaysByName) {
-        v->addListener(listener);
-    }
-
 }
 
 View::~View()
@@ -278,11 +272,8 @@ void View::display()
 
     // display nodes
     for (auto const& [k, v] : viewbag.map) {
-        if (m_displays.find(v.nodeType) != m_displays.end()) {
-            m_displays[v.nodeType]->display(k, v);
-        }
-        else if (m_displaysByName.find(v.name) != m_displaysByName.end()) {
-            m_displaysByName[v.name]->display(k, v);
+        if (m_displays.find(v.name) != m_displays.end()) {
+            m_displays[v.name]->display(k, v);
         }
     }
 
@@ -490,11 +481,11 @@ void MidiInputDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImGui::PopItemWidth();
 	ImGui::PushItemWidth(120.0f);
 	ImGui::Spacing();
-    ImGui::Text("Note 1: %f", snapshot.params.at("out_voice1"));
-    ImGui::Text("Note 2: %f", snapshot.params.at("out_voice2"));
-    ImGui::Text("Note 3: %f", snapshot.params.at("out_voice3"));
-    ImGui::Text("Note 4: %f", snapshot.params.at("out_voice4"));
-    ImGui::Text("Velocity: %f", snapshot.params.at("velocity"));
+    ImGui::Text("Note 1: %f", snapshot.outputs.at("out_voice1"));
+    ImGui::Text("Note 2: %f", snapshot.outputs.at("out_voice2"));
+    ImGui::Text("Note 3: %f", snapshot.outputs.at("out_voice3"));
+    ImGui::Text("Note 4: %f", snapshot.outputs.at("out_voice4"));
+    ImGui::Text("Velocity: %f", snapshot.outputs.at("out_velocity"));
 	ImGui::PopItemWidth();
 
 	ImGui::Spacing();

@@ -7,29 +7,15 @@
 #include "view.h"
 #include "controller.h"
 
-#include "seq.h"
-#include "constant.h"
-#include "sampler.h"
-#include "trig.h"
-#include "oscillator.h"
-#include "delay.h"
+#include "audioinput.h"
 #include "relay.h"
 #include "value.h"
-
 #include "node_editor.h"
-#include "oscillator.h"
-#include "fourvoice.h"
-#include "filter.h"
-#include "freqshift.h"
-#include "gain.h"
-#include "midi.h"
 #include "signal_flow_editor.h"
-#include "output.h"
 #include "util.h"
 #include "portaudio.h"
 #include "portaudiohandler.h"
 #include "windows.h"
-#include "quadmixer.h"
 
 #include "commands.h"
 
@@ -61,34 +47,24 @@ struct AudioData
 
 static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeGraph> graph) noexcept
 {
-
     if (!graph.get()) {
         return { 0,0 };
     }
-
-	float clockCache = -1.f;
 
 	if (graph->getRoot() == -1) {
 		return {0, 0};
 	}
 
 	std::stack<int> postorder;
-	//dfs_traverse(graph, [&postorder](const int node_id) -> void { postorder.push(node_id); });
-
 	std::stack<float> value_stack;
-    // traverse all nodes and say none of them have been visited yet
-    // reset FLAGS before traversal
-    // i don't want to have to do two traversals
-	//std::stack<int> postorder;
 	dfs_traverse(graph, [&postorder](const int node_id) -> void { postorder.push(node_id); });
 
-    size_t nodeCount = postorder.size();
-
     // make a hashmap of ids and count visited
+	// TODO: eliminate all the dynamic memory
     std::unordered_map<int, int> idVisited;
-// check stack size?    
     std::vector<float> cached;
     cached.reserve(16);
+
 	while (!postorder.empty())
 	{
 		const int id = postorder.top();
@@ -97,87 +73,11 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
 		postorder.pop();
 		const auto& pNode = graph->node(id);
 
+		if (pNode->getName() == "audio_input") {
+			pNode->params[AudioInput::ADC_INPUT] = inputSample;
+		}
+
 		switch (pNode->getNodeType()) {
-		//case NodeType::AUDIO_IN:
-		//{
-  //          value_stack.push(inputSample);
-		//}
-		//break;
-		//case NodeType::DELAY:
-		//{
-		//	auto val = value_stack.top();
-		//	value_stack.pop();
-		//	value_stack.push(pNode->process(val));
-		//}
-		//break;
-  //      case NodeType::FILTER:
-  //      {
-  //          auto in = value_stack.top();
-  //          value_stack.pop();
-  //          auto mod = value_stack.top();
-  //          value_stack.pop();
-  //          auto depth = value_stack.top();
-  //          value_stack.pop();
-
-  //          pNode->params[Filter::FREQMOD] = mod;
-  //          pNode->params[Filter::MODDEPTH] = depth;
-  //          value_stack.push(pNode->process(in));
-  //      }
-  //      break;
-  //      case NodeType::FREQ_SHIFT:
-  //      {
-  //          auto in = value_stack.top();
-  //          value_stack.pop();
-  //          pNode->params[FrequencyShifter::INPUT] = in;
-  //          auto modfreq = value_stack.top();
-  //          value_stack.pop();
-  //          pNode->params[FrequencyShifter::MODFREQ] = modfreq;
-
-  //          if (idVisited[id] == 1) {
-  //              cached.clear();
-  //              pNode->process();
-  //              cached.push_back(pNode->params[FrequencyShifter::OUTPUT]);
-  //          }
-  //      }
-  //      break;
-  //      case NodeType::ENVELOPE:
-  //      {
-		//	// pop off the stack in input order
-  //          auto in = value_stack.top();
-  //          value_stack.pop();
-  //          auto trig = value_stack.top();
-  //          value_stack.pop();
-  //          pNode->params[Envelope::TRIG] = trig;
-
-  //          if (idVisited[id] == 1) {
-  //              pNode->process(in);
-  //          }
-
-  //          cached.clear();
-  //          cached.push_back(pNode->params[Envelope::OUTPUT]);
-  //      }
-  //      break;
-  //      case NodeType::LOOPER:
-  //      {
-  //          auto val = value_stack.top();
-  //          value_stack.pop();
-  //          value_stack.push(pNode->process(val));
-  //      }
-  //      break;
-  //      case NodeType::MIDI_IN:
-  //      {
-		//	if (idVisited[id] == 1) {
-  //              cached.clear();
-		//		pNode->process();
-  //              cached.push_back(pNode->params[MIDI::OUT_VOICE1]);
-  //              cached.push_back(pNode->params[MIDI::OUT_VOICE2]);
-  //              cached.push_back(pNode->params[MIDI::OUT_VOICE3]);
-  //              cached.push_back(pNode->params[MIDI::OUT_VOICE4]);
-  //              cached.push_back(pNode->params[MIDI::VELOCITY]);
-  //              break;
-		//	}
-  //      }
-  //      break;
         case NodeType::PROCESSOR:
         {
 			for (size_t idx = 0; idx < pNode->inputs.size(); idx++) {
@@ -196,92 +96,6 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
             }
         }
         break;
-  //      case NodeType::SEQ:
-  //      {
-		//	// i should queue this til after eval
-		//	// pop off the stack in input order
-  //          auto trig = value_stack.top();
-  //          value_stack.pop();
-  //          pNode->params[Seq::TRIGIN] = trig;
-  //          auto reset = value_stack.top();
-  //          value_stack.pop();
-  //          pNode->params[Seq::RESET] = reset;
-
-  //          if (idVisited[id] == 1) {
-  //              pNode->process();
-		//	}
-
-  //          // allow one out to branch to multiple ins
-  //          // repopulate the cache each visit
-		//	cached.clear();
-		//	auto val = pNode->params[Seq::TRIGOUT];
-		//	cached.push_back(val);
-
-  //      }
-  //      break;
-  //      case NodeType::QUAD_MIXER:
-  //      {
-  //          auto d = value_stack.top();
-  //          value_stack.pop();
-  //          auto c = value_stack.top();
-  //          value_stack.pop();
-  //          auto b = value_stack.top();
-  //          value_stack.pop();
-  //          auto a = value_stack.top();
-  //          value_stack.pop();
-  //          pNode->params[QuadMixer::INPUT_A] = a;
-  //          pNode->params[QuadMixer::INPUT_B] = b;
-  //          pNode->params[QuadMixer::INPUT_C] = c;
-  //          pNode->params[QuadMixer::INPUT_D] = d;
-  //          value_stack.push(pNode->process());
-  //      }
-  //      break;
-		//case NodeType::SAMPLER:
-		//{
-		//	pNode->update();
-
-		//	auto val = value_stack.top();
-		//	value_stack.pop();
-		//	pNode->params[Sampler::PITCH] = val;
-
-		//	auto pos = value_stack.top();
-		//	value_stack.pop();
-		//	pNode->params[Sampler::POSITION] = pos;
-
-		//	auto startstop = value_stack.top();
-		//	value_stack.pop();
-		//	pNode->params[Sampler::STARTSTOP] = startstop;
-
-		//	value_stack.push(pNode->process());
-		//}
-		//break;
-		//case NodeType::OSCILLATOR:
-		//{
-		//	pNode->update();
-		//	auto freq = value_stack.top();
-		//	value_stack.pop();
-  //          if (freq > 0) {
-  //              pNode->params[Oscillator::FREQ] = freq;
-  //          }
-		//	auto mod = value_stack.top();
-		//	value_stack.pop();
-		//	if (mod != INVALID_PARAM_VALUE) {
-		//		pNode->params[Oscillator::MODFREQ] = mod;
-		//	}
-		//	auto depth = value_stack.top();
-		//	value_stack.pop();
-		//	if (depth != INVALID_PARAM_VALUE) {
-		//		pNode->params[Oscillator::MODDEPTH] = depth;
-		//	}
-
-  //          if (idVisited[id] == 1) {
-  //              pNode->process();
-  //          }
-
-  //          cached.clear();
-  //          cached.push_back(pNode->params[Oscillator::OUTPUT]);
-		//}
-		//break;
         case NodeType::PROCESSOR_OUTPUT:
         {
             // if there is a Relay it's attached to a process node

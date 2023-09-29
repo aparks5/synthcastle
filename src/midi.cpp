@@ -7,7 +7,7 @@
 
 
 MIDI::MIDI()
-	: Node(NodeType::MIDI_IN, "midi_in", NUM_INPUTS, NUM_OUTPUTS, NUM_PARAMS)
+	: Node(NodeType::PROCESSOR, "midi", NUM_INPUTS, NUM_OUTPUTS, NUM_PARAMS)
 	, midiin(std::make_shared<RtMidiIn>())
 	, m_portId(-1)
 	, m_currentVoice(0)
@@ -36,18 +36,20 @@ MIDI::MIDI()
 		{"node_id", NODE_ID},
 		{"num_ports", NUM_PORTS},
 		{"selected_port", SELECTED_PORT},
-		{"out_voice1_id", OUT_VOICE1_ID},
-		{"out_voice2_id", OUT_VOICE2_ID},
-		{"out_voice3_id", OUT_VOICE3_ID},
-		{"out_voice4_id", OUT_VOICE4_ID},
-		{"out_voice1", OUT_VOICE1},
-		{"out_voice2", OUT_VOICE2},
-		{"out_voice3", OUT_VOICE3},
-		{"out_voice4", OUT_VOICE4},
 		{"note", NOTE},
 		{"velocity", VELOCITY},
 		{"out_velocity_id", OUT_VELOCITY_ID},
 	};
+
+	outputMap = {
+		{"out_voice1", OUT_VOICE1},
+		{"out_voice2", OUT_VOICE2},
+		{"out_voice3", OUT_VOICE3},
+		{"out_voice4", OUT_VOICE4},
+		{"out_velocity", OUT_VELOCITY}
+	};
+
+	initIdStrings();
 
 }
 

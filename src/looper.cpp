@@ -7,7 +7,7 @@
 #include "util.h"
 
 Looper::Looper()
-	: Node(NodeType::LOOPER, "looper", NUM_INPUTS, NUM_OUTPUTS, NUM_PARAMS)
+	: Node(NodeType::PROCESSOR, "looper", NUM_INPUTS, NUM_OUTPUTS, NUM_PARAMS)
 	, m_sampleRate(44100)
 	, m_numLayers(0)
 	, m_maxLoopTimeSec(60)
@@ -29,6 +29,30 @@ Looper::Looper()
 	m_loop.reserve(maxNumSamps);
 	m_buffer.reserve(maxNumSamps);
 	stringParams["path"] = "";
+
+	paramMap = {
+		{"node_id", NODE_ID},
+		{"stop", STOP},
+		{"record", RECORD},
+		{"erase", ERASE},
+		{"loop", LOOP},
+		{"loop_point_begin", LOOP_POINT_BEGIN},
+		{"loop_point_end", LOOP_POINT_END},
+		{"reverse", REVERSE},
+		{"speed", SPEED},
+		{"filename", FILENAME},
+	};
+
+	inputMap = {
+		{"input", INPUT}
+	};
+
+	outputMap = {
+		{"output", OUTPUT}
+	};
+
+	initIdStrings();
+
 } 
 
 void Looper::process() noexcept

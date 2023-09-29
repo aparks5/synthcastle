@@ -55,6 +55,7 @@ Delay::Delay()
 		{"output", OUTPUT}
 	};
 
+	initIdStrings();
 }
 
 float Delay::tap(float ms)

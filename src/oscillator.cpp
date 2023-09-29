@@ -37,15 +37,7 @@ Oscillator::Oscillator()
 		{"output", OUTPUT}
 	};
 
-	inputIdStrings = {
-		"modfreq_id",
-		"moddepth_id"
-	};
-
-	outputIdStrings = {
-		"output_id",
-	};
-
+	initIdStrings();
 }
 
 void Oscillator::update()

@@ -21,6 +21,16 @@ Envelope::Envelope()
 		{"release_ms", RELEASE_MS}
 	};
 
+	inputMap = {
+		{"input", INPUT},
+		{"trig", TRIG},
+	};
+
+	outputMap = {
+		{"output", OUTPUT},
+	};
+
+	initIdStrings();
 }
 
 void Envelope::process() noexcept

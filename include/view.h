@@ -61,8 +61,7 @@ private:
 	SDL_GLContext m_glContext;
 	ImNodesEditorContext* m_pEditorContext;
 	std::shared_ptr<ViewListener> m_listener;
-	std::unordered_map<NodeType, std::shared_ptr<NodeDisplayCommand>> m_displays;
-	std::unordered_map<std::string, std::shared_ptr<NodeDisplayCommand>> m_displaysByName;
+	std::unordered_map<std::string, std::shared_ptr<NodeDisplayCommand>> m_displays;
 	ViewBag m_bag;
 
 	ImVec2 m_cachedClickPos;

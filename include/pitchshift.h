@@ -1,6 +1,9 @@
 #ifndef PITCHSHIFT_H_
 #define PITCHSHIFT_H_
 
+#include "module.h"
+#include "delay.h"
+
 class PitchShift : public Module
 {
 public:

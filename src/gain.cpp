@@ -4,15 +4,11 @@
 #include "constants.h"
 
 Gain::Gain()
-    : Node(NodeType::GAIN, "gain", NUM_INPUTS, NUM_OUTPUTS, NUM_PARAMS)
+    : Node(NodeType::PROCESSOR, "gain", NUM_INPUTS, NUM_OUTPUTS, NUM_PARAMS)
 {
 	params[GAIN] = 1.f;
 	paramMap = {
 			{"gain", GAIN},
-			{"input_id", INPUT_ID},
-			{"left_id", LEFT_ID},
-			{"right_id", RIGHT_ID},
-			{"panmod_id", PANMOD_ID},
 			{"gainmod_depth", GAINMOD_DEPTH},
 			{"pan", PAN},
 			{"panmod_depth", PANMOD_DEPTH},
@@ -29,18 +25,7 @@ Gain::Gain()
 		{"output_right", OUTPUT_RIGHT}
 	};
 
-	// these could be auto generated from keys of inputMap + id
-	inputIdStrings = {
-		"input_id",
-		"gainmod_id",
-		"panmod_id"
-	};
-	
-	outputIdStrings = {
-		"output_left_id",
-		"output_right_id"
-	};
-
+	initIdStrings();
 }
 
 void Gain::setGaindB(float gaindB)

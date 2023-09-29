@@ -24,11 +24,77 @@
 
 #define INVALID_PARAM_VALUE (-128)
 
+// TODO: replace with class registry pattern
+class ProcessorNodeFactory
+{
+public:
+	ProcessorNodeFactory();
+	virtual ~ProcessorNodeFactory();
+	// this factory will grow without Registry pattern
+	static std::shared_ptr<Node> create(std::string str) {
+		if (str == "audio_input") {
+			return std::make_shared<AudioInput>();
+		}
+		else if (str == "constant") {
+			return std::make_shared<Constant>();
+		}
+		else if (str == "distort") {
+			return std::make_shared<Distort>();
+		}
+		else if (str == "delay") {
+			return std::make_shared<Delay>();
+		}
+		else if (str == "envelope") {
+			return std::make_shared<Envelope>();
+		}
+		else if (str == "filter") {
+			return std::make_shared<Filter>();
+		}
+		else if (str == "freqshift") {
+			return std::make_shared<FrequencyShifter>();
+		}
+		else if (str == "gain") {
+			return std::make_shared<Gain>();
+		}
+		else if (str == "looper") {
+			return std::make_shared<Looper>();
+		}
+		else if (str == "mixer") {
+			return std::make_shared<QuadMixer>();
+		}
+		else if (str == "oscillator") {
+			return std::make_shared<Oscillator>();
+		}
+		else if (str == "output") {
+			return std::make_shared<Output>();
+		}
+		else if (str == "sampler") {
+			return std::make_shared<Sampler>();
+		}
+		else if (str == "seq") {
+			return std::make_shared<Seq>();
+		}
+		else if (str == "trig") {
+			return std::make_shared<Trig>();
+		}
+		else if (str == "midi") {
+			return std::make_shared<MIDI>();
+		}
+
+		// we should never reach here
+		return std::make_shared<Constant>();
+	}
+};
+
+
+
 Model::Model()
 	: m_graph(std::make_shared<NodeGraph>())
 	, nodeCreator(m_graph, m_cache)
 {
 }
+
+
 
 NodeGraph Model::cloneGraph()
 {
@@ -131,25 +197,6 @@ int Model::update(UpdateStringEvent update)
 
 	return 0;
 }
-
-// TODO: replace with class registry pattern
-class ProcessorNodeFactory
-{
-public:
-	ProcessorNodeFactory();
-	virtual ~ProcessorNodeFactory();
-	// this factory will grow without Registry pattern
-	static std::shared_ptr<Node> create(std::string str) {
-		if (str == "constant") {
-			return std::make_shared<Constant>();
-		}
-		else if (str == "oscillator") {
-			return std::make_shared<Oscillator>();
-		}
-
-		return std::make_shared<Constant>();
-	}
-};
 
 int ProcessorNodeCreator::create(std::string str)
 {

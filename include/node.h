@@ -126,5 +126,15 @@ protected:
 	std::unordered_map<std::string, int> outputMap;
     std::vector<std::string> inputIdStrings;
     std::vector<std::string> outputIdStrings;
+	void initIdStrings()
+	{
+		for (auto& [k, v] : inputMap) {
+			inputIdStrings.push_back(k + "_id");
+		}
+		for (auto& [k, v] : outputMap) {
+			outputIdStrings.push_back(k + "_id");
+		}
+
+	}
 	
 };

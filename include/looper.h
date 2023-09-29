@@ -49,18 +49,6 @@ private:
 	// by .5
 	size_t m_numLayers;
 	size_t m_maxBufferSize; // governed by first layer in the loop
-	std::unordered_map<std::string, int> m_lookup = {
-		{"node_id", NODE_ID},
-		{"stop", STOP},
-		{"record", RECORD},
-		{"erase", ERASE},
-		{"loop", LOOP},
-		{"loop_point_begin", LOOP_POINT_BEGIN},
-		{"loop_point_end", LOOP_POINT_END},
-		{"reverse", REVERSE},
-		{"speed", SPEED},
-		{"filename", FILENAME},
-	};
 	float m_sampleRate;
 	float m_maxLoopTimeSec;
 	AudioFile<float> audioFile;

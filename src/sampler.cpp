@@ -8,7 +8,7 @@
 #include "util.h"
 
 Sampler::Sampler()
-	: Node(NodeType::SAMPLER, "sampler", NUM_INPUTS, NUM_OUTPUTS, NUM_PARAMS)
+	: Node(NodeType::PROCESSOR, "sampler", NUM_INPUTS, NUM_OUTPUTS, NUM_PARAMS)
 	, m_sampleRate(44100)
 	, m_startPos(0)
 	, m_accum(0)
@@ -27,7 +27,6 @@ Sampler::Sampler()
 	paramMap = {
 		{"node_id", NODE_ID},
 		{"position_id", POSITION_ID},
-		{"position", POSITION},
 		{"spread", SPREAD},
 		{"distance", DISTANCE},
 		{"num_voices", NUM_VOICES},
@@ -35,11 +34,21 @@ Sampler::Sampler()
 		{"grainsize_mod", GRAINSIZE_MOD},
 		{"spray", SPRAY},
 		{"pitch_id", PITCH_ID},
-		{"pitch", PITCH},
 		{"filename", FILENAME},
 		{"startstop_id", STARTSTOP_ID},
-		{"startstop", STARTSTOP},
 	};
+
+	inputMap = {
+		{"pitch", PITCH},
+		{"position", POSITION},
+		{"startstop", STARTSTOP}
+	};
+
+	outputMap = {
+		{"output", OUTPUT}
+	};
+
+	initIdStrings();
 
 } 
 
@@ -59,15 +68,15 @@ void Sampler::update()
 
 void Sampler::process() noexcept
 {
-	if (params[STARTSTOP] >= 0.4) {
-		params[STARTSTOP] = 0;
+	if (inputs[STARTSTOP] >= 0.4) {
+		inputs[STARTSTOP] = 0;
 		m_env.params[Envelope::TRIG] = 1;
 		m_startPos = 0;
 		m_accum = 0;
 		m_bTriggered = true;
 	}
 
-	if (params[POSITION] != 0 && m_bTriggered) {
+	if (inputs[POSITION] != 0 && m_bTriggered) {
 		m_bTriggered = false;
 		m_startPos = audioFile.getNumSamplesPerChannel() * params[SPREAD] * params[POSITION] ;
 		m_accum = m_startPos;
@@ -82,21 +91,21 @@ void Sampler::process() noexcept
 	}
 
 	// TODO: the rest of this function is a mess starting here
-	if (params[PITCH] == 0) {
+	if (inputs[PITCH] == 0) {
 		m_env.inputs[Envelope::INPUT] = 0;
 		m_env.process();
 		outputs[OUTPUT] = m_env.outputs[Envelope::OUTPUT];
 		return;
 	}
 
-	if (params[PITCH] < 0.15) {
+	if (inputs[PITCH] < 0.15) {
 		m_env.inputs[Envelope::INPUT] = 0;
 		m_env.process();
 		outputs[OUTPUT] = m_env.outputs[Envelope::OUTPUT];
 		return;
 	}
 	else {
-		m_rate = params[PITCH];
+		m_rate = inputs[PITCH];
 	}
 	
 
