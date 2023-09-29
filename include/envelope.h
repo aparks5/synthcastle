@@ -49,8 +49,6 @@ public:
 	};
 	enum Params {
 		NODE_ID,
-		INPUT_ID,
-		OUTPUT_ID,
 		TRIG_ID,
 		ATTACK_MS,
 		DECAY_MS,

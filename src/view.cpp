@@ -199,10 +199,11 @@ void View::nodeMenu()
 
 	if (bKeyReleased) {
 		m_cachedClickPos = ImGui::GetMousePos();
+        // give user some space to drag the node
+        m_cachedClickPos.x -= 40;
+        m_cachedClickPos.y -= 40;
 		m_bSetPosOfLatestNode = true;
 	}
-
-
 }
 
 void View::display()
@@ -259,7 +260,6 @@ void View::display()
     }
 
 	if (ImGui::BeginPopup("add node")) {
-        const ImVec2 click_pos = ImGui::GetMousePos(); // GetMousePosOnOpeningCurrentPopup();
 		nodeMenu();
 		ImGui::EndPopup();
 	}
@@ -269,6 +269,23 @@ void View::display()
     }
 
     const ViewBag viewbag = m_listener->snapshot();
+
+    // set the latest created node to the last know mouse position
+    if (m_bSetPosOfLatestNode && 
+        (viewbag.map.size() > m_cachedViewBagSize)) {
+        int min = 0;
+		m_cachedViewBagSize = viewbag.map.size();
+        for (const auto& [k, v] : viewbag.map) {
+            if (v.nodeType == PROCESSOR) {
+                if (k > min) {
+                    min = k;
+                }
+            }
+        }
+
+        ImNodes::SetNodeScreenSpacePos(min, m_cachedClickPos);
+        m_bSetPosOfLatestNode = false;
+    }
 
     // display nodes
     for (auto const& [k, v] : viewbag.map) {
@@ -295,19 +312,6 @@ void View::display()
     ImNodes::EndNodeEditor();
     ImGui::PopStyleColor();
 
-    // set the latest created node to the last know mouse position
-    if (m_bSetPosOfLatestNode && 
-        (viewbag.map.size() > m_cachedViewBagSize)) {
-        int min = 0;
-		m_cachedViewBagSize = viewbag.map.size();
-        for (const auto& [k, v] : viewbag.map) {
-            if (k > min) {
-                min = k;
-            }
-        }
-        ImNodes::SetNodeScreenSpacePos(min, m_cachedClickPos);
-        m_bSetPosOfLatestNode = false;
-    }
 
     {
         int startAttr = 0;
@@ -380,11 +384,11 @@ void OutputDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
     ImGui::BeginGroup();
     {
-        ImNodes::BeginInputAttribute(snapshot.params.at("left_id"));
+        ImNodes::BeginInputAttribute(snapshot.inputs.at("left_id"));
         ImGui::TextUnformatted("Left Output");
         ImNodes::EndInputAttribute();
 
-        ImNodes::BeginInputAttribute(snapshot.params.at("right_id"));
+        ImNodes::BeginInputAttribute(snapshot.inputs.at("right_id"));
         ImGui::TextUnformatted("Right Output");
         ImNodes::EndInputAttribute();
     }
@@ -489,25 +493,24 @@ void MidiInputDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImGui::PopItemWidth();
 
 	ImGui::Spacing();
-	// display note and velocity
 
-    ImNodes::BeginOutputAttribute(snapshot.params.at("out_voice1_id"));
+    ImNodes::BeginOutputAttribute(snapshot.outputs.at("out_voice1_id"));
 	ImGui::TextUnformatted("Voice 1");
 	ImNodes::EndOutputAttribute();
 
-    ImNodes::BeginOutputAttribute(snapshot.params.at("out_voice2_id"));
+    ImNodes::BeginOutputAttribute(snapshot.outputs.at("out_voice2_id"));
 	ImGui::TextUnformatted("Voice 2");
 	ImNodes::EndOutputAttribute();
 
-    ImNodes::BeginOutputAttribute(snapshot.params.at("out_voice3_id"));
+    ImNodes::BeginOutputAttribute(snapshot.outputs.at("out_voice3_id"));
 	ImGui::TextUnformatted("Voice 3");
 	ImNodes::EndOutputAttribute();
 
-    ImNodes::BeginOutputAttribute(snapshot.params.at("out_voice4_id"));
+    ImNodes::BeginOutputAttribute(snapshot.outputs.at("out_voice4_id"));
 	ImGui::TextUnformatted("Voice 4");
 	ImNodes::EndOutputAttribute();
 
-    ImNodes::BeginOutputAttribute(snapshot.params.at("out_velocity_id"));
+    ImNodes::BeginOutputAttribute(snapshot.outputs.at("out_velocity_id"));
 	ImGui::TextUnformatted("Velocity");
 	ImNodes::EndOutputAttribute();
 
@@ -530,7 +533,7 @@ void DelayDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     ImGui::TextUnformatted("Delay");
     ImNodes::EndNodeTitleBar();
 
-	ImNodes::BeginInputAttribute(snapshot.params.at("input_id"));
+	ImNodes::BeginInputAttribute(snapshot.inputs.at("input_id"));
 	ImGui::TextUnformatted("In");
 	ImNodes::EndInputAttribute();
 
@@ -562,7 +565,7 @@ void DelayDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     ImGui::DragFloat("Feedback Lowpass Cutoff (Hz)", &lp, 0.1f, 0.f, 1.f);
     update(id, snapshot, "feedback_lowpass_hz", lp);
 
-    ImNodes::BeginOutputAttribute(id);
+    ImNodes::BeginOutputAttribute(snapshot.outputs.at("output_id"));
 	const float text_width = ImGui::CalcTextSize("Out").x;
 	ImGui::Indent(120.f + ImGui::CalcTextSize("Out").x - text_width);
 	ImGui::TextUnformatted("Out");
@@ -574,7 +577,6 @@ void DelayDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
 void DistortDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 {
-	auto params = snapshot.params;
 
     ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(227, 105, 241, 255));
 	ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(227, 105, 241, 255));
@@ -590,7 +592,7 @@ void DistortDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
     ImGui::BeginGroup();
     {
-        ImNodes::BeginInputAttribute(params["input_id"]);
+        ImNodes::BeginInputAttribute(snapshot.inputs.at("input_id"));
         ImGui::TextUnformatted("In");
         ImNodes::EndInputAttribute();
     }
@@ -620,7 +622,7 @@ void DistortDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     
     ImGui::PushStyleColor(ImGuiCol_Header, (ImVec4)ImColor(227, 255, 99));
     ImGui::PushStyleColor(ImGuiCol_PopupBg, (ImVec4)ImColor(227, 255, 99));
-    int algo = (int)params["algorithm"];
+    int algo = (int)snapshot.params.at("algorithm");
     ImGui::Combo("Algo", &algo, "tanh()\0atan()\0sin()\0twostage-softclip\0cubic-softclip");
     update(id, snapshot, "algorithm", algo);
     ImGui::PopStyleColor(2);
@@ -634,7 +636,7 @@ void DistortDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
     ImGui::BeginGroup();
     {
-        ImNodes::BeginOutputAttribute(id);
+        ImNodes::BeginOutputAttribute(snapshot.outputs.at("output_id"));
 		const float text_width = ImGui::CalcTextSize("Out").x;
 		ImGui::Indent(width + ImGui::CalcTextSize("Out").x + text_width);
         ImGui::TextUnformatted("Out");
@@ -648,8 +650,6 @@ void DistortDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
 void LooperDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 {
-	auto params = snapshot.params;
-
     ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(227, 105, 241, 255));
 	ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(227, 105, 241, 255));
 	ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(227, 105, 241, 255));
@@ -661,7 +661,7 @@ void LooperDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
     ImGui::BeginGroup();
     {
-        ImNodes::BeginInputAttribute(params["input_id"]);
+        ImNodes::BeginInputAttribute(snapshot.inputs.at("input_id"));
         ImGui::TextUnformatted("In");
         ImNodes::EndInputAttribute();
     }
@@ -703,7 +703,7 @@ void LooperDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     }
     ImGui::EndGroup();
 
-	ImNodes::BeginOutputAttribute(id);
+	ImNodes::BeginOutputAttribute(snapshot.outputs.at("output_id"));
 	const float text_width = ImGui::CalcTextSize("Out").x;
 	ImGui::Indent(120.f + ImGui::CalcTextSize("Out").x - text_width);
 	ImGui::TextUnformatted("Out");
@@ -716,8 +716,6 @@ void LooperDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 // change to Mix node
 void GainDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 {
-	auto params = snapshot.params;
-
     ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(227, 105, 241, 255));
 	ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(227, 105, 241, 255));
 	ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(227, 105, 241, 255));
@@ -727,53 +725,42 @@ void GainDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImGui::TextUnformatted("Gain");
 	ImNodes::EndNodeTitleBar();
 
-	ImNodes::BeginInputAttribute(params["input_id"]);
+	ImNodes::BeginInputAttribute(snapshot.inputs.at("input_id"));
 	ImGui::TextUnformatted("In");
 	ImNodes::EndInputAttribute();
 
-	ImNodes::BeginInputAttribute(params["gainmod_id"]);
+	ImNodes::BeginInputAttribute(snapshot.inputs.at("gainmod_id"));
 	ImGui::TextUnformatted("Gain Mod");
 	ImNodes::EndInputAttribute();
 
-	ImNodes::BeginInputAttribute(params["panmod_id"]);
+	ImNodes::BeginInputAttribute(snapshot.inputs.at("panmod_id"));
 	ImGui::TextUnformatted("Pan Mod");
 	ImNodes::EndInputAttribute();
 
+	auto g = snapshot.params.at("gain");
+	if (ImGuiKnobs::Knob("Gain", &g, -60.0f, 30.0f, 0.1f, "%.1fdB", ImGuiKnobVariant_Wiper)) {
+		update(id, snapshot, "gain", g);
+	}
 
-    {
-        auto g = snapshot.params.at("gain");
-        if (ImGuiKnobs::Knob("Gain", &g, -60.0f, 30.0f, 0.1f, "%.1fdB", ImGuiKnobVariant_Wiper)) {
-            update(id, snapshot, "gain", g);
-        }
-    }
-
-    {
-	  auto g = snapshot.params.at("gainmod_depth");
-		if (ImGuiKnobs::Knob("Gain Mod Depth", &g, 0.f, 1.f, 0.1f, "%.1fdB", ImGuiKnobVariant_Wiper)) {
-            update(id, snapshot, "gainmod_depth", g);
-        }
-    }
-
-    {
-        auto p = snapshot.params.at("pan");
-        if (ImGuiKnobs::Knob("Pan", &p, -1.f, 1.0f, 0.1f, "%.1f", ImGuiKnobVariant_Wiper)) {
-            update(id, snapshot, "pan", p);
-        }
-    }
-
-    {
-        auto d = snapshot.params.at("panmod_depth");
-        if (ImGuiKnobs::Knob("Pan Mod Depth", &d, 0.f, 1.0f, 0.1f, "%.1f", ImGuiKnobVariant_Wiper)) {
-            update(id, snapshot, "panmod_depth", d);
-        }
-    }
+	auto gmd = snapshot.params.at("gainmod_depth");
+	if (ImGuiKnobs::Knob("Gain Mod Depth", &gmd, 0.f, 1.f, 0.1f, "%.1fdB", ImGuiKnobVariant_Wiper)) {
+		update(id, snapshot, "gainmod_depth", gmd);
+	}
+	auto p = snapshot.params.at("pan");
+	if (ImGuiKnobs::Knob("Pan", &p, -1.f, 1.0f, 0.1f, "%.1f", ImGuiKnobVariant_Wiper)) {
+		update(id, snapshot, "pan", p);
+	}
+	auto d = snapshot.params.at("panmod_depth");
+	if (ImGuiKnobs::Knob("Pan Mod Depth", &d, 0.f, 1.0f, 0.1f, "%.1f", ImGuiKnobVariant_Wiper)) {
+		update(id, snapshot, "panmod_depth", d);
+	}
 
 
-	ImNodes::BeginOutputAttribute(params["left_id"]);
+	ImNodes::BeginOutputAttribute(snapshot.outputs.at("left_id"));
 	ImGui::TextUnformatted("Left");
 	ImNodes::EndOutputAttribute();
 
-	ImNodes::BeginOutputAttribute(params["right_id"]);
+	ImNodes::BeginOutputAttribute(snapshot.outputs.at("right_id"));
 	ImGui::TextUnformatted("Right");
 	ImNodes::EndOutputAttribute();
 
@@ -797,19 +784,19 @@ void ConstantDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
 	ImGui::BeginGroup(); 
     {
-        ImNodes::BeginInputAttribute(snapshot.params.at("input1_id"));
+        ImNodes::BeginInputAttribute(snapshot.inputs.at("input1_id"));
         ImGui::TextUnformatted("In 1");
         ImNodes::EndInputAttribute();
 
-        ImNodes::BeginInputAttribute(snapshot.params.at("input2_id"));
+        ImNodes::BeginInputAttribute(snapshot.inputs.at("input2_id"));
         ImGui::TextUnformatted("In 2");
         ImNodes::EndInputAttribute();
 
-        ImNodes::BeginInputAttribute(snapshot.params.at("input3_id"));
+        ImNodes::BeginInputAttribute(snapshot.inputs.at("input3_id"));
         ImGui::TextUnformatted("In 3");
         ImNodes::EndInputAttribute();
 
-        ImNodes::BeginInputAttribute(snapshot.params.at("input4_id"));
+        ImNodes::BeginInputAttribute(snapshot.inputs.at("input4_id"));
         ImGui::TextUnformatted("In 4");
         ImNodes::EndInputAttribute();
 
@@ -850,19 +837,19 @@ void ConstantDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
     ImGui::BeginGroup(); 
     {
-        ImNodes::BeginOutputAttribute(snapshot.params.at("output1_id"));
+        ImNodes::BeginOutputAttribute(snapshot.outputs.at("output1_id"));
         ImGui::TextUnformatted("Out 1");
         ImNodes::EndOutputAttribute();
 
-        ImNodes::BeginOutputAttribute(snapshot.params.at("output2_id"));
+        ImNodes::BeginOutputAttribute(snapshot.outputs.at("output2_id"));
         ImGui::TextUnformatted("Out 2");
         ImNodes::EndOutputAttribute();
 
-        ImNodes::BeginOutputAttribute(snapshot.params.at("output3_id"));
+        ImNodes::BeginOutputAttribute(snapshot.outputs.at("output3_id"));
         ImGui::TextUnformatted("Out 3");
         ImNodes::EndOutputAttribute();
 
-        ImNodes::BeginOutputAttribute(snapshot.params.at("output4_id"));
+        ImNodes::BeginOutputAttribute(snapshot.outputs.at("output4_id"));
         ImGui::TextUnformatted("Out 4");
         ImNodes::EndOutputAttribute();
     }
@@ -888,7 +875,7 @@ void AudioInputDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImGui::PopStyleColor();
 	ImNodes::PopColorStyle();
 
-	ImNodes::BeginOutputAttribute(id);
+	ImNodes::BeginOutputAttribute(snapshot.outputs.at("output_id"));
 	const float text_width = ImGui::CalcTextSize("In").x;
 	ImGui::Indent(width + ImGui::CalcTextSize("In").x - text_width);
 	ImGui::TextUnformatted("In");
@@ -901,7 +888,7 @@ void AudioInputDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
 void FreqShiftDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 {
-    float width = 100.f;
+    float width = 80.f;
 	ImGui::PushItemWidth(width);
 	ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0, 0, 0, 255));
 	ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(0, 0, 0, 255));
@@ -914,11 +901,11 @@ void FreqShiftDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImGui::PopStyleColor();
 	ImNodes::PopColorStyle();
 
-	ImNodes::BeginInputAttribute(snapshot.params.at("input_id"));
+	ImNodes::BeginInputAttribute(snapshot.inputs.at("input_id"));
 	ImGui::TextUnformatted("Input");
 	ImNodes::EndInputAttribute();
 
-	ImNodes::BeginInputAttribute(snapshot.params.at("freq_id"));
+	ImNodes::BeginInputAttribute(snapshot.inputs.at("modfreq_id"));
 	ImGui::TextUnformatted("Mod Freq");
 	ImNodes::EndInputAttribute();
 
@@ -928,16 +915,18 @@ void FreqShiftDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     }
     ImGui::SameLine();
 
-    {
-        auto a = snapshot.params.at("drywet");
-        if (ImGuiKnobs::Knob("Dry/Wet", &a, 0.0f, 1.0f, 0.1f, "%1f", ImGuiKnobVariant_Wiper)) {
-            update(id, snapshot, "drywet", a);
-        }
+	auto d = snapshot.params.at("moddepth");
+    if (ImGuiKnobs::Knob("Mod Depth", &d, 0.0f, 1.0f, 0.1f, "%1f", ImGuiKnobVariant_Wiper)) {
+        update(id, snapshot, "moddepth", d);
     }
-
     ImGui::SameLine();
 
-	ImNodes::BeginOutputAttribute(snapshot.params.at("output_id"));
+	auto w = snapshot.params.at("drywet");
+	if (ImGuiKnobs::Knob("Dry/Wet", &w, 0.0f, 1.0f, 0.1f, "%1f", ImGuiKnobVariant_Wiper)) {
+		update(id, snapshot, "drywet", w);
+	}
+
+	ImNodes::BeginOutputAttribute(snapshot.outputs.at("output_id"));
 	const float text_width = ImGui::CalcTextSize("Out").x;
 	ImGui::Indent(width + ImGui::CalcTextSize("Out").x - text_width);
 	ImGui::TextUnformatted("Out");
@@ -946,8 +935,6 @@ void FreqShiftDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImNodes::EndNode();
 	ImGui::PopItemWidth();
 }
-
-
 
 void SeqDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 {
@@ -961,11 +948,11 @@ void SeqDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImNodes::EndNodeTitleBar();
     ImNodes::PopColorStyle();
 
-	ImNodes::BeginInputAttribute(snapshot.params.at("trigin_id"));
+	ImNodes::BeginInputAttribute(snapshot.inputs.at("trigin_id"));
 	ImGui::TextUnformatted("Trig In");
 	ImNodes::EndInputAttribute();
 
-	ImNodes::BeginInputAttribute(snapshot.params.at("reset_id"));
+	ImNodes::BeginInputAttribute(snapshot.inputs.at("reset_id"));
 	ImGui::TextUnformatted("Reset");
 	ImNodes::EndInputAttribute();
 
@@ -1018,7 +1005,7 @@ void SeqDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     update(id, snapshot, "gatemode", (float)g);
 
     ImGui::PopID();
-	ImNodes::BeginOutputAttribute(snapshot.params.at("trigout_id"));
+	ImNodes::BeginOutputAttribute(snapshot.outputs.at("trigout_id"));
     const float text_width = ImGui::CalcTextSize("Out").x;
     ImGui::Indent(120.f + ImGui::CalcTextSize("Out").x - text_width);
 	ImGui::TextUnformatted("Out");
@@ -1046,8 +1033,16 @@ void TrigDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     }
 	update(id, snapshot, "trig", clicked);
 
-	ImNodes::BeginOutputAttribute(snapshot.params.at("trigout_id"));
-    ImGui::TextUnformatted("Trig");
+	ImNodes::BeginOutputAttribute(snapshot.outputs.at("trigout_id"));
+    ImGui::TextUnformatted("1/4");
+	ImNodes::EndOutputAttribute();
+
+	ImNodes::BeginOutputAttribute(snapshot.outputs.at("trig8_id"));
+    ImGui::TextUnformatted("1/8");
+	ImNodes::EndOutputAttribute();
+
+	ImNodes::BeginOutputAttribute(snapshot.outputs.at("trig16_id"));
+    ImGui::TextUnformatted("1/16");
 	ImNodes::EndOutputAttribute();
 
     auto v = snapshot.params.at("bpm");
@@ -1100,11 +1095,11 @@ void EnvelopeDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImNodes::EndNodeTitleBar();
     ImNodes::PopColorStyle();
 
-	ImNodes::BeginInputAttribute(snapshot.params.at("input_id"));
+	ImNodes::BeginInputAttribute(snapshot.inputs.at("input_id"));
 	ImGui::TextUnformatted("In");
 	ImNodes::EndInputAttribute();
 
-	ImNodes::BeginInputAttribute(snapshot.params.at("trig_id"));
+	ImNodes::BeginInputAttribute(snapshot.inputs.at("trig_id"));
 	ImGui::TextUnformatted("Trig");
 	ImNodes::EndInputAttribute();
 
@@ -1124,7 +1119,7 @@ void EnvelopeDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     ImGui::DragFloat("Release Time (ms)", &r, 1.f, 0., 10000.);
     update(id, snapshot, "release_ms", r);
 
-	ImNodes::BeginOutputAttribute(snapshot.params.at("output_id"));
+	ImNodes::BeginOutputAttribute(snapshot.outputs.at("output_id"));
     const float text_width = ImGui::CalcTextSize("Out").x;
     ImGui::Indent(120.f + ImGui::CalcTextSize("Out").x - text_width);
 	ImGui::TextUnformatted("Out");
@@ -1136,7 +1131,6 @@ void EnvelopeDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
 void OscillatorDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 {
-	auto params = snapshot.params;
     ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(233,127,2, 255));
     ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(233,127,2, 230));
     ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(233,127,2, 255));
@@ -1146,30 +1140,30 @@ void OscillatorDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     ImNodes::EndNodeTitleBar();
     ImNodes::PopColorStyle();
 
-    ImNodes::BeginInputAttribute(params["freq_id"]);
+    ImNodes::BeginInputAttribute(snapshot.inputs.at("freq_in_id"));
     ImGui::PushItemWidth(120.0f);
-    auto f = params["freq"];
+    auto f = snapshot.params.at("freq");
     ImGui::DragFloat("Frequency", &f, 1.f, 0.00, 2000.);
     update(id, snapshot, "freq", f);
     ImGui::PopItemWidth();
     ImNodes::EndInputAttribute();
 
-    ImNodes::BeginInputAttribute(params["modfreq_id"]);
+    ImNodes::BeginInputAttribute(snapshot.inputs.at("modfreq_id"));
     ImGui::TextUnformatted("FreqMod");
     ImNodes::EndInputAttribute();
 
-    ImNodes::BeginInputAttribute(params["moddepth_id"]);
+    ImNodes::BeginInputAttribute(snapshot.inputs.at("moddepth_id"));
     ImGui::TextUnformatted("FreqModDepth");
     ImNodes::EndInputAttribute();
 
     ImGui::PushItemWidth(120.0f);
-    auto t = params["tuning_coarse"];
+    auto t = snapshot.params.at("tuning_coarse");
     ImGui::DragFloat("Coarse Tuning", &t, 1.f, -36.00, 36.);
     update(id, snapshot, "tuning_coarse", t);
     ImGui::PopItemWidth();
 
     ImGui::PushItemWidth(120.0f);
-    auto tf = params["tuning_fine"];
+    auto tf = snapshot.params.at("tuning_fine");
     ImGui::DragFloat("Fine Tuning", &tf, 1.f, 0.00, 1.);
     update(id, snapshot, "tuning_fine", tf);
     ImGui::PopItemWidth();
@@ -1181,12 +1175,12 @@ void OscillatorDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     ImGui::PushStyleColor(ImGuiCol_Header, (ImVec4)ImColor(227, 255, 99));
     ImGui::PushStyleColor(ImGuiCol_PopupBg, (ImVec4)ImColor(227, 255, 99));
     ImGui::PushItemWidth(120.0f);
-    int w = (int)params["waveform"];
+    int w = (int)(snapshot.params.at("waveform"));
     ImGui::Combo("Waveform", &w, "Saw\0Sine\0Square\0Triangle\0S&H\0Noise\0");
     update(id, snapshot, "waveform", w);
     ImGui::PopStyleColor(2);
 
-    ImNodes::BeginOutputAttribute(snapshot.params.at("output_id"));
+    ImNodes::BeginOutputAttribute(snapshot.outputs.at("output_id"));
     const float text_width = ImGui::CalcTextSize("Out").x;
     ImGui::Indent(120.f + ImGui::CalcTextSize("Out").x - text_width);
     ImGui::TextUnformatted("Out");
@@ -1198,7 +1192,6 @@ void OscillatorDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 void MixerDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 {
 
-    auto params = snapshot.params;
     ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(206, 171, 156, 255));
     ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(206, 171, 156, 255));
     ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(233, 127, 2, 230));
@@ -1211,19 +1204,19 @@ void MixerDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     ImGui::PushItemWidth(120.0f);
     ImGui::BeginGroup();
     {
-        ImNodes::BeginInputAttribute(params["inputa_id"]);
+        ImNodes::BeginInputAttribute(snapshot.inputs.at("inputa_id"));
         ImGui::TextUnformatted("A");
         ImNodes::EndInputAttribute();
 
-        ImNodes::BeginInputAttribute(params["inputb_id"]);
+        ImNodes::BeginInputAttribute(snapshot.inputs.at("inputb_id"));
         ImGui::TextUnformatted("B");
         ImNodes::EndInputAttribute();
 
-        ImNodes::BeginInputAttribute(params["inputc_id"]);
+        ImNodes::BeginInputAttribute(snapshot.inputs.at("inputc_id"));
         ImGui::TextUnformatted("C");
         ImNodes::EndInputAttribute();
 
-        ImNodes::BeginInputAttribute(params["inputd_id"]);
+        ImNodes::BeginInputAttribute(snapshot.inputs.at("inputd_id"));
         ImGui::TextUnformatted("D");
         ImNodes::EndInputAttribute();
     }
@@ -1260,7 +1253,7 @@ void MixerDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 }
     ImGui::EndGroup();
 
-    ImNodes::BeginOutputAttribute(id);
+    ImNodes::BeginOutputAttribute(snapshot.outputs.at("output_id"));
 	const float text_width = ImGui::CalcTextSize("Out").x;
 	ImGui::Indent(120.f + ImGui::CalcTextSize("Out").x + text_width);
     ImGui::TextUnformatted("Mix");
@@ -1274,7 +1267,6 @@ void SamplerDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 {
 
     ImGui::PushItemWidth(120.0f);
-	auto params = snapshot.params;
     ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(235, 158, 168,255));
     ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(235, 158, 168,255));
     ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(235, 158, 168,255));
@@ -1284,15 +1276,15 @@ void SamplerDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     ImGui::TextUnformatted("Sampler");
     ImNodes::EndNodeTitleBar();
 
-    ImNodes::BeginInputAttribute(params["pitch_id"]);
+    ImNodes::BeginInputAttribute(snapshot.inputs.at("pitch_id"));
     ImGui::TextUnformatted("Freq");
     ImNodes::EndInputAttribute();
 
-    ImNodes::BeginInputAttribute(params["position_id"]);
+    ImNodes::BeginInputAttribute(snapshot.inputs.at("position_id"));
     ImGui::TextUnformatted("Position");
     ImNodes::EndInputAttribute();
 
-	ImNodes::BeginInputAttribute(params["startstop_id"]);
+	ImNodes::BeginInputAttribute(snapshot.inputs.at("startstop_id"));
     ImGui::TextUnformatted("Start/Stop");
     ImNodes::EndInputAttribute();
 
@@ -1323,7 +1315,6 @@ void SamplerDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(.93,.93,.93, 1.));
     ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(.95,.95,.95, 1.));
 
-
     auto p = snapshot.stringParams.at("path");
     std::string filePathName = "";
     std::string dialName = "nodeid_" + std::to_string((int)(snapshot.params.at("node_id")));
@@ -1344,7 +1335,7 @@ void SamplerDisplayCommand::display(int id, const NodeSnapshot& snapshot)
         update(id, snapshot, "path", path);
     }
 
-    ImNodes::BeginOutputAttribute(id);
+    ImNodes::BeginOutputAttribute(snapshot.outputs.at("output_id"));
 	const float text_width = ImGui::CalcTextSize("Out").x;
 	ImGui::Indent(120.f + ImGui::CalcTextSize("Out").x - text_width);
     ImGui::TextUnformatted("Out");
@@ -1359,7 +1350,6 @@ void SamplerDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
 void FilterDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 {
-    auto params = snapshot.params;
     ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(189, 21, 80, 255));
     ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(189, 21, 80, 230));
     ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(189, 21, 80, 255));
@@ -1369,31 +1359,31 @@ void FilterDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImNodes::EndNodeTitleBar();
     ImNodes::PopColorStyle();
 
-    ImNodes::BeginInputAttribute(params["input_id"]);
+    ImNodes::BeginInputAttribute(snapshot.inputs.at("input_id"));
 	ImGui::TextUnformatted("In");
 	ImNodes::EndInputAttribute();
 
-	ImNodes::BeginInputAttribute(params["freqmod_id"]);
+	ImNodes::BeginInputAttribute(snapshot.inputs.at("freqmod_id"));
 	ImGui::TextUnformatted("Mod");
 	ImNodes::EndInputAttribute();
 
-	ImNodes::BeginInputAttribute(params["moddepth_id"]);
+	ImNodes::BeginInputAttribute(snapshot.inputs.at("moddepth_id"));
 	ImGui::TextUnformatted("Depth");
 	ImNodes::EndInputAttribute();
 
 	ImGui::PushItemWidth(120.0f);
-    auto f = params["freq"];
+    auto f = snapshot.params.at("freq");
 	ImGui::DragFloat("Freq", &f, 1.f, 0., 5000.);
     update(id, snapshot, "freq", f);
 	ImGui::PopItemWidth();
 
 	ImGui::PushItemWidth(120.0f);
-    auto q = params["q"];
+    auto q = snapshot.params.at("q");
 	ImGui::DragFloat("Q", &q, 1.f, 0., 10.);
     update(id, snapshot, "q", q);
 	ImGui::PopItemWidth();
 
-	ImNodes::BeginOutputAttribute(id);
+	ImNodes::BeginOutputAttribute(snapshot.outputs.at("output_id"));
 	const float text_width = ImGui::CalcTextSize("Out").x;
 	ImGui::Indent(120.f + ImGui::CalcTextSize("Out").x - text_width);
 	ImGui::TextUnformatted("Out");

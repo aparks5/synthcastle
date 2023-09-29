@@ -86,21 +86,15 @@ public:
 	}
 };
 
-
-
 Model::Model()
 	: m_graph(std::make_shared<NodeGraph>())
 	, nodeCreator(m_graph, m_cache)
-{
-}
-
-
+{}
 
 NodeGraph Model::cloneGraph()
 {
 	NodeGraph graph(*m_graph);
 	return graph;
-
 }
 
 std::vector<std::string> Model::queryNodeNames() const
@@ -141,10 +135,8 @@ ViewBag Model::refresh()
 
 void Model::link(int from, int to)
 {
-
 	auto id = m_graph->insert_edge(from, to);
 
-	// changed, edges are now indexed by id
 	if (m_cache.map.find(from) != m_cache.map.end()) {
 		m_cache.map[from].edges[id] = EdgeSnapshot(from, to);
 	}
@@ -152,10 +144,6 @@ void Model::link(int from, int to)
 
 void Model::deleteLink(int link_id)
 {
-	// i dont think the cache knows about link ids 
-	// but it needs to know if wants to delete edges
-
-	// how do i find the map index
 	// this has a terrible worst case searching for the node that contains this link
 	// but its the price we pay for using a cache
 	for (auto const& [id, snap] : m_cache.map) {
@@ -189,34 +177,42 @@ int Model::update(UpdateStringEvent update)
 	auto p = update.parameter;
 	auto v = update.value;
 	auto node = m_graph->node(i);
-	// todo: restrict to valid values for a given param
+
+	int ok = -1;
 	if (node->stringParams.find(p) != node->stringParams.end()) {
 		node->stringParams[p] = v;
 		m_cache.map[i].stringParams[p] = v;
+		ok = 0;
 	}
 
-	return 0;
+	return ok;
 }
 
+// NOTE: this method is important. it creates the nodes from enums and lists in the Node definition
 int ProcessorNodeCreator::create(std::string str)
 {
 	auto processorNode = ProcessorNodeFactory::create(str);
-	std::stack<std::shared_ptr<ProcessorInput>> inputNodes;
+
+	std::vector<std::shared_ptr<ProcessorInput>> inputNodes;
 
 	for (auto& in : processorNode->inputs) {
 		auto inputNode = std::make_shared<ProcessorInput>();
-		inputNodes.push(inputNode);
+		inputNodes.push_back(inputNode);
 	}
 
 	// insert inputs in reverse order
-	std::vector<int> inputNodeIds;
-	while (!inputNodes.empty()) {
-		auto id = m_g->insert_node(inputNodes.top());
-		inputNodeIds.push_back(id);
-		inputNodes.pop();
+	std::stack<int> inputNodeIds;
+	for (auto& in : inputNodes) {
+		auto id = m_g->insert_node(in);
+		inputNodeIds.push(id);
 	}
 
 	auto processorNodeId = m_g->insert_node(processorNode); 
+
+	if (processorNode->getName() == "output") {
+		m_g->setRoot(processorNodeId);
+	}
+
 	cacheType(processorNodeId, NodeType::PROCESSOR);
 	cacheName(processorNodeId, processorNode->getName());
 
@@ -225,22 +221,16 @@ int ProcessorNodeCreator::create(std::string str)
 	}
 
 	// edges also need reverse order
-	for (auto& id : inputNodeIds) {
+	int inp_id = inputNodeIds.size() - 1;
+	while (!inputNodeIds.empty()) {
+		auto id = inputNodeIds.top();
+		inputNodeIds.pop();
 		m_g->insert_edge(processorNodeId, id);
 		cacheType(id, NodeType::PROCESSOR_INPUT);
+		auto str = processorNode->inputIdToString(inp_id--);
+		cacheInput(processorNodeId, str, id);
 	}
 
-	// index in-order
-	reverse(inputNodeIds.begin(), inputNodeIds.end());
-	int in = 0;
-	for (auto& id : inputNodeIds) {
-		auto str = processorNode->inputIdToString(in++);
-		cacheParam(processorNodeId, str, id);
-	}
-
-	auto inputIdStrings = processorNode->inputIds();
-
-	// handle outputs 
 	std::vector<std::shared_ptr<ProcessorOutput>> outputNodes;
 	for (size_t idx = 0; idx < processorNode->outputs.size(); idx++) {
 		auto outputNode = std::make_shared<ProcessorOutput>(idx);
@@ -262,11 +252,15 @@ int ProcessorNodeCreator::create(std::string str)
 		m_g->insert_edge(outputNodeId, processorNodeId);
 		cacheType(outputNodeId, NodeType::PROCESSOR_OUTPUT);
 		auto str = processorNode->outputIdToString(out++);
-		cacheParam(processorNodeId, str, outputNodeId);
+		cacheOutput(processorNodeId, str, outputNodeId);
 	}
 
 	for (auto& str : processorNode->paramStrings()) {
 		cacheParam(processorNodeId, str, 0.f);
+	}
+
+	for (auto& [k,v] : processorNode->stringParams) {
+		cacheString(processorNodeId, k, v);
 	}
 
 	cacheParam(processorNodeId, "node_id", processorNodeId);

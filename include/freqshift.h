@@ -12,6 +12,7 @@ public:
 
 	enum Inputs {
 		INPUT,
+		MODFREQ,
 		NUM_INPUTS
 	};
 
@@ -22,28 +23,14 @@ public:
 
 	enum Params {
 		NODE_ID,
-		INPUT_ID,
-		FREQ_ID,
-		OUTPUT_ID,
 		FREQ,
-		MODFREQ,
+		MODDEPTH,
 		DRYWET,
 		NUM_PARAMS
 	};
 
-
 private:
 	HilbertTransform hilbert;
 	size_t m_fs;
-
-	std::unordered_map<std::string, int> m_lookup = {
-		{"node_id", NODE_ID},
-		{"input_id", INPUT_ID},
-		{"input", INPUT},
-		{"drywet", DRYWET},
-		{"freq_id", FREQ_ID},
-		{"freq", FREQ},
-		{"output_id", OUTPUT_ID}
-	};
 	
 };

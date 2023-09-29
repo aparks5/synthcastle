@@ -18,10 +18,6 @@ Oscillator::Oscillator()
 
 	paramMap = {
 		{"node_id", NODE_ID},
-		{"freq_id", FREQ_ID},
-		{"output_id", OUTPUT_ID},
-		{"modfreq_id", MODFREQ_ID},
-		{"moddepth_id", MODDEPTH_ID},
 		{"freq", FREQ},
 		{"tuning_fine", TUNING_FINE},
 		{"tuning_coarse", TUNING_COARSE},
@@ -29,6 +25,7 @@ Oscillator::Oscillator()
 	};
 
 	inputMap = {
+		{"freq_in", FREQ_IN},
 		{"modfreq", MODFREQ},
 		{"moddepth", MODDEPTH}
 	};
@@ -44,6 +41,11 @@ void Oscillator::update()
 {
 	auto modfreq = inputs[MODFREQ];
 	auto moddepth = inputs[MODDEPTH];
+
+	// port input should override GUI input
+	if (inputs[FREQ_IN] != 0) {
+		params[FREQ] = inputs[FREQ_IN];
+	}
 
 	auto freq = params[FREQ]; // TODO: scale 0 to 1 to 0 to 22050
 	auto coarse = params[TUNING_COARSE];
@@ -63,6 +65,7 @@ void Oscillator::update()
 
 void Oscillator::process() noexcept
 {
+	update();
 	float out = m_waveforms[(size_t)(params[WAVEFORM])]->process();
 	outputs[OUTPUT] = out;
 }

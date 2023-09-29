@@ -22,6 +22,7 @@ public:
 	void process() noexcept override;
 
 	enum Inputs {
+		FREQ_IN,
 		MODFREQ,
 		MODDEPTH,
 		NUM_INPUTS
@@ -34,10 +35,6 @@ public:
 
 	enum Params {
 		NODE_ID,
-		FREQ_ID,
-		MODFREQ_ID,
-		MODDEPTH_ID,
-		OUTPUT_ID,
 		FREQ,
 		TUNING_FINE,
 		TUNING_COARSE,

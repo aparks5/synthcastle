@@ -2,6 +2,7 @@
 #include "nodetypes.h"
 #include <vector>
 #include <string>
+#include <map>
 #include <unordered_map>
 
 class Node
@@ -58,7 +59,7 @@ public:
 	std::vector<std::string> paramStrings() 
 	{
 		std::vector<std::string> strings;
-		for (std::unordered_map<std::string, int>::iterator iter = paramMap.begin(); iter != paramMap.end(); ++iter) {
+		for (std::map<std::string, int>::iterator iter = paramMap.begin(); iter != paramMap.end(); ++iter) {
 			auto k = iter->first;
 			strings.push_back(k);
 		}
@@ -69,7 +70,7 @@ public:
 	std::vector<std::string> inputStrings() 
 	{
 		std::vector<std::string> strings;
-		for (std::unordered_map<std::string, int>::iterator iter = inputMap.begin(); iter != inputMap.end(); ++iter) {
+		for (std::map<std::string, int>::iterator iter = inputMap.begin(); iter != inputMap.end(); ++iter) {
 			auto k = iter->first;
 			strings.push_back(k);
 		}
@@ -80,7 +81,7 @@ public:
 	std::vector<std::string> outputStrings() 
 	{
 		std::vector<std::string> strings;
-		for (std::unordered_map<std::string, int>::iterator iter = outputMap.begin(); iter != outputMap.end(); ++iter) {
+		for (std::map<std::string, int>::iterator iter = outputMap.begin(); iter != outputMap.end(); ++iter) {
 			auto k = iter->first;
 			strings.push_back(k);
 		}
@@ -121,18 +122,22 @@ public:
 protected:
 	NodeType nodeType;
 	std::string name;
-	std::unordered_map<std::string, int> inputMap;
-	std::unordered_map<std::string, int> paramMap;
-	std::unordered_map<std::string, int> outputMap;
+	std::map<std::string, int> inputMap;
+	std::map<std::string, int> paramMap;
+	std::map<std::string, int> outputMap;
     std::vector<std::string> inputIdStrings;
     std::vector<std::string> outputIdStrings;
+
 	void initIdStrings()
 	{
+		inputIdStrings.resize(inputMap.size());
+		outputIdStrings.resize(outputMap.size());
+
 		for (auto& [k, v] : inputMap) {
-			inputIdStrings.push_back(k + "_id");
+			inputIdStrings[v] = (k + "_id");
 		}
 		for (auto& [k, v] : outputMap) {
-			outputIdStrings.push_back(k + "_id");
+			outputIdStrings[v] = (k + "_id");
 		}
 
 	}

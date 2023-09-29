@@ -94,6 +94,16 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
             for (auto& out : pNode->outputs) {
                 cached.push_back(out);
             }
+
+			// value_stack should have two items from the output node.
+            // output is connected to nothing so these will not show up as PROCESSOR_OUTPUTs
+            // in the graph
+            if (pNode->getName() == "output") {
+                auto l = cached[0];
+                auto r = cached[1];
+                return std::make_tuple(l, r);
+            }
+
         }
         break;
         case NodeType::PROCESSOR_OUTPUT:
@@ -119,13 +129,7 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
 		}
 	}
 
-	// value_stack should have two items from the output node
-	// auto l = value_stack.top();
-	// value_stack.pop();
-	// auto r = value_stack.top();
-	// value_stack.pop()
-	// return std::make_tuple(l, r);
-    return std::make_tuple(0.,0.);
+    return std::make_tuple(0.f, 0.f);
 }
 
 static int paCallbackMethod(const void* inputBuffer, void* outputBuffer,

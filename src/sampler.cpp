@@ -19,23 +19,16 @@ Sampler::Sampler()
 	, m_loopPoint(0)
 {
 	stringParams["path"] = "";
-	m_env.params[Envelope::ATTACK_MS] = 100;
-	m_env.params[Envelope::DECAY_MS] = 250;
-	m_env.params[Envelope::SUSTAIN_DB] = -30.;
-	m_env.params[Envelope::RELEASE_MS] = 50;
 
 	paramMap = {
 		{"node_id", NODE_ID},
-		{"position_id", POSITION_ID},
 		{"spread", SPREAD},
 		{"distance", DISTANCE},
 		{"num_voices", NUM_VOICES},
 		{"grainsize", GRAINSIZE},
 		{"grainsize_mod", GRAINSIZE_MOD},
 		{"spray", SPRAY},
-		{"pitch_id", PITCH_ID},
 		{"filename", FILENAME},
-		{"startstop_id", STARTSTOP_ID},
 	};
 
 	inputMap = {
@@ -50,6 +43,10 @@ Sampler::Sampler()
 
 	initIdStrings();
 
+	m_env.params[Envelope::ATTACK_MS] = 100;
+	m_env.params[Envelope::DECAY_MS] = 250;
+	m_env.params[Envelope::SUSTAIN_DB] = -30.;
+	m_env.params[Envelope::RELEASE_MS] = 50;
 } 
 
 // all node update functions should be called outside of the audio thread
@@ -68,9 +65,10 @@ void Sampler::update()
 
 void Sampler::process() noexcept
 {
+	update();
 	if (inputs[STARTSTOP] >= 0.4) {
 		inputs[STARTSTOP] = 0;
-		m_env.params[Envelope::TRIG] = 1;
+		m_env.inputs[Envelope::TRIG] = 1;
 		m_startPos = 0;
 		m_accum = 0;
 		m_bTriggered = true;

@@ -10,9 +10,6 @@ Envelope::Envelope()
 {
 	paramMap = {
 		{"node_id", NODE_ID},
-		{"input_id", INPUT_ID},
-		{"output_id", OUTPUT_ID},
-		{"output", OUTPUT},
 		{"trigger_id", TRIG_ID},
 		{"trigger", TRIG},
 		{"attack_ms", ATTACK_MS},

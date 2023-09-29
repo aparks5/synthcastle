@@ -29,9 +29,6 @@ public:
 
 	enum Params {
 		NODE_ID,
-		PITCH_ID,
-		POSITION_ID,
-		STARTSTOP_ID,
 		SPREAD, // how far the position CV can go 
 		SPRAY, // s&h lfo on position
 		GRAINSIZE, // how far after the start position to start looping

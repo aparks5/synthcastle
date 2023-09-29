@@ -21,8 +21,8 @@ Gain::Gain()
 	};
 
 	outputMap = {
-		{"output_left", OUTPUT_LEFT},
-		{"output_right", OUTPUT_RIGHT}
+		{"left", OUTPUT_LEFT},
+		{"right", OUTPUT_RIGHT}
 	};
 
 	initIdStrings();
