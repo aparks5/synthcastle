@@ -12,11 +12,11 @@ public:
 	LadderFilterBase(float sampleRate) : sampleRate(sampleRate) {}
 	virtual ~LadderFilterBase() {}
 
-	virtual void apply(float* samples, uint32_t n) = 0;
-	virtual void q(float r) = 0;
-	virtual void freq(float c) = 0;
+	virtual void Process(float* samples, uint32_t n) = 0;
+	virtual void SetResonance(float r) = 0;
+	virtual void SetCutoff(float c) = 0;
 
- 	float GetResonance() { return resonance; }
+	float GetResonance() { return resonance; }
 	float GetCutoff() { return cutoff; }
 
 protected:

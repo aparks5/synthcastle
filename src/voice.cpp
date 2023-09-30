@@ -21,9 +21,9 @@ Voice::Voice(size_t fs)
 	, m_env1out(0.f)
 {
 	EnvelopeParams env(3, 250, 0, 0);
-	m_moogFilter.freq(1000.f);
+	m_moogFilter.SetCutoff(1000.f);
 	m_filtFreq = 1000.f;
-	m_moogFilter.q(3.f);
+	m_moogFilter.SetResonance(3.f);
 	m_lfo.update(1.f);
 }
 
@@ -31,8 +31,8 @@ void Voice::update(VoiceParams params)
 {
 
 	m_params = params;
-	m_moogFilter.q(m_params.filtQ);
-	m_moogFilter.freq(m_params.filtFreq);
+	m_moogFilter.SetResonance(m_params.filtQ);
+	m_moogFilter.SetCutoff(m_params.filtFreq);
 // todo	m_lfo.params[0] = m_params.filtLFOFreq;
 //	m_pitchLfo.params[Oscillator::FREQ] = m_params.pitchLFOFreq;
 
@@ -45,11 +45,11 @@ void Voice::modUpdate()
 
 		auto lfoSamp = m_lfo.process();
 		float filtLfo = (1 + lfoSamp * 0.5f);
-		m_moogFilter.freq(m_params.filtFreq * filtLfo);
+		m_moogFilter.SetCutoff(m_params.filtFreq * filtLfo);
 
 	}
 	else {
-		m_moogFilter.freq(m_params.filtFreq);
+		m_moogFilter.SetCutoff(m_params.filtFreq);
 	}
 
 	if (m_params.bEnablePitchLFO)
@@ -72,7 +72,7 @@ float Voice::operator()()
 	m_pitchLfo.process();
 
 	// FILTER
-	m_moogFilter.apply(&output, 1);
+	m_moogFilter.Process(&output, 1);
 
 	// VCA 
 	m_env.inputs[Envelope::INPUT] = output;

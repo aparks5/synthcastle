@@ -1398,7 +1398,7 @@ void FilterDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
 	ImGui::PushItemWidth(120.0f);
     auto q = snapshot.params.at("q");
-	ImGui::DragFloat("Q", &q, 1.f, 0., 10.);
+	ImGui::DragFloat("Q", &q, 1.f, 0., 100.);
     update(id, snapshot, "q", q);
 	ImGui::PopItemWidth();
 
