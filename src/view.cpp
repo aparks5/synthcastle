@@ -938,78 +938,82 @@ void FreqShiftDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
 void SeqDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 {
-	ImGui::PushItemWidth(160.0f);
-    ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(22,147,165, 255));
-    ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(22,147,165, 230));
-    ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(22,147,165, 255));
-	ImNodes::BeginNode(id);
-	ImNodes::BeginNodeTitleBar();
-	ImGui::TextUnformatted("8-step Sequencer");
-	ImNodes::EndNodeTitleBar();
+    ImGui::PushItemWidth(160.0f);
+    ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(22, 147, 165, 255));
+    ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(22, 147, 165, 230));
+    ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(22, 147, 165, 255));
+    ImNodes::BeginNode(id);
+    ImNodes::BeginNodeTitleBar();
+    ImGui::TextUnformatted("Sequencer");
+    ImNodes::EndNodeTitleBar();
     ImNodes::PopColorStyle();
 
-	ImNodes::BeginInputAttribute(snapshot.inputs.at("trigin_id"));
-	ImGui::TextUnformatted("Trig In");
-	ImNodes::EndInputAttribute();
+	ImGui::BeginGroup();
+	{
+		ImNodes::BeginInputAttribute(snapshot.inputs.at("trigin_id"));
+		ImGui::TextUnformatted("Trig In");
+		ImNodes::EndInputAttribute();
 
-	ImNodes::BeginInputAttribute(snapshot.inputs.at("reset_id"));
-	ImGui::TextUnformatted("Reset");
-	ImNodes::EndInputAttribute();
+		ImNodes::BeginInputAttribute(snapshot.inputs.at("reset_id"));
+		ImGui::TextUnformatted("Reset");
+		ImNodes::EndInputAttribute();
+	}
+	ImGui::EndGroup();
 
-    auto step = snapshot.params.at("step");
-    ImGui::Text("Step: %d", (int)step);
-    auto progress = ((1.+step) / 8.);
+    ImGui::SameLine();
 
-    // Typically we would use ImVec2(-1.0f,0.0f) or ImVec2(-FLT_MIN,0.0f) to use all available width,
-    // or ImVec2(width,0.0f) for a specified width. ImVec2(0.0f,0.0f) uses ItemWidth.
-    ImGui::ProgressBar(progress, ImVec2(216, 0.0f), "");
-    ImGui::NewLine();
+	ImGui::BeginGroup();
+	{
+		auto step = snapshot.params.at("step");
+		ImGui::Text("Step: %d", (int)step);
+		auto progress = ((1. + step) / 16.);
 
-    std::string str[8] = { "s1", "s2","s3","s4","s5","s6","s7","s8"};
-    ImGui::PushID("set1");
-    for (int i = 0; i < 8; i++) {
-		ImGui::SameLine();
-        auto val = snapshot.params.at(str[i]);
-        ImGui::PushID(i);
-        ImGui::PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(i / 7.0f, 0.5f, 0.5f));
-        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(i / 7.0f, 0.6f, 0.5f));
-        ImGui::PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(i / 7.0f, 0.7f, 0.5f));
-        ImGui::PushStyleColor(ImGuiCol_SliderGrab, (ImVec4)ImColor::HSV(i / 7.0f, 0.9f, 0.9f));
-        ImGui::VSliderFloat("##v", ImVec2(22, 160), &val, 0.0f, 1000.f, "");
-		update(id, snapshot, str[i], val);
-        if (ImGui::IsItemActive() || ImGui::IsItemHovered())
-            ImGui::SetTooltip("%.3f", val);
-        ImGui::PopStyleColor(4);
-        ImGui::PopID();
+		// Typically we would use ImVec2(-1.0f,0.0f) or ImVec2(-FLT_MIN,0.0f) to use all available width,
+		// or ImVec2(width,0.0f) for a specified width. ImVec2(0.0f,0.0f) uses ItemWidth.
+		ImGui::ProgressBar(progress, ImVec2(480, 0.0f), "");
+		ImGui::NewLine();
+
+		for (size_t track = 0; track < 8; track++) {
+			ImGui::NewLine();
+			for (size_t step = 0; step < 16; step++) {
+				ImGui::SameLine();
+				auto enableStr = "enable_" + std::to_string(step) + "_" + std::to_string(track);
+				bool val = (bool)(snapshot.params.at(enableStr));
+				if (ImGuiKnobs::SequenceToggle(enableStr.c_str(), &val)) {
+					update(id, snapshot, enableStr, (float)val);
+				}
+			}
+		}
+
+		auto g = (snapshot.params.at("gatemode") == 1.f) ? true : false;
+
+		if (ImGuiKnobs::SequenceToggle("Gate Mode", &g)) {
+			update(id, snapshot, "gatemode", (float)g);
+		}
+	}
+	ImGui::EndGroup();
+
+	ImGui::SameLine();
+
+	ImGui::BeginGroup();
+	{
+		ImNodes::BeginOutputAttribute(snapshot.outputs.at("track_1_id"));
+		ImGui::TextUnformatted("Track 1");
+		ImNodes::EndOutputAttribute();
+
+		ImNodes::BeginOutputAttribute(snapshot.outputs.at("track_2_id"));
+		ImGui::TextUnformatted("Track 2");
+		ImNodes::EndOutputAttribute();
+
+		ImNodes::BeginOutputAttribute(snapshot.outputs.at("track_3_id"));
+		ImGui::TextUnformatted("Track 3");
+		ImNodes::EndOutputAttribute();
+
+		ImNodes::BeginOutputAttribute(snapshot.outputs.at("track_4_id"));
+		ImGui::TextUnformatted("Track 4");
+		ImNodes::EndOutputAttribute();
     }
-
-    ImGui::NewLine();
-
-    for (int i = 0; i < 8; i++) {
-		ImGui::SameLine();
-        auto val = snapshot.params.at(str[i]);
-        ImGui::PushID(i);
-        ImGui::PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(i / 7.0f, 0.5f, 0.5f));
-        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(i / 7.0f, 0.6f, 0.5f));
-        ImGui::PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(i / 7.0f, 0.7f, 0.5f));
-        ImGui::PushStyleColor(ImGuiCol_SliderGrab, (ImVec4)ImColor::HSV(i / 7.0f, 0.9f, 0.9f));
-        auto bEnableStep = static_cast<bool>(snapshot.params.at("enable_" + str[i]));
-        ImGui::Checkbox("##hidelabel", &bEnableStep);
-		update(id, snapshot, "enable_" + str[i], bEnableStep);
-        ImGui::PopStyleColor(4);
-        ImGui::PopID();
-    }
-
-    auto g = (snapshot.params.at("gatemode") == 1.f) ? true : false;
-	ImGui::Checkbox("Gate Mode", &g);
-    update(id, snapshot, "gatemode", (float)g);
-
-    ImGui::PopID();
-	ImNodes::BeginOutputAttribute(snapshot.outputs.at("trigout_id"));
-    const float text_width = ImGui::CalcTextSize("Out").x;
-    ImGui::Indent(120.f + ImGui::CalcTextSize("Out").x - text_width);
-	ImGui::TextUnformatted("Out");
-	ImNodes::EndOutputAttribute();
+    ImGui::EndGroup();
 
 	ImNodes::EndNode();
 	ImGui::PopItemWidth();
@@ -1271,75 +1275,90 @@ void SamplerDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(235, 158, 168,255));
     ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(235, 158, 168,255));
 
-    ImNodes::BeginNode(id);
-    ImNodes::BeginNodeTitleBar();
-    ImGui::TextUnformatted("Sampler");
-    ImNodes::EndNodeTitleBar();
+	ImNodes::BeginNode(id);
+	ImNodes::BeginNodeTitleBar();
+	ImGui::TextUnformatted("Sampler");
+	ImNodes::EndNodeTitleBar();
 
-    ImNodes::BeginInputAttribute(snapshot.inputs.at("pitch_id"));
-    ImGui::TextUnformatted("Freq");
-    ImNodes::EndInputAttribute();
+    ImGui::BeginGroup();
+    {
 
-    ImNodes::BeginInputAttribute(snapshot.inputs.at("position_id"));
-    ImGui::TextUnformatted("Position");
-    ImNodes::EndInputAttribute();
+        ImNodes::BeginInputAttribute(snapshot.inputs.at("pitch_id"));
+        ImGui::TextUnformatted("Freq");
+        ImNodes::EndInputAttribute();
 
-	ImNodes::BeginInputAttribute(snapshot.inputs.at("startstop_id"));
-    ImGui::TextUnformatted("Start/Stop");
-    ImNodes::EndInputAttribute();
+        ImNodes::BeginInputAttribute(snapshot.inputs.at("position_id"));
+        ImGui::TextUnformatted("Position");
+        ImNodes::EndInputAttribute();
 
-    auto grainsize = snapshot.params.at("grainsize");
-    ImGui::DragFloat("Grain Size (ms)", &grainsize, 0.5f, 0, 1000.);
-    update(id, snapshot, "grainsize", grainsize);
-
-    auto spread = snapshot.params.at("spread");
-    ImGui::DragFloat("Spread", &spread, 0.1f, 0, 1.);
-    update(id, snapshot, "spread", spread);
-
-    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 0, 0, 1.));
-    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0., 0, 0, 1.));
-    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(.93, .93, .93, 1.f));
-    ImGui::PushStyleColor(ImGuiCol_Tab, ImVec4(.93, .93, .93, 1.f));
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(.97, .97, .97, 1.f));
-    ImGui::PushStyleColor(ImGuiCol_PopupBg, ImVec4(.95, .95, .95, 1.f));
-    ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(.93, .93, .93, 1.f));
-    ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(.93, .93, .93, 1.f));
-    ImGui::PushStyleColor(ImGuiCol_TitleBgCollapsed, ImVec4(.93, .93, .93, 1.f));
-    ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(.32, 0.7, 0., 1.));
-    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(.93, .79, .78, 1.f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(.82, .71, .74, 1.f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(.82, .71, .74, 1.f));
-    ImGui::PushStyleColor(ImGuiCol_TableHeaderBg, ImVec4(.73, .72, .78, 1.f));
-    ImGui::PushStyleColor(ImGuiCol_TableRowBg, ImVec4(.2, .87, .79, 1.));
-    ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, ImVec4(.64, .94, .87, 1.));
-    ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(.93,.93,.93, 1.));
-    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(.95,.95,.95, 1.));
-
-    auto p = snapshot.stringParams.at("path");
-    std::string filePathName = "";
-    std::string dialName = "nodeid_" + std::to_string((int)(snapshot.params.at("node_id")));
-    if (ImGui::Button("Browse...")) {
-        ImGuiFileDialog::Instance()->OpenDialog(dialName, "Choose File", ".wav,.raw", ".");
+        ImNodes::BeginInputAttribute(snapshot.inputs.at("startstop_id"));
+        ImGui::TextUnformatted("Start/Stop");
+        ImNodes::EndInputAttribute();
     }
-    if (ImGuiFileDialog::Instance()->Display(dialName, 0, ImVec2(300,300), ImVec2(1000,1000))) {
-        if (ImGuiFileDialog::Instance()->IsOk()) {
-            filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+    ImGui::EndGroup();
+
+    ImGui::SameLine();
+
+    ImGui::BeginGroup();
+    {
+        auto grainsize = snapshot.params.at("grainsize");
+        ImGui::DragFloat("Grain Size (ms)", &grainsize, 0.5f, 0, 1000.);
+        update(id, snapshot, "grainsize", grainsize);
+
+        auto spread = snapshot.params.at("spread");
+        ImGui::DragFloat("Spread", &spread, 0.1f, 0, 1.);
+        update(id, snapshot, "spread", spread);
+
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 0, 0, 1.));
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0., 0, 0, 1.));
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(.93, .93, .93, 1.f));
+        ImGui::PushStyleColor(ImGuiCol_Tab, ImVec4(.93, .93, .93, 1.f));
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(.97, .97, .97, 1.f));
+        ImGui::PushStyleColor(ImGuiCol_PopupBg, ImVec4(.95, .95, .95, 1.f));
+        ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(.93, .93, .93, 1.f));
+        ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(.93, .93, .93, 1.f));
+        ImGui::PushStyleColor(ImGuiCol_TitleBgCollapsed, ImVec4(.93, .93, .93, 1.f));
+        ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(.32, 0.7, 0., 1.));
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(.93, .79, .78, 1.f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(.82, .71, .74, 1.f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(.82, .71, .74, 1.f));
+        ImGui::PushStyleColor(ImGuiCol_TableHeaderBg, ImVec4(.73, .72, .78, 1.f));
+        ImGui::PushStyleColor(ImGuiCol_TableRowBg, ImVec4(.2, .87, .79, 1.));
+        ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, ImVec4(.64, .94, .87, 1.));
+        ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(.93, .93, .93, 1.));
+        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(.95, .95, .95, 1.));
+
+        auto p = snapshot.stringParams.at("path");
+        std::string filePathName = "";
+        std::string dialName = "nodeid_" + std::to_string((int)(snapshot.params.at("node_id")));
+        if (ImGui::Button("Browse...")) {
+            ImGuiFileDialog::Instance()->OpenDialog(dialName, "Choose File", ".wav,.raw", ".");
         }
-        ImGuiFileDialog::Instance()->Close();
-    }
-    ImGui::PopStyleColor(18);
+        if (ImGuiFileDialog::Instance()->Display(dialName, 0, ImVec2(300, 300), ImVec2(1000, 1000))) {
+            if (ImGuiFileDialog::Instance()->IsOk()) {
+                filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+            }
+            ImGuiFileDialog::Instance()->Close();
+        }
+        ImGui::PopStyleColor(18);
 
-    auto path = filePathName;
-    ImGui::Text("Path: %s", p.c_str());
-    if (path[0] == 'C') {
-        update(id, snapshot, "path", path);
+        auto path = filePathName;
+        ImGui::Text("Path: %s", p.c_str());
+        if (path[0] == 'C') {
+            update(id, snapshot, "path", path);
+        }
     }
+    ImGui::EndGroup();
 
-    ImNodes::BeginOutputAttribute(snapshot.outputs.at("output_id"));
-	const float text_width = ImGui::CalcTextSize("Out").x;
-	ImGui::Indent(120.f + ImGui::CalcTextSize("Out").x - text_width);
-    ImGui::TextUnformatted("Out");
-    ImNodes::EndOutputAttribute();
+    ImGui::BeginGroup();
+    {
+        ImNodes::BeginOutputAttribute(snapshot.outputs.at("output_id"));
+        const float text_width = ImGui::CalcTextSize("Out").x;
+        ImGui::Indent(120.f + ImGui::CalcTextSize("Out").x - text_width);
+        ImGui::TextUnformatted("Out");
+        ImNodes::EndOutputAttribute();
+    }
+    ImGui::EndGroup();
 
     ImNodes::EndNode();
     ImNodes::PopColorStyle();

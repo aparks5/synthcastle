@@ -67,7 +67,7 @@ void Sampler::process() noexcept
 {
 	update();
 	if (inputs[STARTSTOP] >= 0.4) {
-		inputs[STARTSTOP] = 0;
+		//inputs[STARTSTOP] = 0;
 		m_env.inputs[Envelope::TRIG] = 1;
 		m_startPos = 0;
 		m_accum = 0;
@@ -78,7 +78,7 @@ void Sampler::process() noexcept
 		m_bTriggered = false;
 		m_startPos = audioFile.getNumSamplesPerChannel() * params[SPREAD] * params[POSITION] ;
 		m_accum = m_startPos;
-		params[POSITION] = 0;
+		inputs[POSITION] = 0;
 	}
 
 	if (params[GRAINSIZE] != 0) {
@@ -127,9 +127,10 @@ void Sampler::process() noexcept
 		float remainder = fmodf(m_accum, nearest);
 
 		if (nearest >= 1) {
-			m_env.inputs[Envelope::INPUT] = linearInterpolate(audioFile.samples[0][nearest - 1], audioFile.samples[0][nearest], remainder);
-			m_env.process();
-			outputs[OUTPUT] = m_env.outputs[Envelope::OUTPUT];
+			//m_env.inputs[Envelope::INPUT] = linearInterpolate(audioFile.samples[0][nearest - 1], audioFile.samples[0][nearest], remainder);
+			//m_env.process();
+			//outputs[OUTPUT] = m_env.outputs[Envelope::OUTPUT];
+			outputs[OUTPUT] = linearInterpolate(audioFile.samples[0][nearest - 1], audioFile.samples[0][nearest], remainder);
 			return;
 		
 		} 
