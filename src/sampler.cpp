@@ -12,7 +12,6 @@ Sampler::Sampler()
 	, m_sampleRate(44100)
 	, m_startPos(0)
 	, m_accum(0)
-	, m_increment(1.)
 	, m_rate(1.)
 	, m_path("")
 	, m_bTriggered(false)
@@ -43,10 +42,10 @@ Sampler::Sampler()
 
 	initIdStrings();
 
-	m_env.params[Envelope::ATTACK_MS] = 100;
+	m_env.params[Envelope::ATTACK_MS] = 1;
 	m_env.params[Envelope::DECAY_MS] = 250;
 	m_env.params[Envelope::SUSTAIN_DB] = -30.;
-	m_env.params[Envelope::RELEASE_MS] = 50;
+	m_env.params[Envelope::RELEASE_MS] = 1;
 } 
 
 // all node update functions should be called outside of the audio thread
@@ -60,16 +59,22 @@ void Sampler::update()
 		audioFile.load(stringParams["path"]);
 		m_startPos = audioFile.getNumSamplesPerChannel();
 		m_accum = audioFile.getNumSamplesPerChannel();
+		samples.resize(audioFile.getNumSamplesPerChannel());
+		for (size_t idx = 0; idx < samples.size(); idx++) {
+			samples[idx] = audioFile.samples[0][idx];
+		}
 	}
 }
 
 void Sampler::process() noexcept
 {
 	update();
-	if (inputs[STARTSTOP] >= 0.4) {
+	if (inputs[STARTSTOP] != 0) {
+		//printf("start sample\n");
 		//inputs[STARTSTOP] = 0;
 		m_env.inputs[Envelope::TRIG] = 1;
 		m_startPos = 0;
+		m_loopPoint = 0;
 		m_accum = 0;
 		m_bTriggered = true;
 	}
@@ -93,52 +98,44 @@ void Sampler::process() noexcept
 		m_env.inputs[Envelope::INPUT] = 0;
 		m_env.process();
 		outputs[OUTPUT] = m_env.outputs[Envelope::OUTPUT];
-		return;
 	}
 
 	if (inputs[PITCH] < 0.15) {
 		m_env.inputs[Envelope::INPUT] = 0;
 		m_env.process();
 		outputs[OUTPUT] = m_env.outputs[Envelope::OUTPUT];
-		return;
 	}
 	else {
 		m_rate = inputs[PITCH];
 	}
 	
-
 	// playing back at 44.1kHz, advance only 1 sample each time
-	m_accum += m_rate*m_increment;
-	// linearInterpolate()
+	m_accum += m_rate;
 
 	if ((m_loopPoint != 0) && (m_accum > m_loopPoint)) {
 		// start loop over immediately, 0 delay 
 		m_accum = m_startPos;
 	}
 
-	if (m_accum > (audioFile.getNumSamplesPerChannel() - 1)) {
+	if (m_accum >= (audioFile.getNumSamplesPerChannel() - 1)) {
 		m_env.inputs[Envelope::INPUT] = 0;
 		m_env.process();
 		outputs[OUTPUT] = m_env.outputs[Envelope::OUTPUT];
-		return;
 	}
 	else {
 		int nearest = (int)m_accum;
 		float remainder = fmodf(m_accum, nearest);
 
 		if (nearest >= 1) {
-			//m_env.inputs[Envelope::INPUT] = linearInterpolate(audioFile.samples[0][nearest - 1], audioFile.samples[0][nearest], remainder);
-			//m_env.process();
-			//outputs[OUTPUT] = m_env.outputs[Envelope::OUTPUT];
-			outputs[OUTPUT] = linearInterpolate(audioFile.samples[0][nearest - 1], audioFile.samples[0][nearest], remainder);
-			return;
-		
+			m_env.inputs[Envelope::INPUT] = linearInterpolate(audioFile.samples[0][nearest - 1], audioFile.samples[0][nearest], remainder);
+			m_env.process();
+			outputs[OUTPUT] = m_env.outputs[Envelope::OUTPUT];
+			outputs[OUTPUT] = linearInterpolate(samples[nearest - 1], samples[nearest], remainder);
 		} 
 		else {
 			m_env.inputs[Envelope::INPUT] = audioFile.samples[0][0];
 			m_env.process();
 			outputs[OUTPUT] = m_env.outputs[Envelope::OUTPUT];
-			return;
 		}
 	}
 }

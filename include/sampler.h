@@ -43,6 +43,7 @@ private:
 	Envelope m_env;
 	float m_sampleRate;
 	AudioFile<float> audioFile;
+	std::vector<float> samples;
 	size_t m_startPos;
 	double m_accum;
 	double m_rate;
