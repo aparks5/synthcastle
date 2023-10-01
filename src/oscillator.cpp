@@ -43,11 +43,17 @@ void Oscillator::update()
 	auto moddepth = inputs[MODDEPTH];
 
 	// port input should override GUI input
+	auto freq = 0;
 	if (inputs[FREQ_IN] != 0) {
-		params[FREQ] = inputs[FREQ_IN];
+		auto note = inputs[FREQ_IN] * 128.f;
+		if (note > 14) {
+			freq = midiNoteToFreq(note);
+		}
+	}
+	else {
+		freq = params[FREQ];
 	}
 
-	auto freq = params[FREQ]; // TODO: scale 0 to 1 to 0 to 22050
 	auto coarse = params[TUNING_COARSE];
 	auto fine = params[TUNING_FINE];
 

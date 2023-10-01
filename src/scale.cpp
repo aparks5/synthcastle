@@ -15,6 +15,7 @@ Scale::Scale(Key key, ScalePattern pattern, ScaleMode mode)
 
  Key Scale::strToKey(std::string str)
 {
+    // TODO: replace with map
 	Key key = Key::C;
 	if (str == "C") {
 		key = Key::C;
@@ -56,6 +57,7 @@ Scale::Scale(Key key, ScalePattern pattern, ScaleMode mode)
 
  ScalePattern Scale::strToScalePattern(std::string str)
  {
+	 // TODO: replace with map
 	 ScalePattern pat = ScalePattern::MAJOR;
 	 if (str == "maj") {
 		 pat = ScalePattern::MAJOR;
@@ -75,6 +77,7 @@ Scale::Scale(Key key, ScalePattern pattern, ScaleMode mode)
  {
 	 ScaleMode mode = ScaleMode::IONIAN;
 
+	 // TODO: replace with map
 	 if (str == "ionian" || str == "i") {
 		 mode = ScaleMode::IONIAN;
 	 }
@@ -103,6 +106,7 @@ Scale::Scale(Key key, ScalePattern pattern, ScaleMode mode)
 
 void Scale::generate(Key key, ScalePattern pattern)
 {
+	// copy paste bad replace with iteration
 	size_t startingNote = (12 * m_lowestOctave) + static_cast<size_t>(key);
 	if (pattern == ScalePattern::MAJOR) {
 		size_t nextNote = startingNote;

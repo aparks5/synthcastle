@@ -24,6 +24,12 @@ struct RollingBuffer {
     }
 };
 
+static void out(std::string label, int id) {
+    ImNodes::BeginOutputAttribute(id);
+	ImGui::TextUnformatted(label.c_str());
+	ImNodes::EndOutputAttribute();
+}
+
 View::View()
 	: m_window(
 		SDL_CreateWindow(
@@ -964,7 +970,32 @@ void SeqDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
 	ImGui::BeginGroup();
 	{
-		auto step = snapshot.params.at("step");
+
+        auto cachedStep = snapshot.params.at("step");
+        auto cachedTrack = snapshot.params.at("track");
+
+        ImGui::SameLine();
+        auto note = static_cast<int>(snapshot.params.at("note"));
+        if (ImGuiKnobs::KnobInt("Note", &note, 0, 128, 1, "%1d", ImGuiKnobVariant_Wiper)) {
+            update(id, snapshot, "note", static_cast<float>(note));
+        }
+
+        ImGui::SameLine();
+        auto length = snapshot.params.at("length");
+        if (ImGuiKnobs::Knob("Length", &length, 0.f, 1.0f, 0.01f, "%.1f", ImGuiKnobVariant_Wiper)) {
+            update(id, snapshot, "length", length);
+        }
+
+        ImGui::SameLine();
+        auto prob = snapshot.params.at("probability");
+        if (ImGuiKnobs::Knob("Probability", &prob, 0.f, 1.0f, 0.01f, "%.1f", ImGuiKnobVariant_Wiper)) {
+            update(id, snapshot, "probability", prob);
+        }
+
+
+        ImGui::Text("Selected: %d - %d", static_cast<int>(cachedTrack), static_cast<int>(cachedStep));
+
+		auto step = snapshot.params.at("display_step");
 		ImGui::Text("Step: %d", (int)step);
 		auto progress = ((1. + step) / 16.);
 
@@ -973,22 +1004,27 @@ void SeqDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 		ImGui::ProgressBar(progress, ImVec2(480, 0.0f), "");
 		ImGui::NewLine();
 
-		for (size_t track = 0; track < 8; track++) {
+
+		for (int track = 0; track < 8; track++) {
 			ImGui::NewLine();
-			for (size_t step = 0; step < 16; step++) {
+			for (int step = 0; step < 16; step++) {
 				ImGui::SameLine();
 				auto enableStr = "enable_" + std::to_string(step) + "_" + std::to_string(track);
 				bool val = (bool)(snapshot.params.at(enableStr));
+                if ((cachedStep == step) && (cachedTrack == track)) {
+                    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0, 0, 0, 1));
+                }
 				if (ImGuiKnobs::SequenceToggle(enableStr.c_str(), &val)) {
-					update(id, snapshot, enableStr, (float)val);
+                    update(id, snapshot, "step", static_cast<float>(step));
+                    update(id, snapshot, "track", static_cast<float>(track));
+					update(id, snapshot, enableStr, static_cast<float>(val));
+                    update(id, snapshot, "recall", 1);
 				}
+                if ((cachedStep == step) && (cachedTrack == track)) {
+                    ImGui::PopStyleColor();
+                }
+
 			}
-		}
-
-		auto g = (snapshot.params.at("gatemode") == 1.f) ? true : false;
-
-		if (ImGuiKnobs::SequenceToggle("Gate Mode", &g)) {
-			update(id, snapshot, "gatemode", (float)g);
 		}
 	}
 	ImGui::EndGroup();
@@ -997,21 +1033,15 @@ void SeqDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
 	ImGui::BeginGroup();
 	{
-		ImNodes::BeginOutputAttribute(snapshot.outputs.at("track_1_id"));
-		ImGui::TextUnformatted("Track 1");
-		ImNodes::EndOutputAttribute();
+        for (int track = 1; track <= 8; track++) {
+            auto cvLabelStr = std::to_string(track) + " CV";
+            auto cvParamStr = "cv_" + std::to_string(track) + "_id";
+            auto gateLabelStr = std::to_string(track) + " Gate";
+            auto gateParamStr = "gate_" + std::to_string(track) + "_id";
+            out(cvLabelStr, snapshot.outputs.at(cvParamStr));
+            out(gateLabelStr, snapshot.outputs.at(gateParamStr));
+        }
 
-		ImNodes::BeginOutputAttribute(snapshot.outputs.at("track_2_id"));
-		ImGui::TextUnformatted("Track 2");
-		ImNodes::EndOutputAttribute();
-
-		ImNodes::BeginOutputAttribute(snapshot.outputs.at("track_3_id"));
-		ImGui::TextUnformatted("Track 3");
-		ImNodes::EndOutputAttribute();
-
-		ImNodes::BeginOutputAttribute(snapshot.outputs.at("track_4_id"));
-		ImGui::TextUnformatted("Track 4");
-		ImNodes::EndOutputAttribute();
     }
     ImGui::EndGroup();
 

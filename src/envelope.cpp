@@ -33,15 +33,17 @@ Envelope::Envelope()
 void Envelope::process() noexcept
 {
 	float in = inputs[INPUT];
+
 	// latching vs. instantaneous modes selectable?
-	if ((inputs[TRIG] != 0)) { // && (!m_bTriggered)) {
+
+	// TODO: this makes sustaining impossible
+	if ((inputs[TRIG] != 0)) { 
 		m_stage = EnvelopeStage::ATTACK;
-		m_bTriggered = true;
 	}
 
-	if ((inputs[TRIG] == 0)) {
-		//printf("no trigger\n");
-		m_bTriggered = false;
+	// this effectively makes an AR envelope for instantaneous gates
+	// think about allowing custom gate lengths out of the seq
+	if ((inputs[TRIG] == 0) && (m_stage != EnvelopeStage::ATTACK)) {
 		if (m_stage != EnvelopeStage::RELEASE) {
 			m_stage = EnvelopeStage::RELEASE;
 		}
@@ -72,14 +74,15 @@ void Envelope::process() noexcept
 	case EnvelopeStage::DECAY:
 	{
 		if (env.decayTimeSamps > 0) {
-			m_gain -= static_cast<float>((1.f / env.decayTimeSamps) * pow(10, 1.f * env.sustainLeveldB / 20));
-			if (m_gain < 0) {
+			m_gain -= static_cast<float>((1.f / env.decayTimeSamps) * fmin(pow(10, 1.f * env.sustainLeveldB / 20), 0.0009));
+			if (m_gain <= 0.001) {
 				m_gain = 0;
 				m_stage = EnvelopeStage::RELEASE;
 			}
 		}
 
 		if (m_gain <= (pow(10, 1.f * env.sustainLeveldB / 20))) {
+			m_gain = 0;
 			m_stage = EnvelopeStage::SUSTAIN;
 		}
 
@@ -87,7 +90,13 @@ void Envelope::process() noexcept
 	break;
 	case EnvelopeStage::SUSTAIN:
 	{
-		m_gain = pow(10, 1.f * env.sustainLeveldB / 20);
+		if (pow(10, 1.f * env.sustainLeveldB / 20) <= 0.0009f) {
+			m_gain = 0;
+			m_stage = EnvelopeStage::RELEASE;
+		}
+		else {
+			m_gain = pow(10, 1.f * env.sustainLeveldB / 20);
+		}
 	}
 	break;
 	case EnvelopeStage::RELEASE:

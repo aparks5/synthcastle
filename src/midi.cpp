@@ -96,7 +96,7 @@ void MIDI::process() noexcept
 	// all voices are exhausted, we need to turn one off
 
 	if (midiUserData.note > 21) {
-		params[NOTE] = midiUserData.note;
+		params[NOTE] = midiUserData.note / 128.f;
 	}
 	else {
 		params[NOTE] = 0;
