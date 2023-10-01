@@ -976,7 +976,7 @@ void SeqDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
         ImGui::SameLine();
         auto note = static_cast<int>(snapshot.params.at("note"));
-        if (ImGuiKnobs::KnobInt("Note", &note, 0, 128, 1, "%1d", ImGuiKnobVariant_Wiper)) {
+        if (ImGuiKnobs::KnobInt("Note", &note, 36, 60, 1, "%1d", ImGuiKnobVariant_Wiper)) {
             update(id, snapshot, "note", static_cast<float>(note));
         }
 
