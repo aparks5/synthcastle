@@ -185,14 +185,6 @@ public:
 
 	void setRoot(int id) { m_rootId = id; }
 
-	//void operator=(const NodeGraph& g) {
-	//	edges_ = g.edges_;
-	//	edges_from_node_ = g.edges_from_node_;
-	//	node_neighbors_ = g.node_neighbors_;
-	//	current_id_ = g.current_id_;
-	//	nodes_ = g.nodes_;
-	//}
-
 	virtual ~NodeGraph() {};
 
 	struct Edge

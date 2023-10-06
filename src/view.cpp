@@ -982,7 +982,7 @@ void SeqDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
         ImGui::SameLine();
         auto length = snapshot.params.at("length");
-        if (ImGuiKnobs::Knob("Length", &length, 0.f, 1.0f, 0.01f, "%.1f", ImGuiKnobVariant_Wiper)) {
+        if (ImGuiKnobs::Knob("Length", &length, 0.f, 10000.0f, 10.f, "%.1f", ImGuiKnobVariant_Wiper)) {
             update(id, snapshot, "length", length);
         }
 

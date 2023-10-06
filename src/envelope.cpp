@@ -34,19 +34,15 @@ void Envelope::process() noexcept
 {
 	float in = inputs[INPUT];
 
-	// latching vs. instantaneous modes selectable?
-
 	// TODO: this makes sustaining impossible
-	if ((inputs[TRIG] != 0)) { 
+	if ((inputs[TRIG] != 0) && (!m_bTriggered)) { 
 		m_stage = EnvelopeStage::ATTACK;
+		m_bTriggered = true;
 	}
 
-	// this effectively makes an AR envelope for instantaneous gates
-	// think about allowing custom gate lengths out of the seq
-	if ((inputs[TRIG] == 0) && (m_stage != EnvelopeStage::ATTACK)) {
-		if (m_stage != EnvelopeStage::RELEASE) {
-			m_stage = EnvelopeStage::RELEASE;
-		}
+	if (inputs[TRIG] == 0) {
+		m_stage = EnvelopeStage::RELEASE;
+		m_bTriggered = false;
 	}
 
 	EnvelopeParams env(

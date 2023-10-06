@@ -1,9 +1,7 @@
 
 #include <thread>
 
-
-
-#define BLOCK_SIZE (1024)
+#define BLOCK_SIZE (4096)
 
 #include "model.h"
 #include "view.h"
@@ -17,6 +15,7 @@
 #include "util.h"
 #include "portaudio.h"
 #include "portaudiohandler.h"
+#include "pa_win_wasapi.h"
 #include "windows.h"
 
 #include "commands.h"
@@ -44,17 +43,22 @@ struct AudioData
 	std::shared_ptr<moodycamel::ReaderWriterQueue<Commands>> commandsFromAudioCallback;
 	std::shared_ptr<IOServer> server;
 	std::vector<std::vector<float>> callbackBuffer;
+    float left;
+    float right;
 
 };
 
-static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeGraph> graph) noexcept
+static void evaluate(float inputSample, std::shared_ptr<NodeGraph> graph, float& left, float& right) noexcept
 {
+    left = 0;
+    right = 0;
+
     if (!graph.get()) {
-        return { 0,0 };
+        return;
     }
 
 	if (graph->getRoot() == -1) {
-		return {0, 0};
+        return;
 	}
 
 	std::stack<int> postorder;
@@ -64,8 +68,10 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
     // make a hashmap of ids and count visited
 	// TODO: eliminate all the dynamic memory
     std::unordered_map<int, int> idVisited;
-    std::vector<float> cached;
-    cached.reserve(16);
+
+    std::array<float, 16> cached;
+    int cacheIdx = 0;
+    std::fill(cached.begin(), cached.end(), 0);
 
 	while (!postorder.empty())
 	{
@@ -92,18 +98,22 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
                 pNode->process();
             }
 
-            cached.clear();
+			std::fill(cached.begin(), cached.end(), 0);
+            cacheIdx = 0;
             for (auto& out : pNode->outputs) {
-                cached.push_back(out);
+                cached[cacheIdx++] = out;
+                if (cacheIdx >= cached.size()) {
+                    break;
+                }
             }
 
 			// value_stack should have two items from the output node.
             // output is connected to nothing so these will not show up as PROCESSOR_OUTPUTs
             // in the graph
             if (pNode->getName() == "output") {
-                auto l = cached[0];
-                auto r = cached[1];
-                return std::make_tuple(l, r);
+                left = cached[0];
+                right = cached[1];
+                return;
             }
 
         }
@@ -130,8 +140,6 @@ static std::tuple<float,float> evaluate(float inputSample, std::shared_ptr<NodeG
 			break;
 		}
 	}
-
-    return std::make_tuple(0.f, 0.f);
 }
 
 static int paCallbackMethod(const void* inputBuffer, void* outputBuffer,
@@ -155,14 +163,12 @@ static int paCallbackMethod(const void* inputBuffer, void* outputBuffer,
         float output = 0.f;
         float inputSample = *in++;
         in++; // skip other channel
-        std::tuple<float, float> lr = evaluate(inputSample, nodeGraph);
+        evaluate(inputSample, nodeGraph, data->left, data->right);
             // write interleaved output -- L/R
-		auto l = std::get<0>(lr);
-		auto r = std::get<1>(lr);
-        *out++ = l;
-        *out++ = r;
-        data->callbackBuffer[0][sampIdx] = l;
-        data->callbackBuffer[1][sampIdx] = l;
+        *out++ = data->left;
+        *out++ = data->right;
+        data->callbackBuffer[0][sampIdx] = data->left;
+        data->callbackBuffer[1][sampIdx] = data->right;
     }
 
     // perform all queued updates to modify the graph safely
@@ -234,6 +240,9 @@ void runGui(std::shared_ptr<AudioData> data)
 int main(int, char**)
 {
     std::shared_ptr<AudioData> audioData = std::make_shared<AudioData>();
+    audioData->left = 0;
+    audioData->right = 0;
+
     std::vector<float> myRow(BLOCK_SIZE, 0.f);
     for (size_t idx = 0; idx < 2; idx++) {
         audioData->callbackBuffer.push_back(myRow);
@@ -255,8 +264,13 @@ int main(int, char**)
 	}
 	outputParameters.channelCount = 2;       /* stereo output */
 	outputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
-	outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
-	outputParameters.hostApiSpecificStreamInfo = NULL;
+    outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultHighOutputLatency;
+    PaWasapiStreamInfo wasapiInfo;
+    wasapiInfo.hostApiType = paWASAPI;
+    wasapiInfo.version = 1;
+    wasapiInfo.flags = 0;
+    wasapiInfo.flags |= paWinWasapiExclusive;
+	outputParameters.hostApiSpecificStreamInfo = &wasapiInfo;
 
 	PaStreamParameters inputParameters;
     
@@ -284,7 +298,7 @@ int main(int, char**)
 	inputParameters.channelCount = 2;       // mono input
 	inputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
     inputParameters.suggestedLatency = Pa_GetDeviceInfo(inputParameters.device)->defaultLowInputLatency;
-	inputParameters.hostApiSpecificStreamInfo = NULL;
+    inputParameters.hostApiSpecificStreamInfo = nullptr;
 
 	PaError err = Pa_OpenStream(&stream, &inputParameters,
 		&outputParameters, 44100, BLOCK_SIZE, paClipOff, &paCallbackMethod, audioData.get());
