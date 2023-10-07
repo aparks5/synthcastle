@@ -24,13 +24,6 @@ public:
 	};
 
 	enum Params {
-		INPUT_ID,
-		GAINMOD_ID,
-		GAIN_ID,
-		LEFT_ID,
-		RIGHT_ID,
-		PANMOD_ID,
-		OUTPUT_ID,
 		NODE_ID,
 		GAIN,
 		GAINMOD_DEPTH,

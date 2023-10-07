@@ -3,6 +3,8 @@
 
 #define BLOCK_SIZE (4096)
 
+#define PA_ENABLE_DEBUG_OUTPUT
+
 #include "model.h"
 #include "view.h"
 #include "controller.h"
@@ -36,8 +38,11 @@
 #include "mixer.h"
 #include <mutex>
 
+#define MAX_NODES (2048)
 struct AudioData
 {
+	PaStream* stream;
+    int idVisited[MAX_NODES];
     std::shared_ptr<Controller> controller;
 	std::shared_ptr<moodycamel::ReaderWriterQueue<Commands>> commandsToAudioCallback;
 	std::shared_ptr<moodycamel::ReaderWriterQueue<Commands>> commandsFromAudioCallback;
@@ -45,7 +50,6 @@ struct AudioData
 	std::vector<std::vector<float>> callbackBuffer;
     float left;
     float right;
-
 };
 
 static void evaluate(float inputSample, std::shared_ptr<NodeGraph> graph, float& left, float& right) noexcept
@@ -65,9 +69,8 @@ static void evaluate(float inputSample, std::shared_ptr<NodeGraph> graph, float&
 	std::stack<float> value_stack;
 	dfs_traverse(graph, [&postorder](const int node_id) -> void { postorder.push(node_id); });
 
-    // make a hashmap of ids and count visited
-	// TODO: eliminate all the dynamic memory
-    std::unordered_map<int, int> idVisited;
+    int idVisited[1024];
+    memset(idVisited, 0, sizeof(idVisited));
 
     std::array<float, 16> cached;
     int cacheIdx = 0;
@@ -98,7 +101,10 @@ static void evaluate(float inputSample, std::shared_ptr<NodeGraph> graph, float&
                 pNode->process();
             }
 
-			std::fill(cached.begin(), cached.end(), 0);
+            for (int idx = 0; idx < 16; idx++) {
+                cached[idx] = 0;
+            }
+
             cacheIdx = 0;
             for (auto& out : pNode->outputs) {
                 cached[cacheIdx++] = out;
@@ -150,6 +156,7 @@ static int paCallbackMethod(const void* inputBuffer, void* outputBuffer,
 {
     AudioData* data = (AudioData*)userData;
 
+    int* idVisited = data->idVisited;
     float* out = (float*)outputBuffer;
     float* in = (float*)inputBuffer;
 
@@ -176,6 +183,11 @@ static int paCallbackMethod(const void* inputBuffer, void* outputBuffer,
     // use a SPSC queue to tell the controller to update
     // this should never be resized except at init time to accommodate user driven buffer size
     data->controller->sendBuffer(data->callbackBuffer);
+
+    auto res = Pa_GetStreamCpuLoad(data->stream);
+    if (res > 0.9f) {
+        std::cout << "cpu usage exceeds 90% on this thread" << std::endl;
+    }
 
     return paContinue;
 }
@@ -307,6 +319,7 @@ int main(int, char**)
 		printf("Failed to open stream to device !!!");
 	}
 	err = Pa_StartStream(stream);
+    audioData->stream = stream;
 	if (err != paNoError) {
 		printf("Failed to start stream!!!");
 	}

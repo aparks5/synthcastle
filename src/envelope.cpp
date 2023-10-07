@@ -34,13 +34,12 @@ void Envelope::process() noexcept
 {
 	float in = inputs[INPUT];
 
-	// TODO: this makes sustaining impossible
 	if ((inputs[TRIG] != 0) && (!m_bTriggered)) { 
 		m_stage = EnvelopeStage::ATTACK;
 		m_bTriggered = true;
 	}
 
-	if (inputs[TRIG] == 0) {
+	if (inputs[TRIG] == 0 && (m_stage != EnvelopeStage::ATTACK)) {
 		m_stage = EnvelopeStage::RELEASE;
 		m_bTriggered = false;
 	}

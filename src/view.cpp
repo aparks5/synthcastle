@@ -1005,7 +1005,7 @@ void SeqDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 		ImGui::NewLine();
 
 
-		for (int track = 0; track < 8; track++) {
+		for (int track = 0; track < 4; track++) {
 			ImGui::NewLine();
 			for (int step = 0; step < 16; step++) {
 				ImGui::SameLine();
@@ -1033,7 +1033,7 @@ void SeqDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
 	ImGui::BeginGroup();
 	{
-        for (int track = 1; track <= 8; track++) {
+        for (int track = 1; track <= 4; track++) {
             auto cvLabelStr = std::to_string(track) + " CV";
             auto cvParamStr = "cv_" + std::to_string(track) + "_id";
             auto gateLabelStr = std::to_string(track) + " Gate";
@@ -1419,6 +1419,14 @@ void FilterDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImNodes::BeginInputAttribute(snapshot.inputs.at("moddepth_id"));
 	ImGui::TextUnformatted("Depth");
 	ImNodes::EndInputAttribute();
+
+    ImGui::PushStyleColor(ImGuiCol_Header, (ImVec4)ImColor(227, 255, 99));
+    ImGui::PushStyleColor(ImGuiCol_PopupBg, (ImVec4)ImColor(227, 255, 99));
+    ImGui::PushItemWidth(120.0f);
+    int w = (int)(snapshot.params.at("filter_type"));
+    ImGui::Combo("Filter", &w, "Moog\0Diode\0");
+    update(id, snapshot, "filter_type", w);
+    ImGui::PopStyleColor(2);
 
 	ImGui::PushItemWidth(120.0f);
     auto f = snapshot.params.at("freq");

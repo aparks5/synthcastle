@@ -10,8 +10,8 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "/O2")
+# msvc optimize for speed, use intrinsics, omit frame pointer
+set(CMAKE_CXX_FLAGS_RELEASE "/O2 /Oi /Oy")
 
 #add_compile_definitions(-D PA_USE_ASIO 1)
 

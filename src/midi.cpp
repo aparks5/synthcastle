@@ -38,7 +38,6 @@ MIDI::MIDI()
 		{"selected_port", SELECTED_PORT},
 		{"note", NOTE},
 		{"velocity", VELOCITY},
-		{"out_velocity_id", OUT_VELOCITY_ID},
 	};
 
 	outputMap = {
