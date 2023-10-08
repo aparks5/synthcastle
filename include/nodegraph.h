@@ -183,6 +183,10 @@ public:
 	NodeGraph(const NodeGraph& g) = default;
 	NodeGraph(NodeGraph&& g) = default;
 
+
+	// hold postorder traversal
+	std::stack<int> postorder;
+
 	void setRoot(int id) { m_rootId = id; }
 
 	virtual ~NodeGraph() {};

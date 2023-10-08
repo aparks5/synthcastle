@@ -3,7 +3,6 @@
 
 #define BLOCK_SIZE (4096)
 
-#define PA_ENABLE_DEBUG_OUTPUT
 
 #include "model.h"
 #include "view.h"
@@ -39,9 +38,10 @@
 #include <mutex>
 
 #define MAX_NODES (2048)
+
 struct AudioData
 {
-	PaStream* stream;
+	const PaStream* stream;
     int idVisited[MAX_NODES];
     std::shared_ptr<Controller> controller;
 	std::shared_ptr<moodycamel::ReaderWriterQueue<Commands>> commandsToAudioCallback;
@@ -52,7 +52,7 @@ struct AudioData
     float right;
 };
 
-static void evaluate(float inputSample, std::shared_ptr<NodeGraph> graph, float& left, float& right) noexcept
+static void evaluate(float inputSample, std::shared_ptr<NodeGraph> graph, std::stack<int> postorder, float& left, float& right) noexcept
 {
     left = 0;
     right = 0;
@@ -65,14 +65,12 @@ static void evaluate(float inputSample, std::shared_ptr<NodeGraph> graph, float&
         return;
 	}
 
-	std::stack<int> postorder;
 	std::stack<float> value_stack;
-	dfs_traverse(graph, [&postorder](const int node_id) -> void { postorder.push(node_id); });
 
     int idVisited[1024];
     memset(idVisited, 0, sizeof(idVisited));
 
-    std::array<float, 16> cached;
+    std::array<float, 16> cached{};
     int cacheIdx = 0;
     std::fill(cached.begin(), cached.end(), 0);
 
@@ -161,6 +159,7 @@ static int paCallbackMethod(const void* inputBuffer, void* outputBuffer,
     float* in = (float*)inputBuffer;
 
     auto nodeGraph = std::atomic_load(&(data->controller->m_graph));
+    auto postorder = data->controller->getTraversal();
     
     (void)timeInfo; /* Prevent unused variable warnings. */
     (void)statusFlags;
@@ -170,7 +169,7 @@ static int paCallbackMethod(const void* inputBuffer, void* outputBuffer,
         float output = 0.f;
         float inputSample = *in++;
         in++; // skip other channel
-        evaluate(inputSample, nodeGraph, data->left, data->right);
+        evaluate(inputSample, nodeGraph, postorder, data->left, data->right);
             // write interleaved output -- L/R
         *out++ = data->left;
         *out++ = data->right;
@@ -184,10 +183,10 @@ static int paCallbackMethod(const void* inputBuffer, void* outputBuffer,
     // this should never be resized except at init time to accommodate user driven buffer size
     data->controller->sendBuffer(data->callbackBuffer);
 
-    auto res = Pa_GetStreamCpuLoad(data->stream);
+    /*auto res = Pa_GetStreamCpuLoad(data->stream);
     if (res > 0.9f) {
         std::cout << "cpu usage exceeds 90% on this thread" << std::endl;
-    }
+    }*/
 
     return paContinue;
 }

@@ -105,8 +105,10 @@ std::vector<std::string> Model::queryNodeNames() const
 ViewBag Model::refresh()
 {
 	std::stack<int> postorder;
+
 	if (m_graph->getRoot() != -1) {
 		dfs_traverse(m_graph, [&postorder](const int node_id) -> void { postorder.push(node_id); });
+		m_postorder = postorder;
 
 		// traverse all nodes and update the cache with all the params
 		// after evaluate() process() can update any number of internal params

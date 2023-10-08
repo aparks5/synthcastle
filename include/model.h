@@ -4,6 +4,8 @@
 #include "viewbag.h"
 #include "events.h"
 
+#include <stack>
+
 class ProcessorNodeCreator
 {
 public:
@@ -38,9 +40,11 @@ public:
 	ViewBag refresh(); 
 	// return a deep copy of the graph
 	NodeGraph cloneGraph();
+	std::stack<int> getTraversal() const { return m_postorder; }
 
 private:
 	std::shared_ptr<NodeGraph> m_graph;
+	std::stack<int> m_postorder;
 	ProcessorNodeCreator nodeCreator;
 	ViewBag m_cache;
 

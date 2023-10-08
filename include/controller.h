@@ -23,11 +23,12 @@ public:
 	void queueUpdate(int id, std::string param, std::string str) override;
 	std::vector<std::string> queryNodeNames() const override;
 	std::shared_ptr<NodeGraph> m_graph;
+	std::stack<int> getTraversal() const;
 
 	void createLink(int from, int to);
 	void deleteLink(int link_id);
 	int createNode(std::string nodeName);
-	ViewBag snapshot() const override; 
+	ViewBag snapshot() override; 
 	void update() override; // not accessible to View 
 	// because this is not part of the ViewListener interface
 	bool shouldExit() const {

@@ -14,14 +14,20 @@ Controller::Controller(std::shared_ptr<Model> model)
 	m_circBuff.m_writeIdx = 0;
 }
 
-ViewBag Controller::snapshot() const
+ViewBag Controller::snapshot() 
 {
 	// return a cached viewbag if the model hasn't been updated
-	//if (m_bUpdated) {
-	//	// repopulate the cache
-	//	m_bUpdated = false;
-	//}
-	return m_model->refresh();
+	if (m_bUpdated) {
+		auto bag = m_model->refresh();
+		m_cache = bag;
+	}
+
+	return m_cache;
+}
+
+std::stack<int> Controller::getTraversal() const
+{
+	return m_model->getTraversal();
 }
 
 void Controller::notify(EventType event, const void* data) {
@@ -94,6 +100,8 @@ void Controller::update()
 	// ideally this happens infrequently on its own separate thread, but that thread needs to keep track of the references
 	m_pool.release();
 
+	m_bUpdated = false;
+
 	// do we need to update?
 	if ((m_creationQueue.empty()) &&
 		(m_updates.empty()) &&
@@ -134,6 +142,7 @@ void Controller::update()
 		m_stringUpdates.pop();
 	}
 
+	m_bUpdated = true;
 	// i think this means we need to copy the whole graph
 	std::shared_ptr<NodeGraph> newGraph = std::make_shared<NodeGraph>(m_model->cloneGraph());
 	m_pool.add(newGraph);
