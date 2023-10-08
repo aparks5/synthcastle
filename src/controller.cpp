@@ -16,18 +16,7 @@ Controller::Controller(std::shared_ptr<Model> model)
 
 ViewBag Controller::snapshot() 
 {
-	// return a cached viewbag if the model hasn't been updated
-	if (m_bUpdated) {
-		auto bag = m_model->refresh();
-		m_cache = bag;
-	}
-
-	return m_cache;
-}
-
-std::stack<int> Controller::getTraversal() const
-{
-	return m_model->getTraversal();
+	return m_cache; // see update(), cache is only updated if an update has been processed
 }
 
 void Controller::notify(EventType event, const void* data) {
@@ -147,5 +136,12 @@ void Controller::update()
 	std::shared_ptr<NodeGraph> newGraph = std::make_shared<NodeGraph>(m_model->cloneGraph());
 	m_pool.add(newGraph);
 	std::atomic_store(&m_graph, newGraph);
+
+	auto bag = m_model->refresh();
+	m_cache = bag;
+
+	std::shared_ptr<std::stack<int>> postorder = std::make_shared<std::stack<int>>(m_model->getTraversal());
+	m_pool.add(postorder);
+	std::atomic_store(&m_traversal, postorder);
 
 }

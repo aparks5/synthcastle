@@ -52,18 +52,27 @@ struct AudioData
     float right;
 };
 
-static void evaluate(float inputSample, std::shared_ptr<NodeGraph> graph, std::stack<int> postorder, float& left, float& right) noexcept
+static void evaluate(float inputSample, std::shared_ptr<NodeGraph> graph, std::shared_ptr<std::stack<int>> postorder, float& left, float& right) noexcept
 {
 	left = 0;
 	right = 0;
 
-	if (!graph.get()) {
+	if ((!graph.get()) || (!postorder.get())) {
 		return;
 	}
+
 
 	if (graph->getRoot() == -1) {
 		return;
 	}
+
+    if (postorder->size() == 0) {
+        return;
+    }
+
+
+    // we need to make a copy because we're about to pop off
+    std::stack<int> traversal = *postorder;
 
 	std::stack<float> value_stack;
 	int idVisited[1024];
@@ -73,11 +82,11 @@ static void evaluate(float inputSample, std::shared_ptr<NodeGraph> graph, std::s
 	int cacheIdx = 0;
 	std::fill(cached.begin(), cached.end(), 0);
 
-	while (!postorder.empty())
+	while (!traversal.empty())
 	{
-		const int id = postorder.top();
+		const int id = traversal.top();
 		idVisited[id]++;
-		postorder.pop();
+		traversal.pop();
 		const auto& pNode = graph->node(id);
 
 		if (pNode->getName() == "audio_input") {
@@ -157,7 +166,7 @@ static int paCallbackMethod(const void* inputBuffer, void* outputBuffer,
     float* in = (float*)inputBuffer;
 
     auto nodeGraph = std::atomic_load(&(data->controller->m_graph));
-    auto postorder = data->controller->getTraversal();
+    auto postorder = std::atomic_load(&(data->controller->m_traversal));
     
     (void)timeInfo; /* Prevent unused variable warnings. */
     (void)statusFlags;

@@ -23,7 +23,7 @@ public:
 	void queueUpdate(int id, std::string param, std::string str) override;
 	std::vector<std::string> queryNodeNames() const override;
 	std::shared_ptr<NodeGraph> m_graph;
-	std::stack<int> getTraversal() const;
+	std::shared_ptr<std::stack<int>> m_traversal;
 
 	void createLink(int from, int to);
 	void deleteLink(int link_id);

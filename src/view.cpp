@@ -992,6 +992,22 @@ void SeqDisplayCommand::display(int id, const NodeSnapshot& snapshot)
             update(id, snapshot, "probability", prob);
         }
 
+        ImGui::SameLine();
+
+        ImGui::BeginGroup();
+        {
+            ImGui::Text("Pattern");
+            auto pat = static_cast<int>(snapshot.params.at("pattern"));
+            ImGui::PushItemWidth(80);
+            if (ImGui::InputInt("Pattern", &pat)) {
+                if (pat >= 0 && pat < 64) {
+					update(id, snapshot, "pattern", static_cast<float>(pat));
+                }
+            }
+            ImGui::PopItemWidth();
+        }
+        ImGui::EndGroup();
+
 
         ImGui::Text("Selected: %d - %d", static_cast<int>(cachedTrack), static_cast<int>(cachedStep));
 
