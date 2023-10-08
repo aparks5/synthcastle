@@ -118,6 +118,7 @@ ViewBag Model::refresh()
 			const int id = postorder.top();
 			postorder.pop();
 			const auto& pNode = m_graph->node(id);
+			pNode->update();
 			auto paramStrings = pNode->paramStrings();
 			for (auto& str : paramStrings) {
 				// TODO: repeat this for inputIndexByName and outputIndexByName?

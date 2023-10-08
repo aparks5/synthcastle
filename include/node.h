@@ -31,7 +31,7 @@ public:
 
 	virtual void process() noexcept {};
 	virtual void display() {};
-	virtual void update() {};
+	virtual void update() {}; // should be called during Model::refresh()
 
 	std::string paramStringByName(std::string str)
 	{
