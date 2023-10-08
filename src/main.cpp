@@ -41,44 +41,42 @@
 
 struct AudioData
 {
-	const PaStream* stream;
+    const PaStream* stream;
     int idVisited[MAX_NODES];
     std::shared_ptr<Controller> controller;
-	std::shared_ptr<moodycamel::ReaderWriterQueue<Commands>> commandsToAudioCallback;
-	std::shared_ptr<moodycamel::ReaderWriterQueue<Commands>> commandsFromAudioCallback;
-	std::shared_ptr<IOServer> server;
-	std::vector<std::vector<float>> callbackBuffer;
+    std::shared_ptr<moodycamel::ReaderWriterQueue<Commands>> commandsToAudioCallback;
+    std::shared_ptr<moodycamel::ReaderWriterQueue<Commands>> commandsFromAudioCallback;
+    std::shared_ptr<IOServer> server;
+    std::vector<std::vector<float>> callbackBuffer;
     float left;
     float right;
 };
 
 static void evaluate(float inputSample, std::shared_ptr<NodeGraph> graph, std::stack<int> postorder, float& left, float& right) noexcept
 {
-    left = 0;
-    right = 0;
+	left = 0;
+	right = 0;
 
-    if (!graph.get()) {
-        return;
-    }
+	if (!graph.get()) {
+		return;
+	}
 
 	if (graph->getRoot() == -1) {
-        return;
+		return;
 	}
 
 	std::stack<float> value_stack;
+	int idVisited[1024];
+	memset(idVisited, 0, sizeof(idVisited));
 
-    int idVisited[1024];
-    memset(idVisited, 0, sizeof(idVisited));
-
-    std::array<float, 16> cached{};
-    int cacheIdx = 0;
-    std::fill(cached.begin(), cached.end(), 0);
+	std::array<float, 16> cached{};
+	int cacheIdx = 0;
+	std::fill(cached.begin(), cached.end(), 0);
 
 	while (!postorder.empty())
 	{
 		const int id = postorder.top();
-
-        idVisited[id]++;
+		idVisited[id]++;
 		postorder.pop();
 		const auto& pNode = graph->node(id);
 
@@ -87,59 +85,59 @@ static void evaluate(float inputSample, std::shared_ptr<NodeGraph> graph, std::s
 		}
 
 		switch (pNode->getNodeType()) {
-        case NodeType::PROCESSOR:
-        {
+		case NodeType::PROCESSOR:
+		{
 			for (size_t idx = 0; idx < pNode->inputs.size(); idx++) {
-                auto val = value_stack.top();
-                pNode->inputs[idx] = val;
-                value_stack.pop();
-            }
+				auto val = value_stack.top();
+				pNode->inputs[idx] = val;
+				value_stack.pop();
+			}
 
-            if (idVisited[id] == 1) {
-                pNode->process();
-            }
+			if (idVisited[id] == 1) {
+				pNode->process();
+			}
 
-            for (int idx = 0; idx < 16; idx++) {
-                cached[idx] = 0;
-            }
+			for (int idx = 0; idx < 16; idx++) {
+				cached[idx] = 0;
+			}
 
-            cacheIdx = 0;
-            for (auto& out : pNode->outputs) {
-                cached[cacheIdx++] = out;
-                if (cacheIdx >= cached.size()) {
-                    break;
-                }
-            }
+			cacheIdx = 0;
+			for (auto& out : pNode->outputs) {
+				cached[cacheIdx++] = out;
+				if (cacheIdx >= cached.size()) {
+					break;
+				}
+			}
 
 			// value_stack should have two items from the output node.
-            // output is connected to nothing so these will not show up as PROCESSOR_OUTPUTs
-            // in the graph
-            if (pNode->getName() == "output") {
-                left = cached[0];
-                right = cached[1];
-                return;
-            }
+			// output is connected to nothing so these will not show up as PROCESSOR_OUTPUTs
+			// in the graph
+			if (pNode->getName() == "output") {
+				left = cached[0];
+				right = cached[1];
+				return;
+			}
 
-        }
-        break;
-        case NodeType::PROCESSOR_OUTPUT:
-        {
-            // if there is a Relay it's attached to a process node
-            // push its index to the stack to obtain the output?
-            // just pull the value-th item from the cache
-            value_stack.push(cached[pNode->outputs[ProcessorOutput::OUTPUT]]);
-        }
-        break;
+		}
+		break;
+		case NodeType::PROCESSOR_OUTPUT:
+		{
+			// if there is a Relay it's attached to a process node
+			// push its index to the stack to obtain the output?
+			// just pull the value-th item from the cache
+			value_stack.push(cached[pNode->outputs[ProcessorOutput::OUTPUT]]);
+		}
+		break;
 		case NodeType::PROCESSOR_INPUT:
 		{
-             //if the edge does not have an edge connecting to another node, then just use the value
-            // at this node. it means the node's input pin has not been connected to anything and
-            // the value comes from the node's ui.
+			//if the edge does not have an edge connecting to another node, then just use the value
+		   // at this node. it means the node's input pin has not been connected to anything and
+		   // the value comes from the node's ui.
 			if (graph->num_edges_from_node(id) == 0ull) {
 				value_stack.push(pNode->outputs[ProcessorInput::OUTPUT]);
 			}
 		}
-        break;
+		break;
 		default:
 			break;
 		}
@@ -245,7 +243,7 @@ void runGui(std::shared_ptr<AudioData> data)
 
     auto view = std::make_shared<View>();
     view->addListener(controller);
-	view->run();
+    view->run();
 }
 
 int main(int, char**)
@@ -259,31 +257,31 @@ int main(int, char**)
         audioData->callbackBuffer.push_back(myRow);
     }
 
-	PaStream* stream;
-	PortAudioHandler paInit;
-	size_t bufSize = BLOCK_SIZE * sizeof(float);
-	PaStreamParameters outputParameters;
+    PaStream* stream;
+    PortAudioHandler paInit;
+    size_t bufSize = BLOCK_SIZE * sizeof(float);
+    PaStreamParameters outputParameters;
 
-	int index = Pa_GetDefaultOutputDevice();
-	outputParameters.device = index;
-	if (outputParameters.device == paNoDevice) {
-		return false;
-	}
-	const PaDeviceInfo* pInfo = Pa_GetDeviceInfo(index);
-	if (pInfo != 0) {
-		printf("Output device name: '%s'\r", pInfo->name);
-	}
-	outputParameters.channelCount = 2;       /* stereo output */
-	outputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
+    int index = Pa_GetDefaultOutputDevice();
+    outputParameters.device = index;
+    if (outputParameters.device == paNoDevice) {
+        return false;
+    }
+    const PaDeviceInfo* pInfo = Pa_GetDeviceInfo(index);
+    if (pInfo != 0) {
+        printf("Output device name: '%s'\r", pInfo->name);
+    }
+    outputParameters.channelCount = 2;       /* stereo output */
+    outputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
     outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultHighOutputLatency;
     PaWasapiStreamInfo wasapiInfo;
     wasapiInfo.hostApiType = paWASAPI;
     wasapiInfo.version = 1;
     wasapiInfo.flags = 0;
     wasapiInfo.flags |= paWinWasapiExclusive;
-	outputParameters.hostApiSpecificStreamInfo = &wasapiInfo;
+    outputParameters.hostApiSpecificStreamInfo = &wasapiInfo;
 
-	PaStreamParameters inputParameters;
+    PaStreamParameters inputParameters;
     
     int hostNr = Pa_GetHostApiCount();
 
@@ -298,38 +296,38 @@ int main(int, char**)
     // look for WASAPI device if we can find one
     for (auto& item : infoVertex) {
         printf("host: %s\n", item->name);
-		if (item->type == paWASAPI) {
-			inputIndex = item->defaultInputDevice;
-			index = item->defaultOutputDevice;
-			inputParameters.device = inputIndex;
-			outputParameters.device = index;
+        if (item->type == paWASAPI) {
+            inputIndex = item->defaultInputDevice;
+            index = item->defaultOutputDevice;
+            inputParameters.device = inputIndex;
+            outputParameters.device = index;
         }
     }
 
-	inputParameters.channelCount = 2;       // mono input
-	inputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
+    inputParameters.channelCount = 2;       // mono input
+    inputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
     inputParameters.suggestedLatency = Pa_GetDeviceInfo(inputParameters.device)->defaultLowInputLatency;
     inputParameters.hostApiSpecificStreamInfo = nullptr;
 
-	PaError err = Pa_OpenStream(&stream, &inputParameters,
-		&outputParameters, 44100, BLOCK_SIZE, paClipOff, &paCallbackMethod, audioData.get());
+    PaError err = Pa_OpenStream(&stream, &inputParameters,
+        &outputParameters, 44100, BLOCK_SIZE, paClipOff, &paCallbackMethod, audioData.get());
 
-	if (err != paNoError) {
-		printf("Failed to open stream to device !!!");
-	}
-	err = Pa_StartStream(stream);
+    if (err != paNoError) {
+        printf("Failed to open stream to device !!!");
+    }
+    err = Pa_StartStream(stream);
     audioData->stream = stream;
-	if (err != paNoError) {
-		printf("Failed to start stream!!!");
-	}
-	if (err != paNoError) {
-		Pa_CloseStream(stream);
-		stream = 0;
-	}
+    if (err != paNoError) {
+        printf("Failed to start stream!!!");
+    }
+    if (err != paNoError) {
+        Pa_CloseStream(stream);
+        stream = 0;
+    }
 
-	std::thread gui(runGui, audioData);
+    std::thread gui(runGui, audioData);
     gui.join();
 
-	return 0;
+    return 0;
 }
 
