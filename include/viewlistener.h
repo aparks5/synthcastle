@@ -20,6 +20,7 @@ public:
 	virtual void queueDestroyLink(int link_id) = 0;
 	virtual ViewBag snapshot() = 0;
 	virtual AudioPlotBuffer buffer() const = 0;
+	virtual float cpu() const = 0;
 	virtual std::vector<std::string> queryNodeNames() const = 0;
 	virtual void update() = 0; // for now, should take out of interface eventually
 };

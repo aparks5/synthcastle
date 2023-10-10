@@ -36,6 +36,10 @@ public:
 	}
 
 	void sendBuffer(std::vector<std::vector<float>> buf);
+	void sendCPUPercentage(float cpu) {
+		m_cpuPercentage = cpu * 100.f;
+	}
+	float cpu() const { return m_cpuPercentage; }
 	AudioPlotBuffer buffer() const override { return m_circBuff; }
 
 private:
@@ -51,5 +55,6 @@ private:
 	std::queue<LinkEvent> m_linkQueue;
 	std::queue<int> m_linkDeletionQueue;
 	bool m_bExit;
+	float m_cpuPercentage; // obtained from the portaudio callback
 
 };

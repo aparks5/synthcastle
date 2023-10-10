@@ -11,7 +11,7 @@ set(VCPKG_TARGET_TRIPLET x64-windows CACHE STRING "")
 #endif()
 
 # msvc optimize for speed, use intrinsics, omit frame pointer
-# set(CMAKE_CXX_FLAGS_RELEASE "/O2 /Oi /Oy")
+set(CMAKE_CXX_FLAGS_RELEASE "/O2 /Oi /Oy")
 
 #add_compile_definitions(-D PA_USE_ASIO 1)
 

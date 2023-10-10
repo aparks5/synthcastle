@@ -246,11 +246,9 @@ void View::display()
     ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0, 0, 0, 1));
 
     ImGui::Begin("S Y N T H C A S T L E", 0, ImGuiWindowFlags_NoTitleBar);
-    ImGui::TextUnformatted("instructions: right-click to add nodes | select and press x to delete link");
-
+    ImGui::Text("instructions: right-click to add nodes | select and press x to delete link | 2048 @ 44100 Hz | CPU: %.1f\%\n", m_listener->cpu());
     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 0, 0, 1));
     ImNodes::BeginNodeEditor();
-
 
     // node menu
     {
@@ -629,7 +627,7 @@ void DistortDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     ImGui::PushStyleColor(ImGuiCol_Header, (ImVec4)ImColor(227, 255, 99));
     ImGui::PushStyleColor(ImGuiCol_PopupBg, (ImVec4)ImColor(227, 255, 99));
     int algo = (int)snapshot.params.at("algorithm");
-    ImGui::Combo("Algo", &algo, "tanh()\0atan()\0sin()\0twostage-softclip\0cubic-softclip");
+    ImGui::Combo("Algo", &algo, "tanh()\0atan()\0sin()\0twostage-softclip\0cubic-softclip\0apply-triangle\0");
     update(id, snapshot, "algorithm", algo);
     ImGui::PopStyleColor(2);
 
@@ -776,87 +774,92 @@ void GainDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
 void ConstantDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 {
-	ImGui::PushItemWidth(120.0f);
+    ImGui::PushItemWidth(120.0f);
     ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0, 0, 0, 255));
     ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(0, 0, 0, 255));
     ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(0, 0, 0, 255));
-	ImNodes::BeginNode(id);
+    ImNodes::BeginNode(id);
     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 1, 1, 1));
-	ImNodes::BeginNodeTitleBar();
-	ImGui::TextUnformatted("Constant");
-	ImNodes::EndNodeTitleBar();
+    ImNodes::BeginNodeTitleBar();
+    ImGui::TextUnformatted("Constant");
+    ImNodes::EndNodeTitleBar();
     ImGui::PopStyleColor();
     ImNodes::PopColorStyle();
 
-	ImGui::BeginGroup(); 
+    ImGui::BeginGroup();
     {
         ImNodes::BeginInputAttribute(snapshot.inputs.at("input1_id"));
-        ImGui::TextUnformatted("In 1");
+        ImGui::TextUnformatted("In1");
         ImNodes::EndInputAttribute();
 
         ImNodes::BeginInputAttribute(snapshot.inputs.at("input2_id"));
-        ImGui::TextUnformatted("In 2");
+        ImGui::TextUnformatted("In2");
         ImNodes::EndInputAttribute();
 
         ImNodes::BeginInputAttribute(snapshot.inputs.at("input3_id"));
-        ImGui::TextUnformatted("In 3");
+        ImGui::TextUnformatted("In3");
         ImNodes::EndInputAttribute();
 
         ImNodes::BeginInputAttribute(snapshot.inputs.at("input4_id"));
-        ImGui::TextUnformatted("In 4");
+        ImGui::TextUnformatted("In4");
         ImNodes::EndInputAttribute();
 
     }
     ImGui::EndGroup();
 
-    {
-        std::string p = "value1";
-        std::string title = "V1";
-        auto v = snapshot.params.at(p);
-        ImGui::DragFloat(title.c_str(), &v, 0.1f, 0, 1.);
-        update(id, snapshot, p, v);
-    }
+    ImGui::SameLine();
+    ImGui::PushItemWidth(60);
+	ImGui::BeginGroup();
+	{
+		{
+			std::string p = "value1";
+			auto v1 = snapshot.params.at(p);
+			ImGui::DragFloat("##v1", &v1, 0.1f, 0, 1.);
+			update(id, snapshot, p, v1);
+		}
 
-    {
-        std::string p = "value2";
-        std::string title = "V2";
-        auto v = snapshot.params.at(p);
-        ImGui::DragFloat(title.c_str(), &v, 0.1f, 0, 1.);
-        update(id, snapshot, p, v);
-    }
+		{
+			std::string p = "value2";
+			auto v2 = snapshot.params.at(p);
+            ImGui::DragFloat("##v2", &v2, 0.1f, 0, 1.);
+			update(id, snapshot, p, v2);
+		}
 
-    {
-        std::string p = "value3";
-        std::string title = "V3";
-        auto v = snapshot.params.at(p);
-        ImGui::DragFloat(title.c_str(), &v, 0.1f, 0, 1.);
-        update(id, snapshot, p, v);
-    }
+		{
+			std::string p = "value3";
+			auto v3 = snapshot.params.at(p);
+			ImGui::DragFloat("##v3", &v3, 0.1f, 0, 1.);
+			update(id, snapshot, p, v3);
+		}
 
-    {
-        std::string p = "value4";
-        std::string title = "V4";
-        auto v = snapshot.params.at(p);
-        ImGui::DragFloat(title.c_str(), &v, 0.1f, 0, 1.);
-        update(id, snapshot, p, v);
-    }
+		{
+			std::string p = "value4";
+			auto v4 = snapshot.params.at(p);
+			ImGui::DragFloat("##v4", &v4, 0.1f, 0, 1.);
+			update(id, snapshot, p, v4);
+		}
+	}
+    ImGui::EndGroup();
+	ImGui::PopItemWidth();
+
+    ImGui::SameLine();
 
     ImGui::BeginGroup(); 
     {
         ImNodes::BeginOutputAttribute(snapshot.outputs.at("output1_id"));
-        ImGui::TextUnformatted("Out 1");
+        ImGui::TextUnformatted("Out1");
         ImNodes::EndOutputAttribute();
 
         ImNodes::BeginOutputAttribute(snapshot.outputs.at("output2_id"));
-        ImGui::TextUnformatted("Out 2");
+        ImGui::TextUnformatted("Out2");
         ImNodes::EndOutputAttribute();
 
         ImNodes::BeginOutputAttribute(snapshot.outputs.at("output3_id"));
-        ImGui::TextUnformatted("Out 3");
+        ImGui::TextUnformatted("Out3");
         ImNodes::EndOutputAttribute();
 
         ImNodes::BeginOutputAttribute(snapshot.outputs.at("output4_id"));
-        ImGui::TextUnformatted("Out 4");
+        ImGui::TextUnformatted("Out4");
         ImNodes::EndOutputAttribute();
     }
     ImGui::EndGroup();
@@ -1078,7 +1081,7 @@ void TrigDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
     int clicked = 0;
     if (ImGui::Button("Trig!")) {
-        printf("clicked trig\n");
+        //printf("clicked trig\n");
         clicked = 1;
     }
 	update(id, snapshot, "trig", clicked);
@@ -1145,29 +1148,42 @@ void EnvelopeDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImNodes::EndNodeTitleBar();
     ImNodes::PopColorStyle();
 
-	ImNodes::BeginInputAttribute(snapshot.inputs.at("input_id"));
-	ImGui::TextUnformatted("In");
-	ImNodes::EndInputAttribute();
 
-	ImNodes::BeginInputAttribute(snapshot.inputs.at("trig_id"));
-	ImGui::TextUnformatted("Trig");
-	ImNodes::EndInputAttribute();
+    ImGui::BeginGroup();
+    {
+        ImNodes::BeginInputAttribute(snapshot.inputs.at("input_id"));
+        ImGui::TextUnformatted("In");
+        ImNodes::EndInputAttribute();
 
-    auto a = snapshot.params.at("attack_ms");
-	ImGui::DragFloat("Attack Time (ms)", &a, 0.2f, 0., 5000.);
-    update(id, snapshot, "attack_ms", a);
+        ImNodes::BeginInputAttribute(snapshot.inputs.at("trig_id"));
+        ImGui::TextUnformatted("Trig");
+        ImNodes::EndInputAttribute();
+    }
+    ImGui::EndGroup();
 
-    auto d = snapshot.params.at("decay_ms");
-	ImGui::DragFloat("Decay Time (ms)", &d, 0.2f, 0, 1000.);
-    update(id, snapshot, "decay_ms", d);
+    ImGui::SameLine();
 
-    auto s = snapshot.params.at("sustain_db");
-	ImGui::DragFloat("Sustain Level (dB)", &s, 1.f, -60, 0.);
-    update(id, snapshot, "sustain_db", s);
+    ImGui::PushItemWidth(60);
+    ImGui::BeginGroup();
+    {
+        auto a = snapshot.params.at("attack_ms");
+        ImGui::DragFloat("Attack", &a, 0.2f, 0., 5000.);
+        update(id, snapshot, "attack_ms", a);
 
-    auto r = snapshot.params.at("release_ms");
-    ImGui::DragFloat("Release Time (ms)", &r, 1.f, 0., 10000.);
-    update(id, snapshot, "release_ms", r);
+        auto d = snapshot.params.at("decay_ms");
+        ImGui::DragFloat("Decay", &d, 0.2f, 0, 1000.);
+        update(id, snapshot, "decay_ms", d);
+
+        auto s = snapshot.params.at("sustain_db");
+        ImGui::DragFloat("Sustain", &s, 1.f, -60, 0.);
+        update(id, snapshot, "sustain_db", s);
+
+        auto r = snapshot.params.at("release_ms");
+        ImGui::DragFloat("Release", &r, 1.f, 0., 10000.);
+        update(id, snapshot, "release_ms", r);
+    }
+    ImGui::EndGroup();
+    ImGui::PopItemWidth();
 
 	ImNodes::BeginOutputAttribute(snapshot.outputs.at("output_id"));
     const float text_width = ImGui::CalcTextSize("Out").x;
@@ -1190,45 +1206,58 @@ void OscillatorDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     ImNodes::EndNodeTitleBar();
     ImNodes::PopColorStyle();
 
-    ImNodes::BeginInputAttribute(snapshot.inputs.at("freq_in_id"));
-    ImGui::PushItemWidth(120.0f);
-    auto f = snapshot.params.at("freq");
-    ImGui::DragFloat("Frequency", &f, 1.f, 0.00, 2000.);
-    update(id, snapshot, "freq", f);
-    ImGui::PopItemWidth();
-    ImNodes::EndInputAttribute();
+    ImGui::BeginGroup();
+    {
+        ImNodes::BeginInputAttribute(snapshot.inputs.at("freq_in_id"));
+        ImGui::TextUnformatted("Freq");
+        ImNodes::EndInputAttribute();
 
-    ImNodes::BeginInputAttribute(snapshot.inputs.at("modfreq_id"));
-    ImGui::TextUnformatted("FreqMod");
-    ImNodes::EndInputAttribute();
+        ImNodes::BeginInputAttribute(snapshot.inputs.at("modfreq_id"));
+        ImGui::TextUnformatted("Mod");
+        ImNodes::EndInputAttribute();
 
-    ImNodes::BeginInputAttribute(snapshot.inputs.at("moddepth_id"));
-    ImGui::TextUnformatted("FreqModDepth");
-    ImNodes::EndInputAttribute();
+        ImNodes::BeginInputAttribute(snapshot.inputs.at("moddepth_id"));
+        ImGui::TextUnformatted("Depth");
+        ImNodes::EndInputAttribute();
+    }
+    ImGui::EndGroup();
 
-    ImGui::PushItemWidth(120.0f);
-    auto t = snapshot.params.at("tuning_coarse");
-    ImGui::DragFloat("Coarse Tuning", &t, 1.f, -36.00, 36.);
-    update(id, snapshot, "tuning_coarse", t);
-    ImGui::PopItemWidth();
+    ImGui::SameLine();
 
-    ImGui::PushItemWidth(120.0f);
-    auto tf = snapshot.params.at("tuning_fine");
-    ImGui::DragFloat("Fine Tuning", &tf, 1.f, 0.00, 1.);
-    update(id, snapshot, "tuning_fine", tf);
-    ImGui::PopItemWidth();
+    ImGui::BeginGroup();
+    {
+        ImGui::PushItemWidth(60.0f);
+        auto f = snapshot.params.at("freq");
+        ImGui::DragFloat("Freq", &f, 1.f, 0.00, 2000.);
+        update(id, snapshot, "freq", f);
+        ImGui::PopItemWidth();
 
-    int selected = -1;
 
-    // Simplified one-liner Combo() API, using values packed in a single constant string
+        ImGui::PushItemWidth(60.0f);
+        auto t = snapshot.params.at("tuning_coarse");
+        ImGui::DragFloat("Coarse", &t, 1.f, -36.00, 36.);
+        update(id, snapshot, "tuning_coarse", t);
+        ImGui::PopItemWidth();
 
-    ImGui::PushStyleColor(ImGuiCol_Header, (ImVec4)ImColor(227, 255, 99));
-    ImGui::PushStyleColor(ImGuiCol_PopupBg, (ImVec4)ImColor(227, 255, 99));
-    ImGui::PushItemWidth(120.0f);
-    int w = (int)(snapshot.params.at("waveform"));
-    ImGui::Combo("Waveform", &w, "Saw\0Sine\0Square\0Triangle\0S&H\0Noise\0");
-    update(id, snapshot, "waveform", w);
-    ImGui::PopStyleColor(2);
+        ImGui::PushItemWidth(60.0f);
+        auto tf = snapshot.params.at("tuning_fine");
+        ImGui::DragFloat("Fine", &tf, 1.f, 0.00, 1.);
+        update(id, snapshot, "tuning_fine", tf);
+        ImGui::PopItemWidth();
+
+        int selected = -1;
+
+        // Simplified one-liner Combo() API, using values packed in a single constant string
+
+        ImGui::PushStyleColor(ImGuiCol_Header, (ImVec4)ImColor(227, 255, 99));
+        ImGui::PushStyleColor(ImGuiCol_PopupBg, (ImVec4)ImColor(227, 255, 99));
+        ImGui::PushItemWidth(60.0f);
+        int w = (int)(snapshot.params.at("waveform"));
+        ImGui::Combo("Wave", &w, "Saw\0Sine\0Square\0Triangle\0S&H\0Noise\0");
+        update(id, snapshot, "waveform", w);
+        ImGui::PopStyleColor(2);
+    }
+    ImGui::EndGroup();
 
     ImNodes::BeginOutputAttribute(snapshot.outputs.at("output_id"));
     const float text_width = ImGui::CalcTextSize("Out").x;
@@ -1424,36 +1453,43 @@ void FilterDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImNodes::EndNodeTitleBar();
     ImNodes::PopColorStyle();
 
-    ImNodes::BeginInputAttribute(snapshot.inputs.at("input_id"));
-	ImGui::TextUnformatted("In");
-	ImNodes::EndInputAttribute();
+    ImGui::BeginGroup();
+    {
+        ImNodes::BeginInputAttribute(snapshot.inputs.at("input_id"));
+        ImGui::TextUnformatted("In");
+        ImNodes::EndInputAttribute();
 
-	ImNodes::BeginInputAttribute(snapshot.inputs.at("freqmod_id"));
-	ImGui::TextUnformatted("Mod");
-	ImNodes::EndInputAttribute();
+        ImNodes::BeginInputAttribute(snapshot.inputs.at("freqmod_id"));
+        ImGui::TextUnformatted("Mod");
+        ImNodes::EndInputAttribute();
 
-	ImNodes::BeginInputAttribute(snapshot.inputs.at("moddepth_id"));
-	ImGui::TextUnformatted("Depth");
-	ImNodes::EndInputAttribute();
+        ImNodes::BeginInputAttribute(snapshot.inputs.at("moddepth_id"));
+        ImGui::TextUnformatted("Depth");
+        ImNodes::EndInputAttribute();
+    }
+    ImGui::EndGroup();
 
-    ImGui::PushStyleColor(ImGuiCol_Header, (ImVec4)ImColor(227, 255, 99));
-    ImGui::PushStyleColor(ImGuiCol_PopupBg, (ImVec4)ImColor(227, 255, 99));
-    ImGui::PushItemWidth(120.0f);
-    int w = (int)(snapshot.params.at("filter_type"));
-    ImGui::Combo("Filter", &w, "Moog\0Diode\0");
-    update(id, snapshot, "filter_type", w);
-    ImGui::PopStyleColor(2);
+    ImGui::SameLine();
 
-	ImGui::PushItemWidth(120.0f);
-    auto f = snapshot.params.at("freq");
-	ImGui::DragFloat("Freq", &f, 1.f, 0., 5000.);
-    update(id, snapshot, "freq", f);
-	ImGui::PopItemWidth();
+	ImGui::PushItemWidth(60.0f);
+    ImGui::BeginGroup();
+    {
+        ImGui::PushStyleColor(ImGuiCol_Header, (ImVec4)ImColor(227, 255, 99));
+        ImGui::PushStyleColor(ImGuiCol_PopupBg, (ImVec4)ImColor(227, 255, 99));
+        int w = (int)(snapshot.params.at("filter_type"));
+        ImGui::Combo("Filter", &w, "Moog\0Diode\0");
+        update(id, snapshot, "filter_type", w);
+        ImGui::PopStyleColor(2);
 
-	ImGui::PushItemWidth(120.0f);
-    auto q = snapshot.params.at("q");
-	ImGui::DragFloat("Q", &q, 1.f, 0., 100.);
-    update(id, snapshot, "q", q);
+        auto f = snapshot.params.at("freq");
+        ImGui::DragFloat("Freq", &f, 1.f, 0., 5000.);
+        update(id, snapshot, "freq", f);
+
+        auto q = snapshot.params.at("q");
+        ImGui::DragFloat("Q", &q, 1.f, 0., 100.);
+        update(id, snapshot, "q", q);
+    }
+    ImGui::EndGroup();
 	ImGui::PopItemWidth();
 
 	ImNodes::BeginOutputAttribute(snapshot.outputs.at("output_id"));
@@ -1464,4 +1500,4 @@ void FilterDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
 	ImNodes::EndNode();
 }
-
+    

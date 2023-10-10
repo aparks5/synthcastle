@@ -41,7 +41,7 @@
 
 struct AudioData
 {
-    const PaStream* stream;
+    PaStream* stream;
     int idVisited[MAX_NODES];
     std::shared_ptr<Controller> controller;
     std::shared_ptr<moodycamel::ReaderWriterQueue<Commands>> commandsToAudioCallback;
@@ -190,10 +190,8 @@ static int paCallbackMethod(const void* inputBuffer, void* outputBuffer,
     // this should never be resized except at init time to accommodate user driven buffer size
     data->controller->sendBuffer(data->callbackBuffer);
 
-    /*auto res = Pa_GetStreamCpuLoad(data->stream);
-    if (res > 0.9f) {
-        std::cout << "cpu usage exceeds 90% on this thread" << std::endl;
-    }*/
+    auto res = Pa_GetStreamCpuLoad(data->stream);
+    data->controller->sendCPUPercentage(res);
 
     return paContinue;
 }
