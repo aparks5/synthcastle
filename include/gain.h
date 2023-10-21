@@ -35,7 +35,6 @@ public:
 	void setGainf(float gain) { m_gain = gain; };
 	void setGaindB(float gaindB);
 
-protected:
 private:
 	float m_gain;
 };

@@ -4,44 +4,45 @@
 #include <string>
 #include <vector>
 
-enum class ScalePattern
-{
-	MAJOR,
-	MINOR,
-	BLUES,
-	CHROMATIC
-};
-
-enum class ScaleMode
-{
-	IONIAN,
-	DORIAN,
-	PHRYGIAN,
-	LYDIAN,
-	MIXOLYDIAN,
-	AEOLIAN,
-	LOCRIAN
-};
-
-enum class Key
-{
-	C,
-	CSHARP,
-	D,
-	EFLAT,
-	E,
-	F,
-	FSHARP,
-	G,
-	AFLAT,
-	A,
-	BFLAT,
-	B
-};
 
 class Scale
 {
 public:
+	enum ScalePattern
+	{
+		MAJOR,
+		MINOR,
+		BLUES,
+		CHROMATIC
+	};
+
+	enum ScaleMode
+	{
+		IONIAN,
+		DORIAN,
+		PHRYGIAN,
+		LYDIAN,
+		MIXOLYDIAN,
+		AEOLIAN,
+		LOCRIAN
+	};
+
+	enum Key
+	{
+		C,
+		CSHARP,
+		D,
+		EFLAT,
+		E,
+		F,
+		FSHARP,
+		G,
+		AFLAT,
+		A,
+		BFLAT,
+		B
+	};
+
 	Scale(Key key, ScalePattern pattern, ScaleMode mode);
 	void transpose(Key key);
 	void modulate(ScaleMode mode);
@@ -52,7 +53,10 @@ public:
 	static ScaleMode strToScaleMode(std::string str);
 
 private:
+	// given the chosen pattern, fill in the chosen scale
 	void generate(Key key, ScalePattern pattern);
+	// fill in the pattern starting from note start
+	void fill(int start, std::vector<int> pattern);
 	Key m_key;
 	ScalePattern m_pattern;
 	ScaleMode m_mode;

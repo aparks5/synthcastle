@@ -7,6 +7,7 @@ Gain::Gain()
     : Node(NodeType::PROCESSOR, "gain", NUM_INPUTS, NUM_OUTPUTS, NUM_PARAMS)
 {
 	params[GAIN] = 1.f;
+
 	paramMap = {
 			{"gain", GAIN},
 			{"gainmod_depth", GAINMOD_DEPTH},
@@ -36,9 +37,16 @@ void Gain::setGaindB(float gaindB)
 void Gain::process() noexcept
 {
 	float in = inputs[INPUT];
-
 	auto g = dBtoFloat(params[GAIN]);
-	in *= g * inputs[GAINMOD];
+
+	in *= g;
+
+	if (inputs[GAINMOD] != 0) {
+		in *= inputs[GAINMOD];
+		if (params[GAINMOD_DEPTH] != 0) {
+			in *= params[GAINMOD_DEPTH];
+		}
+	}
 
 	auto p = params[PAN];
 
@@ -49,11 +57,10 @@ void Gain::process() noexcept
 		}
 	}
 
-	float temp = M_PI * 0.25 * p;
-
+	float pan = M_PI * 0.25 * p;
     float scale = 0.7071; // ~= sqrt(2)/2
-	float rightPanGain = scale * (cos(temp) + sin(temp));
-	float leftPanGain = scale * (cos(temp) - sin(temp));
+	float rightPanGain = scale * (cos(pan) + sin(pan));
+	float leftPanGain = scale * (cos(pan) - sin(pan));
 
 	outputs[OUTPUT_LEFT] = in * leftPanGain;
 	outputs[OUTPUT_RIGHT] = in * rightPanGain;

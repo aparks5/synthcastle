@@ -1,5 +1,7 @@
 #include "scale.h"
+#include <unordered_map>
 
+// generates MIDI notes in the scale typically starting at C1 - MIDI note 24
 Scale::Scale(Key key, ScalePattern pattern, ScaleMode mode)
 	: m_key(key)
 	, m_pattern(pattern)
@@ -13,49 +15,30 @@ Scale::Scale(Key key, ScalePattern pattern, ScaleMode mode)
 	modulate(mode);
 }
 
- Key Scale::strToKey(std::string str)
+ Scale::Key Scale::strToKey(std::string str)
 {
-    // TODO: replace with map
-	Key key = Key::C;
-	if (str == "C") {
-		key = Key::C;
-	}
-	else if (str == "C#" || str == "Db") {
-		key = Key::CSHARP;
-	}
-	else if (str == "D") {
-		key = Key::D;
-	}
-	else if (str == "Eb" || str == "D#") {
-		key = Key::EFLAT;
-	}
-	else if (str == "F") {
-		key = Key::F;
-	}
-	else if (str == "F#" || str == "Gb") {
-		key = Key::FSHARP;
-	}
-	else if (str == "G") {
-		key == Key::G;
-	}
-	else if (str == "G#" || str == "Ab") {
-		key == Key::AFLAT;
-	}
-	else if (str == "A") {
-		key == Key::A;
-	}
-	else if (str == "A#" || str == "Bb") {
-		key == Key::BFLAT;
-	}
-	else if (str == "B") {
-		key == Key::B;
-	}
+    std::unordered_map<std::string, Key> keys;
+	keys["C"] = Key::C;
+	keys["C#"] = Key::CSHARP;
+	keys["Db"] = Key::CSHARP;
+	keys["D"] = Key::D;
+	keys["Eb"] = Key::EFLAT;
+	keys["D#"] = Key::EFLAT;
+	keys["F"] = Key::F;
+	keys["F#"] = Key::FSHARP;
+	keys["Gb"] = Key::FSHARP;
+	keys["G"] = Key::G;
+	keys["G#"] = Key::AFLAT;
+	keys["Ab"] = Key::AFLAT;
+	keys["A"] = Key::A;
+	keys["A#"] = Key::BFLAT;
+	keys["Bb"] = Key::BFLAT;
+	keys["B"] = Key::B;
 
-	return key;
-
+	return keys[str];
 }
 
- ScalePattern Scale::strToScalePattern(std::string str)
+ Scale::ScalePattern Scale::strToScalePattern(std::string str)
  {
 	 // TODO: replace with map
 	 ScalePattern pat = ScalePattern::MAJOR;
@@ -70,14 +53,13 @@ Scale::Scale(Key key, ScalePattern pattern, ScaleMode mode)
 	 }
 
 	 return pat;
-
  }
 
- ScaleMode Scale::strToScaleMode(std::string str)
+ Scale::ScaleMode Scale::strToScaleMode(std::string str)
  {
 	 ScaleMode mode = ScaleMode::IONIAN;
 
-	 // TODO: replace with map
+	 // do we need string control or just indices?
 	 if (str == "ionian" || str == "i") {
 		 mode = ScaleMode::IONIAN;
 	 }
@@ -106,59 +88,24 @@ Scale::Scale(Key key, ScalePattern pattern, ScaleMode mode)
 
 void Scale::generate(Key key, ScalePattern pattern)
 {
-	// copy paste bad replace with iteration
-	size_t startingNote = (12 * m_lowestOctave) + static_cast<size_t>(key);
-	if (pattern == ScalePattern::MAJOR) {
-		size_t nextNote = startingNote;
-		m_scale.push_back(nextNote);
-		nextNote += 2;
-		m_scale.push_back(nextNote);
-		nextNote += 2;
-		m_scale.push_back(nextNote);
-		nextNote += 1;
-		m_scale.push_back(nextNote);
-		nextNote += 2;
-		m_scale.push_back(nextNote);
-		nextNote += 2;
-		m_scale.push_back(nextNote);
-		nextNote += 2;
-		m_scale.push_back(nextNote);
-		nextNote += 1;
-		m_scale.push_back(nextNote);
-	}
 
-	if (pattern == ScalePattern::MINOR) {
-		size_t nextNote = startingNote;
-		m_scale.push_back(nextNote);
-		nextNote += 2;
-		m_scale.push_back(nextNote);
-		nextNote += 1;
-		m_scale.push_back(nextNote);
-		nextNote += 2;
-		m_scale.push_back(nextNote);
-		nextNote += 2;
-		m_scale.push_back(nextNote);
-		nextNote += 1;
-		m_scale.push_back(nextNote);
-		nextNote += 2;
-		m_scale.push_back(nextNote);
-		nextNote += 2;
-		m_scale.push_back(nextNote);
-	}
-	if (pattern == ScalePattern::BLUES) {
-		size_t nextNote = startingNote;
-		m_scale.push_back(nextNote);
-		nextNote += 3;
-		m_scale.push_back(nextNote);
-		nextNote += 2;
-		m_scale.push_back(nextNote);
-		nextNote += 1;
-		m_scale.push_back(nextNote);
-		nextNote += 1;
-		m_scale.push_back(nextNote);
-		nextNote += 3;
-		m_scale.push_back(nextNote);
-		nextNote += 2;
+    // C1 starts at MIDI note 24 https://www.inspiredacoustics.com/en/MIDI_note_numbers_and_center_frequencies
+	size_t start = (12 * m_lowestOctave) + static_cast<size_t>(key);
+	
+	std::unordered_map<ScalePattern, std::vector<int>> steps;
+	steps[ScalePattern::MAJOR] = { 2,2,1,2,2,2,1 };
+	steps[ScalePattern::MINOR] = { 2,1,2,2,1,2,2 };
+	steps[ScalePattern::BLUES] = { 3,2,1,1,3,2 };
+	fill(start, steps[pattern]);
+}
+
+void Scale::fill(int startingNote, std::vector<int> pattern)
+{
+	size_t nextNote = startingNote;
+	m_scale.push_back(nextNote);
+
+	for (auto& step : pattern) {
+		nextNote += step;
 		m_scale.push_back(nextNote);
 	}
 }

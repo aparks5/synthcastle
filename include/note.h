@@ -32,7 +32,6 @@ public:
 	std::deque<NoteEvent> makeSequence(std::string input, std::vector<std::string> trackList);
 	std::deque<NoteEvent> makeDrumPattern(float quantization, std::vector<std::string> input);
 	std::deque<NoteEvent> randomPattern(std::string track, size_t numSteps, Scale scale);
-	std::deque<NoteEvent> scalePattern(Key key, ScalePattern pattern, ScaleMode mode);
 	static std::deque<NoteEvent> sortTimeVal(std::deque<NoteEvent> notes);
 
 };

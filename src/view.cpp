@@ -562,11 +562,11 @@ void DelayDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     update(id, snapshot, "moddepth_ms", depth);
 
     auto hp = snapshot.params.at("feedback_highpass_hz");
-    ImGui::DragFloat("Feedback Highpass Cutoff (Hz)", &hp, 1.f, 0.f, 2000.f);
+    ImGui::DragFloat("Feedback HP", &hp, 1.f, 0.f, 2000.f);
     update(id, snapshot, "feedback_highpass_hz", hp);
 
     auto lp = snapshot.params.at("feedback_lowpass_hz");
-    ImGui::DragFloat("Feedback Lowpass Cutoff (Hz)", &lp, 0.1f, 0.f, 1.f);
+    ImGui::DragFloat("Feedback LP", &lp, 0.1f, 0.f, 1.f);
     update(id, snapshot, "feedback_lowpass_hz", lp);
 
     ImNodes::BeginOutputAttribute(snapshot.outputs.at("output_id"));
@@ -729,44 +729,65 @@ void GainDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 	ImGui::TextUnformatted("Gain");
 	ImNodes::EndNodeTitleBar();
 
-	ImNodes::BeginInputAttribute(snapshot.inputs.at("input_id"));
-	ImGui::TextUnformatted("In");
-	ImNodes::EndInputAttribute();
+    ImGui::BeginGroup();
+    {
+        ImNodes::BeginInputAttribute(snapshot.inputs.at("input_id"));
+        ImGui::TextUnformatted("In");
+        ImNodes::EndInputAttribute();
 
-	ImNodes::BeginInputAttribute(snapshot.inputs.at("gainmod_id"));
-	ImGui::TextUnformatted("Gain Mod");
-	ImNodes::EndInputAttribute();
+        ImNodes::BeginInputAttribute(snapshot.inputs.at("gainmod_id"));
+        ImGui::TextUnformatted("GainMod");
+        ImNodes::EndInputAttribute();
 
-	ImNodes::BeginInputAttribute(snapshot.inputs.at("panmod_id"));
-	ImGui::TextUnformatted("Pan Mod");
-	ImNodes::EndInputAttribute();
+        ImNodes::BeginInputAttribute(snapshot.inputs.at("panmod_id"));
+        ImGui::TextUnformatted("PanMod");
+        ImNodes::EndInputAttribute();
+    }
+    ImGui::EndGroup();
 
-	auto g = snapshot.params.at("gain");
-	if (ImGuiKnobs::Knob("Gain", &g, -60.0f, 30.0f, 0.1f, "%.1fdB", ImGuiKnobVariant_Wiper)) {
-		update(id, snapshot, "gain", g);
-	}
+    ImGui::SameLine();
 
-	auto gmd = snapshot.params.at("gainmod_depth");
-	if (ImGuiKnobs::Knob("Gain Mod Depth", &gmd, 0.f, 1.f, 0.1f, "%.1fdB", ImGuiKnobVariant_Wiper)) {
-		update(id, snapshot, "gainmod_depth", gmd);
-	}
-	auto p = snapshot.params.at("pan");
-	if (ImGuiKnobs::Knob("Pan", &p, -1.f, 1.0f, 0.1f, "%.1f", ImGuiKnobVariant_Wiper)) {
-		update(id, snapshot, "pan", p);
-	}
-	auto d = snapshot.params.at("panmod_depth");
-	if (ImGuiKnobs::Knob("Pan Mod Depth", &d, 0.f, 1.0f, 0.1f, "%.1f", ImGuiKnobVariant_Wiper)) {
-		update(id, snapshot, "panmod_depth", d);
-	}
+    ImGui::BeginGroup();
+    {
+        auto g = snapshot.params.at("gain");
+        if (ImGuiKnobs::Knob("Gain", &g, -60.0f, 30.0f, 0.1f, "%.1fdB", ImGuiKnobVariant_Wiper)) {
+            update(id, snapshot, "gain", g);
+        }
 
+        ImGui::SameLine();
 
-	ImNodes::BeginOutputAttribute(snapshot.outputs.at("left_id"));
-	ImGui::TextUnformatted("Left");
-	ImNodes::EndOutputAttribute();
+        auto gmd = snapshot.params.at("gainmod_depth");
+        if (ImGuiKnobs::Knob("GainDepth", &gmd, 0.f, 1.f, 0.1f, "%.1f\%", ImGuiKnobVariant_Wiper)) {
+            update(id, snapshot, "gainmod_depth", gmd);
+        }
 
-	ImNodes::BeginOutputAttribute(snapshot.outputs.at("right_id"));
-	ImGui::TextUnformatted("Right");
-	ImNodes::EndOutputAttribute();
+        auto p = snapshot.params.at("pan");
+        if (ImGuiKnobs::Knob("Pan", &p, -1.f, 1.0f, 0.1f, "%.1f", ImGuiKnobVariant_Wiper)) {
+            update(id, snapshot, "pan", p);
+        }
+
+        ImGui::SameLine();
+
+        auto d = snapshot.params.at("panmod_depth");
+        if (ImGuiKnobs::Knob("PanDepth", &d, 0.f, 1.0f, 0.1f, "%.1f\%", ImGuiKnobVariant_Wiper)) {
+            update(id, snapshot, "panmod_depth", d);
+        }
+    }
+    ImGui::EndGroup();
+
+    ImGui::SameLine();
+
+    ImGui::BeginGroup();
+    {
+        ImNodes::BeginOutputAttribute(snapshot.outputs.at("left_id"));
+        ImGui::TextUnformatted("Left");
+        ImNodes::EndOutputAttribute();
+
+        ImNodes::BeginOutputAttribute(snapshot.outputs.at("right_id"));
+        ImGui::TextUnformatted("Right");
+        ImNodes::EndOutputAttribute();
+    }
+    ImGui::EndGroup();
 
 	ImNodes::EndNode();
     ImNodes::PopColorStyle();
@@ -978,8 +999,8 @@ void SeqDisplayCommand::display(int id, const NodeSnapshot& snapshot)
         auto cachedTrack = snapshot.params.at("track");
 
         ImGui::SameLine();
-        auto note = static_cast<int>(snapshot.params.at("note"));
-        if (ImGuiKnobs::KnobInt("Note", &note, 36, 60, 1, "%1d", ImGuiKnobVariant_Wiper)) {
+        auto note = snapshot.params.at("note");
+        if (ImGuiKnobs::Knob("Note", &note, 0, 1, 0.01f, "%.01f", ImGuiKnobVariant_Wiper)) {
             update(id, snapshot, "note", static_cast<float>(note));
         }
 
@@ -993,6 +1014,12 @@ void SeqDisplayCommand::display(int id, const NodeSnapshot& snapshot)
         auto prob = snapshot.params.at("probability");
         if (ImGuiKnobs::Knob("Probability", &prob, 0.f, 1.0f, 0.01f, "%.1f", ImGuiKnobVariant_Wiper)) {
             update(id, snapshot, "probability", prob);
+        }
+
+        ImGui::SameLine();
+        auto key = static_cast<int>(snapshot.params.at("key"));
+        if (ImGuiKnobs::KnobInt("Key", &key, 0, 11, 1.f, "%1d", ImGuiKnobVariant_Wiper)) {
+            update(id, snapshot, "key", static_cast<float>(key));
         }
 
         ImGui::SameLine();
