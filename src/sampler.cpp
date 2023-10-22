@@ -21,6 +21,7 @@ Sampler::Sampler()
 
 	paramMap = {
 		{"node_id", NODE_ID},
+		{"reverse", REVERSE},
 		{"spread", SPREAD},
 		{"distance", DISTANCE},
 		{"num_voices", NUM_VOICES},
@@ -70,13 +71,15 @@ void Sampler::process() noexcept
 {
 	update();
 	if (inputs[STARTSTOP] != 0) {
-		//printf("start sample\n");
-		//inputs[STARTSTOP] = 0;
 		m_env.inputs[Envelope::TRIG] = 1;
 		m_startPos = 0;
 		m_loopPoint = 0;
 		m_accum = 0;
 		m_bTriggered = true;
+		if (params[REVERSE] == 1.f) {
+			m_startPos = audioFile.getNumSamplesPerChannel() - 1;
+			m_accum = m_startPos;
+		}
 	}
 
 	if (inputs[POSITION] != 0 && m_bTriggered) {
@@ -110,14 +113,23 @@ void Sampler::process() noexcept
 	}
 	
 	// playing back at 44.1kHz, advance only 1 sample each time
-	m_accum += m_rate;
-
-	if ((m_loopPoint != 0) && (m_accum > m_loopPoint)) {
-		// start loop over immediately, 0 delay 
-		m_accum = m_startPos;
+	if (params[REVERSE] == 1.f) {
+		m_accum -= m_rate;
+	}
+	else {
+		m_accum += m_rate;
 	}
 
-	if (m_accum >= (audioFile.getNumSamplesPerChannel() - 1)) {
+	if (m_loopPoint != 0) {
+		// start loop over immediately, 0 delay 
+		if ((params[REVERSE] == 1.f && (m_accum < m_loopPoint)) ||
+			(m_accum > m_loopPoint)) {
+			m_accum = m_startPos;
+		}
+	}
+
+	// todo: check if m_accum < 0
+	if ((m_accum >= (audioFile.getNumSamplesPerChannel() - 1))) {
 		m_env.inputs[Envelope::INPUT] = 0;
 		m_env.process();
 		outputs[OUTPUT] = m_env.outputs[Envelope::OUTPUT];

@@ -999,9 +999,14 @@ void SeqDisplayCommand::display(int id, const NodeSnapshot& snapshot)
         auto cachedTrack = snapshot.params.at("track");
 
         ImGui::SameLine();
+		ImGui::PushItemWidth(80);
         auto note = snapshot.params.at("note");
-        if (ImGuiKnobs::Knob("Note", &note, 0, 1, 0.01f, "%.01f", ImGuiKnobVariant_Wiper)) {
-            update(id, snapshot, "note", static_cast<float>(note));
+        note *= 11.f;
+        auto n = static_cast<int>(note);
+        if (ImGui::InputInt("Note", &n)) {
+            if (n >= 0 && n <= 11) {
+                update(id, snapshot, "note", static_cast<float>(n / 11.f));
+            }
         }
 
         ImGui::SameLine();
@@ -1484,6 +1489,12 @@ void SamplerDisplayCommand::display(int id, const NodeSnapshot& snapshot)
         }
     }
     ImGui::EndGroup();
+
+
+    bool rev = (snapshot.params.at("reverse") == 1.f);
+    if (ImGui::Checkbox("Reverse Playback", &rev)) {
+        update(id, snapshot, "reverse", rev ? 1.f : 0.f);
+    }
 
     ImGui::BeginGroup();
     {

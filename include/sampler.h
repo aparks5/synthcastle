@@ -29,6 +29,7 @@ public:
 
 	enum Params {
 		NODE_ID,
+		REVERSE, // 1 for reverse, 0 for forward
 		SPREAD, // how far the position CV can go 
 		SPRAY, // s&h lfo on position
 		GRAINSIZE, // how far after the start position to start looping
