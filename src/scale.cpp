@@ -95,7 +95,11 @@ void Scale::generate(Key key, ScalePattern pattern)
 	std::unordered_map<ScalePattern, std::vector<int>> steps;
 	steps[ScalePattern::MAJOR] = { 2,2,1,2,2,2,1 };
 	steps[ScalePattern::MINOR] = { 2,1,2,2,1,2,2 };
+	steps[ScalePattern::HARMONIC_MINOR] = { 2,1,2,2,1,3,1 };
 	steps[ScalePattern::BLUES] = { 3,2,1,1,3,2 };
+	steps[ScalePattern::CHROMATIC] = { 1,1,1,1,1,1,1,1,1,1,1,1 };
+	steps[ScalePattern::PHRYGIAN_DOMINANT] = { 1, 1, 1, 2, 1, 2, 2 };
+	steps[ScalePattern::WHOLE_TONE] = { 2,2,2,2,2,2 };
 	fill(start, steps[pattern]);
 }
 

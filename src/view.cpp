@@ -968,7 +968,7 @@ void FreqShiftDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
 void SeqDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 {
-    ImGui::PushItemWidth(160.0f);
+    ImGui::PushItemWidth(240.0f);
     ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(22, 147, 165, 255));
     ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(22, 147, 165, 230));
     ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(22, 147, 165, 255));
@@ -1012,34 +1012,67 @@ void SeqDisplayCommand::display(int id, const NodeSnapshot& snapshot)
 
         ImGui::SameLine();
         auto prob = snapshot.params.at("probability");
-        if (ImGuiKnobs::Knob("Probability", &prob, 0.f, 1.0f, 0.01f, "%.1f", ImGuiKnobVariant_Wiper)) {
+        if (ImGuiKnobs::Knob("Chance", &prob, 0.f, 1.0f, 0.01f, "%.1f", ImGuiKnobVariant_Wiper)) {
             update(id, snapshot, "probability", prob);
         }
 
         ImGui::SameLine();
-        auto key = static_cast<int>(snapshot.params.at("key"));
-        if (ImGuiKnobs::KnobInt("Key", &key, 0, 11, 1.f, "%1d", ImGuiKnobVariant_Wiper)) {
-            update(id, snapshot, "key", static_cast<float>(key));
-        }
-
-        ImGui::SameLine();
-
         ImGui::BeginGroup();
         {
-            ImGui::Text("Pattern");
-            auto pat = static_cast<int>(snapshot.params.at("pattern"));
-            ImGui::PushItemWidth(80);
-            if (ImGui::InputInt("Pattern", &pat)) {
-                if (pat >= 0 && pat < 64) {
-					update(id, snapshot, "pattern", static_cast<float>(pat));
-                }
+            // to do: map key int to Key name here 
+            auto key = static_cast<int>(snapshot.params.at("key"));
+            if (ImGuiKnobs::KnobInt("Key", &key, 0, 11, 1.f, "%1d", ImGuiKnobVariant_Wiper)) {
+                update(id, snapshot, "key", static_cast<float>(key));
             }
+
+            const std::string chromatic[12] = { "C","C#","D","Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B" };
+            ImGui::Text("%s\n", chromatic[key]);
+        }
+        ImGui::EndGroup();
+
+		ImGui::SameLine();
+        ImGui::BeginGroup();
+        {
+            // to do: map key int to Key name here 
+            auto scmode = static_cast<int>(snapshot.params.at("scale_mode"));
+            if (ImGuiKnobs::KnobInt("Mode", &scmode, 0, 6, 1.f, "%1d", ImGuiKnobVariant_Wiper)) {
+                update(id, snapshot, "scale_mode", static_cast<float>(scmode));
+            }
+
+            const std::string ecclesiastic[7] = { "Ionian", "Dorian", "Phrygian", "Lydian", "Mixolydian", "Aeolian", "Locrian" };
+            ImGui::Text("%s\n", ecclesiastic[scmode]);
+        }
+        ImGui::EndGroup();
+
+		ImGui::SameLine();
+        ImGui::BeginGroup();
+        {
+            ImGui::PushStyleColor(ImGuiCol_Header, (ImVec4)ImColor(227, 255, 99));
+            ImGui::PushStyleColor(ImGuiCol_PopupBg, (ImVec4)ImColor(227, 255, 99));
+            ImGui::PushItemWidth(60.0f);
+            int sc = (int)(snapshot.params.at("scale"));
+            ImGui::Combo("Scale", &sc, "Major\0Minor\0Harmonic Minor\0Blues\0Chromatic\0Phrygian Dominant\0Whole Tone\0");
+            update(id, snapshot, "scale", sc);
+            ImGui::PopStyleColor(2);
             ImGui::PopItemWidth();
         }
         ImGui::EndGroup();
 
+        ImGui::SameLine();
+        ImGui::BeginGroup();
+        {
+            auto pat = static_cast<int>(snapshot.params.at("pattern"));
+            ImGui::PushItemWidth(80);
+            if (ImGui::InputInt("Pattern", &pat)) {
+                if (pat >= 0 && pat < 64) {
+                    update(id, snapshot, "pattern", static_cast<float>(pat));
+                }
+            }
+            ImGui::PopItemWidth();
 
-        ImGui::Text("Selected: %d - %d", static_cast<int>(cachedTrack), static_cast<int>(cachedStep));
+            ImGui::Text("Selected: %d - %d", static_cast<int>(cachedTrack), static_cast<int>(cachedStep));
+        }
+        ImGui::EndGroup();
 
 		auto step = snapshot.params.at("display_step");
 		ImGui::Text("Step: %d", (int)step);

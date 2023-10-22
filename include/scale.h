@@ -12,8 +12,11 @@ public:
 	{
 		MAJOR,
 		MINOR,
+		HARMONIC_MINOR,
 		BLUES,
-		CHROMATIC
+		CHROMATIC,
+		PHRYGIAN_DOMINANT,
+		WHOLE_TONE,
 	};
 
 	enum ScaleMode
