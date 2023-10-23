@@ -1144,12 +1144,26 @@ void TrigDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     ImGui::TextUnformatted("Trig");
     ImNodes::EndNodeTitleBar();
 
-    int clicked = 0;
+    // we need this here because it seems like there are times when the button trigger misaligns with the
+    // audio callback
+    // therefore we heurstically hold down the trigger for approx 6 frames or 100 ms
+    static float debounce = 0;
+    static bool clicked = 0;
     if (ImGui::Button("Trig!")) {
-        //printf("clicked trig\n");
         clicked = 1;
     }
-	update(id, snapshot, "trig", clicked);
+
+    if (debounce > 0.1f) {
+        clicked = 0;
+        debounce = 0;
+        update(id, snapshot, "trig", 0);
+    }
+
+    if (clicked == 1) {
+        debounce += ImGui::GetIO().DeltaTime;
+        update(id, snapshot, "trig", 1);
+    }
+
 
 	ImNodes::BeginOutputAttribute(snapshot.outputs.at("trigout_id"));
     ImGui::TextUnformatted("1/4");
@@ -1184,16 +1198,12 @@ void TrigDisplayCommand::display(int id, const NodeSnapshot& snapshot)
     ImGui::ProgressBar(1.f, ImVec2(25.f, 0.0f), "");
     ImGui::PopStyleColor(2);
 
-    clicked = 0;
     if (ImGui::SmallButton("Stop")) {
-        clicked = 1;
-		update(id, snapshot, "stop", clicked);
+		update(id, snapshot, "stop", 1);
     }
 
-    clicked = 0;
     if (ImGui::SmallButton("Start")) {
-        clicked = 0;
-		update(id, snapshot, "stop", clicked);
+		update(id, snapshot, "stop", 0);
     }
 
     ImNodes::EndNode();
