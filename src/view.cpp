@@ -1479,16 +1479,17 @@ void SamplerDisplayCommand::display(int id, const NodeSnapshot& snapshot)
         ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(.95, .95, .95, 1.));
 
         auto p = snapshot.stringParams.at("path");
+        static ImGuiFileDialog dialog;
         std::string filePathName = "";
         std::string dialName = "nodeid_" + std::to_string((int)(snapshot.params.at("node_id")));
         if (ImGui::Button("Browse...")) {
-            ImGuiFileDialog::Instance()->OpenDialog(dialName, "Choose File", ".wav,.raw", ".");
+            dialog.OpenDialog(dialName, "Choose File", ".wav,.raw", ".");
         }
-        if (ImGuiFileDialog::Instance()->Display(dialName, 0, ImVec2(300, 300), ImVec2(1000, 1000))) {
-            if (ImGuiFileDialog::Instance()->IsOk()) {
-                filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+        if (dialog.Display(dialName, 0, ImVec2(300, 300), ImVec2(1000, 1000))) {
+            if (dialog.IsOk()) {
+                filePathName = dialog.GetFilePathName();
             }
-            ImGuiFileDialog::Instance()->Close();
+            dialog.Close();
         }
         ImGui::PopStyleColor(18);
 
