@@ -35,41 +35,13 @@ Welcome to...
 - `imgui` branch now open for business
 
 # synthcastle
-an interactive text-based synthesizer in modern c++
-
-like building sandcastles in sound
-
-
-
-
+sandcastles in sound
 
 ### Description
 
 This project aims to create a musical instrument and prototyping ground for new audio algorithms.
-
 I have only built this on Windows 10, compiled in Visual Studio.
-
-It uses cmake, PortAudio, RtMidi, and OpenGL (GLAD + GLFW).
-
-The syntax once you run `main.cpp` is very simple:
-
-```
-PortAudio Test: output triangle wave. SR = 44100, BufSize = 256
-Output device name: 'Speakers (Elektron Digitakt)'
-
->>> commands: stop, osc, freq, filt-freq, filt-q, filt-lfo-freq, pitch/filt-lfo-on/off,
->>> pitch-lfo-freq, pitch-lfo-depth, reverb-on/off, chorus-on/off, delay-on/off
->>> osc2-enable, osc2-coarse, osc2-fine, env [attackMs decayMs susdB]
->>> play [note], loop [note-note2-note3:duration,note4:duration2... loopNumTimes]
->>>
-```
-
-The OpenGL visualizer window currently has three modes. You must press 1, 2, 3 to switch modes:
-```
-1 - Time-domain oscilloscope (256 sample display)
-2 - VU RMS meter
-3 - FFT (256 samples, real-valued power spectrum)
-```
+It uses cmake, ImGui, PortAudio, RtMidi, and OpenGL (GLAD + GLFW).
 
 # Excellent reference books used to help make this:
 - Will Pirkle - Designing Software Synthesizer Plugins in C++ 
